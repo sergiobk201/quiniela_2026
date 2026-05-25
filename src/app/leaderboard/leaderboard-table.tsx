@@ -7,6 +7,7 @@ type Row = {
   rank: number
   userId: string
   displayName: string
+  championFlag?: string | null
   preTournament: number
   groupStage: number
   knockout: number
@@ -96,13 +97,18 @@ export default function LeaderboardTable({ initialRows, currentUserId }: Props) 
             <tr
               key={row.userId}
               className={`border-b last:border-0 ${
-                row.isCurrentUser ? 'bg-primary/5 font-semibold' : 'hover:bg-muted/30'
+                row.isCurrentUser ? 'font-semibold' : 'hover:bg-muted/30'
               }`}
+              style={row.isCurrentUser ? {
+                backgroundColor: 'color-mix(in oklch, var(--champion-primary) 10%, transparent)',
+                borderLeft: '3px solid var(--champion-primary)',
+              } : undefined}
             >
               <td className={`px-4 py-3 text-center font-bold ${medalColors[row.rank] ?? 'text-muted-foreground'}`}>
                 {row.rank}
               </td>
               <td className="px-4 py-3">
+                {row.championFlag && <span className="mr-1.5">{row.championFlag}</span>}
                 {row.displayName}
                 {row.isCurrentUser && (
                   <span className="ml-2 text-xs text-muted-foreground">(you)</span>
