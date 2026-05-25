@@ -27,13 +27,13 @@ export async function inviteUser(formData: FormData) {
 
 export async function togglePaid(userId: string, current: boolean) {
   const admin = createAdminClient()
-  await admin.from('profiles').update({ entry_paid: !current }).eq('id', userId)
+  await admin.from('profiles').upsert({ id: userId, entry_paid: !current }, { onConflict: 'id' })
   revalidatePath('/admin/users')
 }
 
 export async function toggleAdmin(userId: string, current: boolean) {
   const admin = createAdminClient()
-  await admin.from('profiles').update({ is_admin: !current }).eq('id', userId)
+  await admin.from('profiles').upsert({ id: userId, is_admin: !current }, { onConflict: 'id' })
   revalidatePath('/admin/users')
 }
 

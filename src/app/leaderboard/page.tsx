@@ -10,19 +10,29 @@ export default async function LeaderboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: scores } = await supabase
-    .from('scores')
-    .select(`
-      user_id, pre_tournament_points, group_stage_points,
-      knockout_points, rebuy_points, total_points, last_computed_at,
-      profile:profiles(display_name),
-      champion:pre_tournament_predictions(team:teams!champion_team_id(code))
-    `)
-    .order('total_points', { ascending: false })
+  const [{ data: scores }, { data: champPreds }] = await Promise.all([
+    supabase
+      .from('scores')
+      .select(`
+        user_id, pre_tournament_points, group_stage_points,
+        knockout_points, rebuy_points, total_points, last_computed_at,
+        profile:profiles(display_name)
+      `)
+      .order('total_points', { ascending: false }),
+    // RLS: returns own row pre-lock, all rows after lock (locked = TRUE)
+    supabase
+      .from('pre_tournament_predictions')
+      .select('user_id, team:teams!champion_team_id(code)'),
+  ])
+
+  const champMap = new Map<string, string>()
+  for (const c of champPreds ?? []) {
+    const code = (c.team as unknown as { code: string } | null)?.code
+    if (code) champMap.set(c.user_id, code)
+  }
 
   const rows = (scores ?? []).map((s, i) => {
-    const champion = (s.champion as unknown as { team: { code: string } | null }[] | null)
-    const championCode = champion?.[0]?.team?.code ?? null
+    const championCode = champMap.get(s.user_id) ?? null
     return {
       rank: i + 1,
       userId: s.user_id,

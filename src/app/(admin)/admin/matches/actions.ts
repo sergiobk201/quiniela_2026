@@ -12,7 +12,7 @@ async function triggerRecompute() {
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ type: 'matches' }),
+      body: JSON.stringify({ type: 'all' }),
     })
   } catch {
     // Non-blocking — scores will be stale until next manual recompute

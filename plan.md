@@ -52,14 +52,16 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [ ] Optimistic UI updates + save indicators
 - [ ] **PDF prediction receipt** — user can download all their predictions at any point as a dated PDF (display name + timestamp + all predictions); serves as tamper-proof proof of submission (`@react-pdf/renderer`)
 
-### Phase 4 — Scoring Engine + Leaderboard (Days 13–15)
-- [ ] Supabase Edge Function: `compute-scores` (match points)
-- [ ] Edge Function: group standings scoring
-- [ ] Edge Function: pre-tournament scoring (runs at tournament end)
-- [ ] Edge Function: rebuy scoring
-- [ ] Admin trigger: "recompute scores" button
-- [ ] `/leaderboard` — ranked table, Supabase Realtime subscription
-- [ ] `/dashboard` — user's own points breakdown by category
+### Phase 4 — Scoring Engine + Leaderboard (Days 13–15) ✅ COMPLETE
+> **Day 3 (2026-05-25):** All scoring infrastructure built, Edge Function deployed.
+
+- [x] Supabase Edge Function: `compute-scores` (match points) — `supabase/functions/compute-scores/`
+- [x] Edge Function: group standings scoring — same function, `type: 'standings'`
+- [x] Edge Function: pre-tournament scoring — same function, `type: 'pre-tournament'`
+- [x] Edge Function: rebuy scoring — same function, `type: 'rebuy'`
+- [x] Admin trigger: "recompute scores" button — `/admin/scoring`
+- [x] `/leaderboard` — ranked table, top-3 podium, Realtime subscription
+- [x] `/dashboard` — user score breakdown, champion pick, prediction fill progress
 
 ### Phase 5 — Hardening + Deploy (Days 16–17)
 - [ ] RLS policy audit: attempt cross-user data access in test env

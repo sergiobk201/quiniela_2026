@@ -176,6 +176,13 @@ Deno.serve(async (req) => {
       }
     })
 
+    if (rows.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, usersUpdated: 0, type, warning: 'No profiles found — create user profiles first' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { error } = await supabase
       .from('scores')
       .upsert(rows, { onConflict: 'user_id' })

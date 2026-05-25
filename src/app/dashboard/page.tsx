@@ -27,7 +27,7 @@ export default async function DashboardPage() {
     { data: prePred },
     { data: rebuy },
   ] = await Promise.all([
-    supabase.from('profiles').select('display_name, entry_paid').eq('id', user.id).single(),
+    supabase.from('profiles').select('display_name, entry_paid').eq('id', user.id).maybeSingle(),
     supabase.from('scores').select('*').eq('user_id', user.id).maybeSingle(),
     supabase.from('match_predictions').select('match_id', { count: 'exact' }).eq('user_id', user.id),
     supabase.from('pre_tournament_predictions').select('champion_team_id, champion:teams!champion_team_id(name)').eq('user_id', user.id).maybeSingle(),
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold">
           Welcome back, {profile?.display_name ?? user.email}
         </h1>
-        {!profile?.entry_paid && (
+        {profile !== null && !profile.entry_paid && (
           <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
             Entry fee not yet marked as paid — contact the admin.
           </p>

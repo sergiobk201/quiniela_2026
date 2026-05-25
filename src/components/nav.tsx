@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SignOutButton } from '@/components/sign-out-button'
+import { NavLinks } from '@/components/nav-links'
 
 export async function Nav() {
   const cookieStore = await cookies()
@@ -27,16 +28,7 @@ export async function Nav() {
         </Link>
 
         <div className="flex items-center gap-3">
-          {user && (
-            <nav className="hidden sm:flex items-center gap-4 text-sm">
-              <Link href="/predictions/pre-tournament" className="text-muted-foreground hover:text-foreground transition-colors">
-                Predictions
-              </Link>
-              <Link href="/leaderboard" className="text-muted-foreground hover:text-foreground transition-colors">
-                Leaderboard
-              </Link>
-            </nav>
-          )}
+          {user && <NavLinks />}
           <ThemeToggle />
           {user && (
             <>
