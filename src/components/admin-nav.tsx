@@ -17,9 +17,9 @@ export function AdminNav() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-52 shrink-0 border-r min-h-full bg-muted/20">
-      <nav className="p-3 space-y-1">
-        <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+    <aside className="border-b lg:border-b-0 lg:border-r lg:w-52 lg:shrink-0 lg:min-h-full bg-muted/20">
+      <nav className="flex lg:flex-col gap-1 overflow-x-auto p-3 lg:space-y-1">
+        <p className="hidden lg:block px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
           Admin
         </p>
         {links.map(({ href, label, icon: Icon }) => (
@@ -27,7 +27,7 @@ export function AdminNav() {
             key={href}
             href={href}
             className={cn(
-              'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              'flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
               pathname.startsWith(href)
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'

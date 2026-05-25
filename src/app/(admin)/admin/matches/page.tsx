@@ -108,7 +108,9 @@ export default async function MatchesPage() {
                 Group {groupName}
               </h2>
               <div className="border rounded-md overflow-hidden">
-                <MatchTable matches={groupMatches} />
+                <div className="overflow-x-auto">
+                  <MatchTable matches={groupMatches} />
+                </div>
               </div>
             </div>
           ))}
@@ -119,7 +121,9 @@ export default async function MatchesPage() {
           <TabsContent key={key} value={key} className="mt-4">
             <div className="border rounded-md overflow-hidden">
               {byStage[key].length > 0 ? (
-                <MatchTable matches={byStage[key]} />
+                <div className="overflow-x-auto">
+                  <MatchTable matches={byStage[key]} />
+                </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8 text-sm">
                   No {label} matches found.

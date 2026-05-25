@@ -7,6 +7,7 @@ const links = [
   { href: '/dashboard',                  label: 'Dashboard',   match: (p: string) => p === '/dashboard' },
   { href: '/predictions/pre-tournament', label: 'Predictions', match: (p: string) => p.startsWith('/predictions') },
   { href: '/leaderboard',                label: 'Leaderboard', match: (p: string) => p === '/leaderboard' },
+  { href: '/rules',                      label: 'Rules',       match: (p: string) => p === '/rules' },
 ]
 
 export function NavLinks() {
