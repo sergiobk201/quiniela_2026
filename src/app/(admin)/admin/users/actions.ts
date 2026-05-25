@@ -1,9 +1,11 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
 
 export async function inviteUser(formData: FormData) {
+  await assertAdmin()
   const email = (formData.get('email') as string).trim().toLowerCase()
   const displayName = (formData.get('displayName') as string).trim()
 
@@ -26,18 +28,21 @@ export async function inviteUser(formData: FormData) {
 }
 
 export async function togglePaid(userId: string, current: boolean) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.from('profiles').upsert({ id: userId, entry_paid: !current }, { onConflict: 'id' })
   revalidatePath('/admin/users')
 }
 
 export async function toggleAdmin(userId: string, current: boolean) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.from('profiles').upsert({ id: userId, is_admin: !current }, { onConflict: 'id' })
   revalidatePath('/admin/users')
 }
 
 export async function deleteUser(userId: string) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.auth.admin.deleteUser(userId)
   revalidatePath('/admin/users')

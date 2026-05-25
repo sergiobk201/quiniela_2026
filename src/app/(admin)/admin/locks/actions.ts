@@ -1,9 +1,11 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
 
 export async function lockStage(stage: string) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin
     .from('matches')
@@ -13,6 +15,7 @@ export async function lockStage(stage: string) {
 }
 
 export async function unlockStage(stage: string) {
+  await assertAdmin()
   const admin = createAdminClient()
   // Reset to 1 hour before each match's scheduled_at
   const { data: matches } = await admin
@@ -36,12 +39,14 @@ export async function unlockStage(stage: string) {
 }
 
 export async function lockPreTournament() {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.from('pre_tournament_predictions').update({ locked: true }).neq('locked', true)
   revalidatePath('/admin/locks')
 }
 
 export async function unlockPreTournament() {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.from('pre_tournament_predictions').update({ locked: false }).neq('locked', false)
   revalidatePath('/admin/locks')

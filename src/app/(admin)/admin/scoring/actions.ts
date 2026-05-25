@@ -1,9 +1,11 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
 
 export async function recomputeScores(type: string = 'all') {
+  await assertAdmin()
   const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/compute-scores`
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -25,6 +27,7 @@ export async function recomputeScores(type: string = 'all') {
 }
 
 export async function saveTournamentResults(formData: FormData) {
+  await assertAdmin()
   const admin = createAdminClient()
 
   const row = {
@@ -53,6 +56,7 @@ export async function createRebuyOpportunity(
   unlockedAtStage: string,
   pointsAvailable: number
 ) {
+  await assertAdmin()
   const admin = createAdminClient()
   const { error } = await admin.from('champion_rebuys').upsert(
     { user_id: userId, unlocked_at_stage: unlockedAtStage, points_available: pointsAvailable },

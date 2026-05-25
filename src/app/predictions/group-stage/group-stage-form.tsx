@@ -68,7 +68,7 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
 
       setStatus(match.id, 'saving')
       try {
-        await saveMatchPrediction(match.id, match.locked_at, h, a)
+        await saveMatchPrediction(match.id, h, a)
         setStatus(match.id, 'saved')
       } catch {
         setStatus(match.id, 'error')

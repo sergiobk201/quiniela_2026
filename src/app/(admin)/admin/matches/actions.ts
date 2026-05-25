@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
 
 async function triggerRecompute() {
@@ -20,6 +21,7 @@ async function triggerRecompute() {
 }
 
 export async function updateScore(matchId: number, homeScore: number, awayScore: number) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin
     .from('matches')
@@ -32,12 +34,14 @@ export async function updateScore(matchId: number, homeScore: number, awayScore:
 }
 
 export async function toggleUpset(matchId: number, current: boolean) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.from('matches').update({ upset: !current }).eq('id', matchId)
   revalidatePath('/admin/matches')
 }
 
 export async function updateStatus(matchId: number, status: 'scheduled' | 'live' | 'finished') {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin.from('matches').update({ status }).eq('id', matchId)
   revalidatePath('/admin/matches')
@@ -48,6 +52,7 @@ export async function assignKnockoutTeams(
   homeTeamId: number,
   awayTeamId: number
 ) {
+  await assertAdmin()
   const admin = createAdminClient()
   await admin
     .from('matches')
