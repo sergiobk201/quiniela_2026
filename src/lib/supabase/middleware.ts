@@ -33,15 +33,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (isAdmin && user) {
+  if (isAdmin) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.is_admin) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (profile?.is_admin !== true) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 

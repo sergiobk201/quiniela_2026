@@ -18,27 +18,30 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 
 ## Roadmap
 
-### Phase 1 — Foundation (Days 1–3)
+### Phase 1 — Foundation (Days 1–3) ✅ COMPLETE
 > **Day 1 (2026-05-24):** Project scaffolded. Next.js + Supabase + Tailwind + shadcn wired up. Schema + RLS migrations written. Middleware skeleton in place.
+> **Day 2 (2026-05-25):** Supabase prod project created. DB seeded (48 teams, 104 matches). Auth flow + layout shell complete.
 
-- [ ] Create Supabase project (prod)
+- [x] Create Supabase project (prod) — provisioned via dashboard, migrations applied via SQL Editor
 - [x] Run schema migrations (all tables from blueprint) — `supabase/migrations/001_initial_schema.sql`
 - [x] Enable RLS + add all policies — `supabase/migrations/002_rls_policies.sql`
-- [ ] Seed 48 teams + 12 groups
-- [ ] Seed 104 matches with scheduled_at + locked_at + stage_multiplier
+- [x] Seed 48 teams + 12 groups — `supabase/seed/001_seed_data.sql`
+- [x] Seed 104 matches with scheduled_at + locked_at + stage_multiplier — same seed file
 - [x] Init Next.js 14 app (`npx create-next-app@latest`) — Next 16.2.6 / React 19
 - [x] Install + configure Tailwind, shadcn/ui — Tailwind v4 + shadcn components bootstrapped
-- [x] Install Supabase JS client, generate types — `@supabase/ssr` + `@supabase/supabase-js` installed; `src/lib/supabase/{client,server,middleware}.ts` scaffolded
-- [ ] Supabase Auth: magic link flow
-- [x] Invite-only middleware (block unauthenticated + non-invited) — `middleware.ts` + `src/lib/supabase/middleware.ts` session handler
-- [ ] Basic layout: nav, shell, dark mode toggle
+- [x] Install Supabase JS client, generate types — `@supabase/ssr` + `@supabase/supabase-js`
+- [x] Supabase Auth: magic link flow — custom form at `/login`, callback at `/auth/callback`
+- [x] Invite-only middleware — `/auth/*` public, all other paths gated
+- [x] Basic layout: nav, shell, dark mode toggle — `ThemeProvider` + `Nav` in root layout
 
-### Phase 2 — Admin Panel (Days 4–7)
-- [ ] `/admin` — protected route (is_admin check)
-- [ ] `/admin/matches` — enter home/away scores, mark finished, flag upsets
-- [ ] `/admin/locks` — toggle round lock state with confirmation dialog
-- [ ] `/admin/users` — create accounts, send Resend invite email, mark entry_paid
-- [ ] `/admin/audit` — paginated audit log viewer
+### Phase 2 — Admin Panel (Days 4–7) ✅ COMPLETE
+> **Day 2 (2026-05-25):** All 4 admin sections built and passing build.
+
+- [x] `/admin` — protected route (is_admin check in middleware) → redirects to `/admin/users`
+- [x] `/admin/matches` — tabbed by stage, inline score entry, status cycle, upset flag
+- [x] `/admin/locks` — per-stage lock/unlock with confirmation dialog, reset to original times
+- [x] `/admin/users` — invite users, toggle paid/admin, remove; flexible user count
+- [x] `/admin/audit` — paginated (50/page) insert-only log viewer
 
 ### Phase 3 — Prediction UX (Days 8–12)
 - [ ] `/predictions/pre-tournament` — champion, runner-up, 3rd, awards, group standings (A–L), 3rd-place qualifiers
@@ -47,6 +50,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [ ] `/predictions/[stage]` — reusable knockout round prediction page
 - [ ] Form locking: disable inputs when `locked_at < now()`
 - [ ] Optimistic UI updates + save indicators
+- [ ] **PDF prediction receipt** — user can download all their predictions at any point as a dated PDF (display name + timestamp + all predictions); serves as tamper-proof proof of submission (`@react-pdf/renderer`)
 
 ### Phase 4 — Scoring Engine + Leaderboard (Days 13–15)
 - [ ] Supabase Edge Function: `compute-scores` (match points)
