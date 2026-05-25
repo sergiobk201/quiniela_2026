@@ -165,3 +165,50 @@
 
 ### Summary
 Spent the session fighting a subtle 3-way bug: recursive RLS + www/non-www mismatch + Supabase SMTP rate limit. All three were masking each other and causing admin login to fail in production (not reproducible in dev). Resolved by adopting the service-role pattern consistently and fixing the env var. Custom domain fully wired. App is live and the admin tab works correctly.
+
+---
+
+## [Day 5] — 2026-05-25 (Phase 5 Complete + Phase 7 UI Polish)
+
+### Completed
+
+**Phase 5 — Security Hardening (previously partial)**
+- **RLS write-lock enforcement** (`supabase/migrations/004_rls_write_locks.sql`): replaced `FOR ALL` policies with explicit INSERT/UPDATE/DELETE on `match_predictions`, `pre_tournament_predictions`, `group_standing_predictions`, `third_place_qualifier_predictions`. Post-lock writes now blocked at DB level — 3-layer defense: UI → server action → RLS.
+- **Server action auth guards** (`src/lib/supabase/assert-admin.ts`): `assertAdmin()` helper added to all 13 admin server actions across users, matches, locks, and scoring. Pattern: session client for getUser → service-role client for is_admin check.
+- **HTTP security headers** (`next.config.ts`): X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy.
+- **Client-trusted lockedAt bypass fixed**: `saveMatchPrediction` previously accepted `lockedAt` as a client param. Now fetches `locked_at` server-side from DB.
+- **Portfolio README** (`README.md`): architecture section, scoring table, quick start, env vars table, roadmap pulled from `plan.md`.
+
+**Phase 7 — UI Polish (Nice-to-Haves, shipped)**
+- **Football-themed color palette** (`src/app/globals.css`): emerald primary + amber accent in both light and dark modes (oklch). CSS vars `--champion-primary` / `--champion-secondary` added with WC green/gold fallbacks.
+- **Champion-themed dynamic UI**: `ChampionTheme` component applies team hex colors as CSS vars server-side on load (no flash). Luminance clamping (`clamp()`) for dark/light mode adaptation — too-dark colors lifted +160 RGB in dark mode; too-light darkened to 40% in light mode.
+- **Live champion color update**: pre-tournament form and rebuy form dispatch `champion-changed` CustomEvent on team select — CSS vars update instantly without waiting for save.
+- **Flag emojis everywhere**: `getFlag()` wired into pre-tournament form (trophy fields + TeamSelect options), group-stage form, knockout form, rebuy form/page (with `originalChampionCode`), receipt page (all team references, group standings, 3rd-place qualifiers), admin match-row, dashboard rebuy card, leaderboard table.
+- **Nav**: sticky + backdrop blur + champion-gradient logo text.
+- **Leaderboard**: current user row uses `color-mix(oklch, --champion-primary 10%)` background + left border accent; champion flag emoji shown before each player's display name.
+- **Dashboard**: champion-colored score card top border + progress bar; champion flag next to pick; rebuy team flag on submitted rebuy card.
+
+### Plan Updates
+- Phase 5 ✅ fully complete (RLS write-locks + action guards close the remaining open items)
+- Phase 7 items marked shipped:
+  - Champion-themed UI ✅
+  - Flag emoji on all team mentions ✅
+
+### Deployed
+- `vercel --prod` → live at `https://www.quiniela2026.space`
+- Build: 17 routes, TypeScript clean, 0 errors
+
+### Lessons Learned
+- `clamp()` for luminance-adaptive hex: compute relative luminance (0.2126R + 0.7152G + 0.0722B) / 255 — lift dark colors by +160 RGB in dark mode, darken light by ×0.4 in light mode
+- `CustomEvent` on `window` is the clean pattern for cross-component theme updates in Next.js App Router without lifting state to a context provider
+- PostgREST joined relation queries must include `code` explicitly — `select('name')` silently drops other columns
+
+### Remaining — Phase 6 (Onboarding)
+- [ ] Send magic link invites to 25 users via Resend
+- [ ] Schedule deadline reminder email (June 3)
+- [ ] README TODO slots — add screenshots
+
+## Session Log: 2026-05-25 (Session 3 — Security Hardening + UI Polish)
+
+### Summary
+Full Phase 5 security hardening (RLS write-locks, server action guards, HTTP headers, server-side lock validation). Portfolio README written. Full UI overhaul: football color palette, live champion theming with luminance clamping, flag emojis on every team reference across all pages. Deployed to production. App is visually complete and production-hardened.

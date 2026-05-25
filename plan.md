@@ -65,11 +65,12 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] `/leaderboard` — ranked table, top-3 podium, Realtime subscription
 - [x] `/dashboard` — user score breakdown, champion pick, prediction fill progress
 
-### Phase 5 — Hardening + Deploy (Days 16–17) ✅ COMPLETE (core)
+### Phase 5 — Hardening + Deploy (Days 16–17) ✅ COMPLETE
 > **Day 4 (2026-05-25):** Deployed to Vercel prod. Custom domain `quiniela2026.space` live. Admin auth hardened via service-role pattern. Resend SMTP configured.
+> **Day 5 (2026-05-25):** RLS write-lock enforcement via explicit INSERT/UPDATE/DELETE policies. All 13 admin server actions guarded with `assertAdmin()`. HTTP security headers added. Client-trusted `lockedAt` bypass fixed.
 
-- [ ] RLS policy audit: attempt cross-user data access in test env
-- [ ] Lock time edge case tests (UTC, timezone-naive clients)
+- [x] RLS policy audit — `004_rls_write_locks.sql` closes post-lock write bypass via direct PostgREST calls
+- [x] Lock time edge case — server action now fetches `locked_at` from DB; not trusted from client
 - [x] Mobile responsiveness pass — admin sidebar collapses to scrollable nav on mobile; matches table `overflow-x-auto`
 - [x] Error boundaries + loading states — `error.tsx`, 404 page, loading skeletons for all sections
 - [x] Deploy to Vercel — connected Supabase prod env vars; live at `https://www.quiniela2026.space`
@@ -86,8 +87,8 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 > These require no paid services — all free-tier solutions.
 
 - [ ] **Auto-pull match scores** — scheduled Edge Function polls Football-Data.org (free tier: 10 req/min) every 5 min during match windows; auto-marks matches `finished` and triggers recompute
-- [ ] **Champion-themed UI** — color accent variables from champion flag hex already wired; extend to buttons, nav active states, and score highlights *(infrastructure done — needs CSS wiring)*
-- [ ] **Flag emoji on all team mentions** — add to team selects in pre-tournament form, group-stage rows, knockout rows, receipt *(mapping built — needs component-level integration)*
+- [x] **Champion-themed UI** — live color update on champion/rebuy select; luminance clamping for dark/light mode; CSS vars on nav, score card, progress bar, leaderboard row
+- [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
 - [ ] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
 - [ ] **Reminder push** — Resend email blast June 3 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [ ] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
