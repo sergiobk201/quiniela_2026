@@ -2,93 +2,48 @@
 
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
-  const [token, setToken] = useState('')
-  const [step, setStep] = useState<'email' | 'otp'>('email')
   const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
-  async function handleSendOtp(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     })
+
     if (error) {
       setError(error.message)
     } else {
-      setStep('otp')
+      setSent(true)
     }
     setLoading(false)
   }
 
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email',
-    })
-    if (error) {
-      setError(error.message)
-    } else {
-      router.push('/dashboard')
-      router.refresh()
-    }
-    setLoading(false)
-  }
-
-  if (step === 'otp') {
+  if (sent) {
     return (
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-bold">Check your email</h1>
-          <p className="text-muted-foreground text-sm">
-            Enter the 6-digit code sent to <span className="font-medium text-foreground">{email}</span>
-          </p>
-        </div>
-        <form onSubmit={handleVerifyOtp} className="space-y-3">
-          <Input
-            type="text"
-            inputMode="numeric"
-            placeholder="123456"
-            value={token}
-            onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            required
-            disabled={loading}
-            autoFocus
-            className="text-center text-2xl tracking-widest"
-          />
-          {error && <p className="text-destructive text-sm">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading || token.length !== 6}>
-            {loading ? 'Verifying…' : 'Sign in'}
-          </Button>
-          <button
-            type="button"
-            onClick={() => { setStep('email'); setToken(''); setError(null) }}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Use a different email
-          </button>
-        </form>
+      <div className="w-full max-w-sm text-center space-y-2">
+        <h1 className="text-2xl font-bold">Check your email</h1>
+        <p className="text-muted-foreground text-sm">
+          We sent a magic link to <span className="font-medium text-foreground">{email}</span>.
+          Click it to sign in.
+        </p>
       </div>
     )
   }
@@ -97,9 +52,10 @@ export default function LoginPage() {
     <div className="w-full max-w-sm space-y-6">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-bold">Quiniela 2026</h1>
-        <p className="text-muted-foreground text-sm">Enter your email to receive a sign-in code</p>
+        <p className="text-muted-foreground text-sm">Enter your email to receive a sign-in link</p>
       </div>
-      <form onSubmit={handleSendOtp} className="space-y-3">
+
+      <form onSubmit={handleSubmit} className="space-y-3">
         <Input
           type="email"
           placeholder="you@example.com"
@@ -111,7 +67,7 @@ export default function LoginPage() {
         />
         {error && <p className="text-destructive text-sm">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Sending…' : 'Send code'}
+          {loading ? 'Sending…' : 'Send magic link'}
         </Button>
       </form>
     </div>

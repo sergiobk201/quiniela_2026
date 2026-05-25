@@ -10,12 +10,15 @@ const links = [
   { href: '/rules',                      label: 'Rules',       match: (p: string) => p === '/rules' },
 ]
 
-export function NavLinks() {
+const adminLink = { href: '/admin', label: 'Admin', match: (p: string) => p.startsWith('/admin') }
+
+export function NavLinks({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname()
+  const allLinks = isAdmin ? [...links, adminLink] : links
 
   return (
     <nav className="hidden sm:flex items-center gap-4 text-sm">
-      {links.map(({ href, label, match }) => {
+      {allLinks.map(({ href, label, match }) => {
         const isActive = match(pathname)
         return (
           <Link

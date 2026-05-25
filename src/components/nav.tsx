@@ -20,6 +20,16 @@ export async function Nav() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  let isAdmin = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+    isAdmin = profile?.is_admin === true
+  }
+
   return (
     <header className="border-b bg-background">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -28,7 +38,7 @@ export async function Nav() {
         </Link>
 
         <div className="flex items-center gap-3">
-          {user && <NavLinks />}
+          {user && <NavLinks isAdmin={isAdmin} />}
           <ThemeToggle />
           {user && (
             <>
