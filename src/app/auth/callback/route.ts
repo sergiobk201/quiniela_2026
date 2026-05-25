@@ -26,6 +26,17 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
+        if (profile?.is_admin === true) {
+          return NextResponse.redirect(`${origin}/admin`)
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
