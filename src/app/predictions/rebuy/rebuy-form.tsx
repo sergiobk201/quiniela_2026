@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { submitRebuy } from './actions'
+import { getFlag } from '@/lib/teams/meta'
 
 interface Rebuy {
   team_id: number | null
@@ -16,7 +17,8 @@ interface Rebuy {
 interface Props {
   rebuy: Rebuy | null
   originalChampion: string | null
-  teams: { id: number; name: string }[]
+  originalChampionCode: string | null
+  teams: { id: number; name: string; code: string }[]
 }
 
 const STAGE_LABELS: Record<string, string> = {
@@ -24,11 +26,17 @@ const STAGE_LABELS: Record<string, string> = {
   sf: 'Semi-Finals', '3rd': '3rd Place', final: 'Final',
 }
 
-export default function RebuyForm({ rebuy, originalChampion, teams }: Props) {
+export default function RebuyForm({ rebuy, originalChampion, originalChampionCode, teams }: Props) {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(
     rebuy?.team_id ?? null
   )
   const [pending, startTransition] = useTransition()
+
+  function handleTeamChange(id: number | null) {
+    setSelectedTeamId(id)
+    const code = id ? teams.find(t => t.id === id)?.code ?? null : null
+    window.dispatchEvent(new CustomEvent('champion-changed', { detail: { code } }))
+  }
 
   // No rebuy available
   if (!rebuy) {
@@ -38,7 +46,7 @@ export default function RebuyForm({ rebuy, originalChampion, teams }: Props) {
           <p className="font-medium">No rebuy available yet</p>
           <p className="text-sm text-muted-foreground">
             {originalChampion
-              ? `Your predicted champion (${originalChampion}) is still in the tournament.`
+              ? `Your predicted champion (${originalChampionCode ? getFlag(originalChampionCode) + ' ' : ''}${originalChampion}) is still in the tournament.`
               : 'Submit your pre-tournament champion pick first.'}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
@@ -57,7 +65,10 @@ export default function RebuyForm({ rebuy, originalChampion, teams }: Props) {
         <CardContent className="py-8 text-center space-y-2">
           <p className="font-medium text-green-600 dark:text-green-400">Rebuy Submitted</p>
           <p className="text-sm text-muted-foreground">
-            New champion pick: <strong>{submittedTeam?.name ?? 'Unknown'}</strong>
+            New champion pick:{' '}
+            <strong>
+              {submittedTeam ? `${getFlag(submittedTeam.code)} ${submittedTeam.name}` : 'Unknown'}
+            </strong>
           </p>
           <p className="text-xs text-muted-foreground">
             Potential bonus: {rebuy.points_available} pts · Unlocked at{' '}
@@ -90,7 +101,11 @@ export default function RebuyForm({ rebuy, originalChampion, teams }: Props) {
         <CardContent className="py-4 space-y-1">
           <p className="text-sm">
             <span className="text-muted-foreground">Original champion: </span>
-            <strong>{originalChampion ?? '—'}</strong>
+            <strong>
+              {originalChampion
+                ? `${originalChampionCode ? getFlag(originalChampionCode) + ' ' : ''}${originalChampion}`
+                : '—'}
+            </strong>
           </p>
           <p className="text-sm">
             <span className="text-muted-foreground">Unlocked at: </span>
@@ -107,13 +122,13 @@ export default function RebuyForm({ rebuy, originalChampion, teams }: Props) {
         <label className="text-sm font-medium">Pick your new champion</label>
         <select
           value={selectedTeamId ?? ''}
-          onChange={(e) => setSelectedTeamId(e.target.value ? Number(e.target.value) : null)}
+          onChange={(e) => handleTeamChange(e.target.value ? Number(e.target.value) : null)}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
           <option value="">Select team…</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>
-              {t.name}
+              {getFlag(t.code)} {t.name}
             </option>
           ))}
         </select>

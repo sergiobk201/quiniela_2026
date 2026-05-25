@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getFlag } from '@/lib/teams/meta'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,12 +31,16 @@ export default async function DashboardPage() {
     supabase.from('profiles').select('display_name, entry_paid').eq('id', user.id).maybeSingle(),
     supabase.from('scores').select('*').eq('user_id', user.id).maybeSingle(),
     supabase.from('match_predictions').select('match_id', { count: 'exact' }).eq('user_id', user.id),
-    supabase.from('pre_tournament_predictions').select('champion_team_id, champion:teams!champion_team_id(name)').eq('user_id', user.id).maybeSingle(),
-    supabase.from('champion_rebuys').select('submitted_at, team_id, rebuy_team:teams!team_id(name)').eq('user_id', user.id).maybeSingle(),
+    supabase.from('pre_tournament_predictions').select('champion_team_id, champion:teams!champion_team_id(name,code)').eq('user_id', user.id).maybeSingle(),
+    supabase.from('champion_rebuys').select('submitted_at, team_id, rebuy_team:teams!team_id(name,code)').eq('user_id', user.id).maybeSingle(),
   ])
 
-  const champion = (prePred?.champion as unknown as { name: string } | null)?.name
-  const rebuyTeam = (rebuy?.rebuy_team as unknown as { name: string } | null)?.name
+  const championMeta = prePred?.champion as unknown as { name: string; code: string } | null
+  const champion = championMeta?.name
+  const championFlag = championMeta?.code ? getFlag(championMeta.code) : null
+  const rebuyMeta = rebuy?.rebuy_team as unknown as { name: string; code: string } | null
+  const rebuyTeam = rebuyMeta?.name
+  const rebuyFlag = rebuyMeta?.code ? getFlag(rebuyMeta.code) : null
   const totalPts = score?.total_points ?? 0
 
   const breakdown = [
@@ -59,12 +64,14 @@ export default async function DashboardPage() {
       </div>
 
       {/* Score summary */}
-      <Card>
+      <Card style={{ borderTop: '3px solid var(--champion-primary)' }}>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Your Score</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-4xl font-bold mb-4">{totalPts} pts</p>
+          <p className="text-5xl font-bold mb-4 tabular-nums" style={{ color: 'var(--champion-primary)' }}>
+            {totalPts} <span className="text-2xl font-normal text-muted-foreground">pts</span>
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {breakdown.map(({ label, pts }) => (
               <div key={label} className="text-center p-3 rounded-md bg-muted/50">
@@ -72,6 +79,22 @@ export default async function DashboardPage() {
                 <p className="text-xs text-muted-foreground mt-1">{label}</p>
               </div>
             ))}
+          </div>
+          {/* Prediction fill progress */}
+          <div className="mt-4 space-y-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Match predictions filled</span>
+              <span className="font-medium">{matchPredCount?.length ?? 0} / 104</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(((matchPredCount?.length ?? 0) / 104) * 100, 100)}%`,
+                  backgroundColor: 'var(--champion-primary)',
+                }}
+              />
+            </div>
           </div>
           {score?.last_computed_at && (
             <p className="text-xs text-muted-foreground mt-3">
@@ -89,7 +112,10 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {champion ? (
-              <p className="font-semibold">{champion}</p>
+              <p className="font-semibold flex items-center gap-2">
+                <span className="text-2xl">{championFlag}</span>
+                {champion}
+              </p>
             ) : (
               <Link href="/predictions/pre-tournament" className="text-sm text-primary hover:underline">
                 Add your champion pick →
@@ -104,7 +130,10 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {rebuy?.submitted_at ? (
-              <p className="font-semibold">{rebuyTeam ?? '—'}</p>
+              <p className="font-semibold flex items-center gap-2">
+                {rebuyFlag && <span className="text-2xl">{rebuyFlag}</span>}
+                {rebuyTeam ?? '—'}
+              </p>
             ) : rebuy ? (
               <Link href="/predictions/rebuy" className="text-sm text-primary hover:underline">
                 Rebuy available — pick now →

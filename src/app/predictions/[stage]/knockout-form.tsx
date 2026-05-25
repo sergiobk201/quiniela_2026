@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { saveMatchPrediction } from './actions'
 import { isMatchLocked } from '@/lib/utils/lock'
+import { getFlag } from '@/lib/teams/meta'
 
 type TeamRef = { id: number; name: string; code: string } | null
 
@@ -109,13 +110,15 @@ export default function KnockoutForm({ matches, predictions }: Props) {
             const kickoff = new Date(match.scheduled_at)
             const homeName = match.home_team?.code ?? 'TBD'
             const awayName = match.away_team?.code ?? 'TBD'
+            const homeFlag = match.home_team?.code ? getFlag(match.home_team.code) : '🏳️'
+            const awayFlag = match.away_team?.code ? getFlag(match.away_team.code) : '🏳️'
 
             return (
               <tr key={match.id} className="border-b last:border-0 hover:bg-muted/30">
                 <td className="px-3 py-2 text-muted-foreground whitespace-nowrap text-xs">
                   {kickoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </td>
-                <td className="px-3 py-2 text-right font-medium">{homeName}</td>
+                <td className="px-3 py-2 text-right font-medium"><span className="mr-1">{homeFlag}</span>{homeName}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center justify-center gap-1">
                     <input
@@ -141,7 +144,7 @@ export default function KnockoutForm({ matches, predictions }: Props) {
                     />
                   </div>
                 </td>
-                <td className="px-3 py-2 font-medium">{awayName}</td>
+                <td className="px-3 py-2 font-medium"><span className="mr-1">{awayFlag}</span>{awayName}</td>
                 <td className="px-3 py-2 text-center">
                   <StatusDot status={status} />
                 </td>

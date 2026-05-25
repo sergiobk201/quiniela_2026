@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PrintButton from './print-button'
+import { getFlag } from '@/lib/teams/meta'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,13 +34,14 @@ export default async function ReceiptPage() {
       .from('match_predictions')
       .select('match_id, predicted_home_score, predicted_away_score, match:matches(scheduled_at, stage, home_team:teams!home_team_id(name, code), away_team:teams!away_team_id(name, code))')
       .eq('user_id', user.id),
-    supabase.from('teams').select('id, name').order('name'),
+    supabase.from('teams').select('id, name, code').order('name'),
     supabase.from('groups').select('id, name').order('name'),
     supabase.from('champion_rebuys').select('team_id, submitted_at').eq('user_id', user.id).maybeSingle(),
   ])
 
-  // Build team lookup map
+  // Build team lookup maps
   const teamMap = Object.fromEntries((allTeams ?? []).map((t) => [t.id, t.name]))
+  const teamCodeMap = Object.fromEntries((allTeams ?? []).map((t) => [t.id, t.code]))
   const groupMap = Object.fromEntries((groups ?? []).map((g) => [g.id, g.name]))
 
   // Group match predictions by stage
@@ -87,15 +89,15 @@ export default async function ReceiptPage() {
           <h2 className="text-base font-semibold mb-3 border-b pb-1">Pre-Tournament Picks</h2>
           {prePred ? (
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
-              <Row label="Champion" value={teamMap[prePred.champion_team_id!] ?? '—'} />
-              <Row label="Runner-up" value={teamMap[prePred.runner_up_team_id!] ?? '—'} />
-              <Row label="3rd Place" value={teamMap[prePred.third_place_team_id!] ?? '—'} />
+              <Row label="Champion" value={flaggedTeam(prePred.champion_team_id, teamMap, teamCodeMap)} />
+              <Row label="Runner-up" value={flaggedTeam(prePred.runner_up_team_id, teamMap, teamCodeMap)} />
+              <Row label="3rd Place" value={flaggedTeam(prePred.third_place_team_id, teamMap, teamCodeMap)} />
               <Row label="Golden Boot" value={prePred.golden_boot_player ?? '—'} />
               <Row label="Golden Glove" value={prePred.golden_glove_player ?? '—'} />
               <Row label="Kopa Award" value={prePred.kopa_player ?? '—'} />
               <Row label="Total Goals" value={prePred.total_goals_prediction?.toString() ?? '—'} />
-              <Row label="First Eliminated" value={teamMap[prePred.first_eliminated_team_id!] ?? '—'} />
-              <Row label="Most Yellow Cards" value={teamMap[prePred.most_yellows_team_id!] ?? '—'} />
+              <Row label="First Eliminated" value={flaggedTeam(prePred.first_eliminated_team_id, teamMap, teamCodeMap)} />
+              <Row label="Most Yellow Cards" value={flaggedTeam(prePred.most_yellows_team_id, teamMap, teamCodeMap)} />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No pre-tournament picks submitted.</p>
@@ -107,7 +109,7 @@ export default async function ReceiptPage() {
           <section>
             <h2 className="text-base font-semibold mb-3 border-b pb-1">Champion Rebuy</h2>
             <p className="text-sm">
-              New champion: <strong>{teamMap[rebuy.team_id!] ?? '—'}</strong>
+              New champion: <strong>{flaggedTeam(rebuy.team_id, teamMap, teamCodeMap)}</strong>
             </p>
           </section>
         )}
@@ -121,10 +123,10 @@ export default async function ReceiptPage() {
                 <div key={gs.group_id}>
                   <p className="font-medium mb-1">Group {groupMap[gs.group_id] ?? gs.group_id}</p>
                   <ol className="list-decimal list-inside space-y-0.5 text-muted-foreground">
-                    <li>{teamMap[gs.predicted_1st!] ?? '—'}</li>
-                    <li>{teamMap[gs.predicted_2nd!] ?? '—'}</li>
-                    <li>{teamMap[gs.predicted_3rd!] ?? '—'}</li>
-                    <li>{teamMap[gs.predicted_4th!] ?? '—'}</li>
+                    <li>{flaggedTeam(gs.predicted_1st, teamMap, teamCodeMap)}</li>
+                    <li>{flaggedTeam(gs.predicted_2nd, teamMap, teamCodeMap)}</li>
+                    <li>{flaggedTeam(gs.predicted_3rd, teamMap, teamCodeMap)}</li>
+                    <li>{flaggedTeam(gs.predicted_4th, teamMap, teamCodeMap)}</li>
                   </ol>
                 </div>
               ))}
@@ -143,7 +145,7 @@ export default async function ReceiptPage() {
             <div className="flex flex-wrap gap-2">
               {(qualifiers.team_ids as number[]).map((id) => (
                 <span key={id} className="px-2 py-0.5 rounded bg-muted text-sm">
-                  {teamMap[id] ?? `#${id}`}
+                  {flaggedTeam(id, teamMap, teamCodeMap)}
                 </span>
               ))}
             </div>
@@ -176,11 +178,15 @@ export default async function ReceiptPage() {
                             })
                           : '—'}
                       </td>
-                      <td className="py-1 text-right w-24">{m?.home_team?.code ?? 'TBD'}</td>
+                      <td className="py-1 text-right w-24">
+                        {m?.home_team ? `${getFlag(m.home_team.code)} ${m.home_team.code}` : 'TBD'}
+                      </td>
                       <td className="py-1 text-center font-mono w-16">
                         {mp.predicted_home_score} : {mp.predicted_away_score}
                       </td>
-                      <td className="py-1 w-24">{m?.away_team?.code ?? 'TBD'}</td>
+                      <td className="py-1 w-24">
+                        {m?.away_team ? `${getFlag(m.away_team.code)} ${m.away_team.code}` : 'TBD'}
+                      </td>
                     </tr>
                   )
                 })}
@@ -198,6 +204,18 @@ export default async function ReceiptPage() {
       </div>
     </>
   )
+}
+
+function flaggedTeam(
+  id: number | null | undefined,
+  nameMap: Record<number, string>,
+  codeMap: Record<number, string>
+): string {
+  if (!id) return '—'
+  const name = nameMap[id]
+  const code = codeMap[id]
+  if (!name) return '—'
+  return code ? `${getFlag(code)} ${name}` : name
 }
 
 function Row({ label, value }: { label: string; value: string }) {

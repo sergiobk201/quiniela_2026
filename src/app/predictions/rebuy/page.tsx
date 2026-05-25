@@ -18,13 +18,15 @@ export default async function RebuyPage() {
         .maybeSingle(),
       supabase
         .from('pre_tournament_predictions')
-        .select('champion_team_id, champion:teams!champion_team_id(name)')
+        .select('champion_team_id, champion:teams!champion_team_id(name, code)')
         .eq('user_id', user.id)
         .maybeSingle(),
-      supabase.from('teams').select('id, name').order('name'),
+      supabase.from('teams').select('id, name, code').order('name'),
     ])
 
-  const originalChampion = (originalPrediction?.champion as unknown as { name: string } | null)?.name ?? null
+  const originalChampionRaw = originalPrediction?.champion as unknown as { name: string; code: string } | null
+  const originalChampion = originalChampionRaw?.name ?? null
+  const originalChampionCode = originalChampionRaw?.code ?? null
 
   return (
     <div className="max-w-xl mx-auto p-6 space-y-6">
@@ -37,6 +39,7 @@ export default async function RebuyPage() {
       <RebuyForm
         rebuy={rebuy}
         originalChampion={originalChampion}
+        originalChampionCode={originalChampionCode}
         teams={teams ?? []}
       />
     </div>

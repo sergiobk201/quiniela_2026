@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { saveMatchPrediction } from './actions'
 import { isMatchLocked } from '@/lib/utils/lock'
+import { getFlag } from '@/lib/teams/meta'
 
 type TeamRef = { id: number; name: string; code: string }
 
@@ -134,7 +135,7 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
                           })}
                         </td>
                         <td className="px-3 py-2 text-right font-medium">
-                          {match.home_team.code}
+                          <span className="mr-1">{getFlag(match.home_team.code)}</span>{match.home_team.code}
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center justify-center gap-1">
@@ -162,7 +163,7 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
                           </div>
                         </td>
                         <td className="px-3 py-2 font-medium">
-                          {match.away_team.code}
+                          <span className="mr-1">{getFlag(match.away_team.code)}</span>{match.away_team.code}
                         </td>
                         <td className="px-3 py-2 text-center">
                           <StatusDot status={status} />

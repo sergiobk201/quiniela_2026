@@ -11,6 +11,7 @@ import {
   saveGroupStandings,
   saveThirdPlaceQualifiers,
 } from './actions'
+import { getFlag } from '@/lib/teams/meta'
 
 type Team = { id: number; name: string; code: string; group_id: number | null }
 type Group = { id: number; name: string }
@@ -64,7 +65,7 @@ function TeamSelect({
       <option value="">{placeholder}</option>
       {teams.map(t => (
         <option key={t.id} value={t.id}>
-          {t.name}
+          {getFlag(t.code)} {t.name}
         </option>
       ))}
     </select>
@@ -220,7 +221,13 @@ export default function PreTournamentForm({
                 <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
                 <TeamSelect
                   value={trophy[key]}
-                  onChange={id => setTrophy(prev => ({ ...prev, [key]: id }))}
+                  onChange={id => {
+                    setTrophy(prev => ({ ...prev, [key]: id }))
+                    if (key === 'champion_team_id') {
+                      const code = id ? teams.find(t => t.id === id)?.code ?? null : null
+                      window.dispatchEvent(new CustomEvent('champion-changed', { detail: { code } }))
+                    }
+                  }}
                   teams={teams}
                   disabled={locked}
                 />

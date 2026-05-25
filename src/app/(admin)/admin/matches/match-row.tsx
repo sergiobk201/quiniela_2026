@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { getFlag } from '@/lib/teams/meta'
 
 type Team = { id: number; name: string; code: string } | null
 
@@ -79,7 +80,9 @@ export function MatchRow({
 
       {/* Home team */}
       <td className="px-3 py-2 text-right font-medium text-sm">
-        {homeTeam?.name ?? <span className="text-muted-foreground">TBD</span>}
+        {homeTeam
+          ? <>{getFlag(homeTeam.code)} {homeTeam.name}</>
+          : <span className="text-muted-foreground">TBD</span>}
       </td>
 
       {/* Score inputs */}
@@ -107,7 +110,9 @@ export function MatchRow({
 
       {/* Away team */}
       <td className="px-3 py-2 font-medium text-sm">
-        {awayTeam?.name ?? <span className="text-muted-foreground">TBD</span>}
+        {awayTeam
+          ? <>{getFlag(awayTeam.code)} {awayTeam.name}</>
+          : <span className="text-muted-foreground">TBD</span>}
       </td>
 
       {/* Status badge */}
