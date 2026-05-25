@@ -26,8 +26,8 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isPublic = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/rules') || pathname.startsWith('/auth')
-  const isAdmin = pathname.startsWith('/admin')
+  const isPublic = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/rules') || pathname.startsWith('/auth') || pathname === '/admin-login'
+  const isAdmin = pathname.startsWith('/admin') && pathname !== '/admin-login'
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))
