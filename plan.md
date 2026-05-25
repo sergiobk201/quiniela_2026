@@ -19,16 +19,18 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 ## Roadmap
 
 ### Phase 1 — Foundation (Days 1–3)
+> **Day 1 (2026-05-24):** Project scaffolded. Next.js + Supabase + Tailwind + shadcn wired up. Schema + RLS migrations written. Middleware skeleton in place.
+
 - [ ] Create Supabase project (prod)
-- [ ] Run schema migrations (all tables from blueprint)
-- [ ] Enable RLS + add all policies
+- [x] Run schema migrations (all tables from blueprint) — `supabase/migrations/001_initial_schema.sql`
+- [x] Enable RLS + add all policies — `supabase/migrations/002_rls_policies.sql`
 - [ ] Seed 48 teams + 12 groups
 - [ ] Seed 104 matches with scheduled_at + locked_at + stage_multiplier
-- [ ] Init Next.js 14 app (`npx create-next-app@latest`)
-- [ ] Install + configure Tailwind, shadcn/ui
-- [ ] Install Supabase JS client, generate types
+- [x] Init Next.js 14 app (`npx create-next-app@latest`) — Next 16.2.6 / React 19
+- [x] Install + configure Tailwind, shadcn/ui — Tailwind v4 + shadcn components bootstrapped
+- [x] Install Supabase JS client, generate types — `@supabase/ssr` + `@supabase/supabase-js` installed; `src/lib/supabase/{client,server,middleware}.ts` scaffolded
 - [ ] Supabase Auth: magic link flow
-- [ ] Invite-only middleware (block unauthenticated + non-invited)
+- [x] Invite-only middleware (block unauthenticated + non-invited) — `middleware.ts` + `src/lib/supabase/middleware.ts` session handler
 - [ ] Basic layout: nav, shell, dark mode toggle
 
 ### Phase 2 — Admin Panel (Days 4–7)
