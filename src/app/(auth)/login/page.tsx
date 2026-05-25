@@ -39,11 +39,14 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <div className="w-full max-w-sm text-center space-y-2">
+      <div className="w-full max-w-sm text-center space-y-3">
         <h1 className="text-2xl font-bold">Check your email</h1>
         <p className="text-muted-foreground text-sm">
-          We sent a magic link to <span className="font-medium text-foreground">{email}</span>.
-          Click it to sign in.
+          If <span className="font-medium text-foreground">{email}</span> has been invited,
+          you&apos;ll receive a magic link shortly. Click it to sign in.
+        </p>
+        <p className="text-muted-foreground text-xs">
+          Don&apos;t see it? Contact the admin to be invited.
         </p>
       </div>
     )

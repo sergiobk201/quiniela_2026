@@ -1,21 +1,22 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SignOutButton } from '@/components/sign-out-button'
 import { NavLinks } from '@/components/nav-links'
 
 export async function Nav() {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
 
   let isAdmin = false
   if (user) {
-    const { data: profile } = await supabase
+    const admin = createAdminClient()
+    const { data: profile } = await admin
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
     isAdmin = profile?.is_admin === true
   }
 
