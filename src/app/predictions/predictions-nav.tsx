@@ -1,0 +1,46 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+const LINKS = [
+  { href: '/predictions/pre-tournament', label: 'Pre-Tournament' },
+  { href: '/predictions/group-stage', label: 'Groups' },
+  { href: '/predictions/r32', label: 'R32' },
+  { href: '/predictions/r16', label: 'R16' },
+  { href: '/predictions/qf', label: 'QF' },
+  { href: '/predictions/sf', label: 'SF' },
+  { href: '/predictions/3rd', label: '3rd' },
+  { href: '/predictions/final', label: 'Final' },
+  { href: '/predictions/rebuy', label: 'Rebuy' },
+  { href: '/predictions/receipt', label: 'Receipt' },
+]
+
+export default function PredictionsNav() {
+  const pathname = usePathname()
+
+  return (
+    <nav className="border-b bg-background print:hidden">
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-none">
+          {LINKS.map(({ href, label }) => {
+            const active = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`shrink-0 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {label}
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </nav>
+  )
+}

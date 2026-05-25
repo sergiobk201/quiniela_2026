@@ -60,3 +60,15 @@
 - `@base-ui/react` (used by this shadcn install) does NOT support `asChild` or Radix-style `DialogTrigger asChild` — use manual `open` state instead
 - Supabase joined relations (`.select('team:teams!fk(...)')`) are inferred as arrays by TS — cast via `as unknown as T` at usage sites
 - `NEXT_PUBLIC_SITE_URL` must be set in `.env.local` for magic link `emailRedirectTo` to work in dev
+
+---
+
+## Session Log: 2026-05-25
+
+### Major Lessons Learned Today
+
+| | Approach |
+|---|---|
+| **Incorrect** | Running `find`/`ls` directory scans at session start to understand project state |
+| **Correct** | Read `plan.md` + `CHANGELOG.md` first — they are the canonical source of truth for what files exist, what's complete, and what's pending |
+| **Why** | Directory scans waste tokens and hit usage limits; the plan and changelog already contain the full project inventory and status |

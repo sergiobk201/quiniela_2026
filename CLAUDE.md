@@ -59,3 +59,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 ```
+
+## Session Standards
+
+### Constraint: Session Bootstrap
+**ALWAYS** start a session by reading `plan.md` and `CHANGELOG.md` first.
+Do NOT run `find`, `ls`, or directory scans to understand project state — those files already contain the full inventory of what exists, what's done, and what's pending.
+Scanning the file tree wastes tokens and hits usage limits; the two docs are the canonical source of truth for session context.
