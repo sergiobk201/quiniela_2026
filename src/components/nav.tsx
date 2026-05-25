@@ -23,21 +23,19 @@ export async function Nav() {
   return (
     <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50" style={{ borderBottomColor: 'color-mix(in oklch, var(--champion-primary) 35%, transparent)' }}>
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="font-bold text-lg tracking-tight flex items-center gap-1.5">
-          <span>⚽</span>
-          <span style={{
-            background: 'linear-gradient(135deg, var(--champion-primary), var(--champion-secondary))',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>
-            Quiniela 2026
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="text-xl leading-none">⚽</span>
+          <span className="font-black text-base tracking-tight" style={{ color: 'var(--champion-primary)' }}>
+            Quiniela
+          </span>
+          <span className="font-light text-base tracking-tight text-muted-foreground">
+            2026
           </span>
         </Link>
 
         <div className="flex items-center gap-3">
           {user && <NavLinks isAdmin={isAdmin} />}
-          <ThemeToggle />
+          {user && <ThemeToggle />}
           {user && (
             <>
               <span className="text-sm text-muted-foreground hidden sm:block">

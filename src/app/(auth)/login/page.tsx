@@ -1,14 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { requestAccess } from './actions'
+
+type Result = 'sent_link' | 'sent_invite_request' | null
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [result, setResult] = useState<Result>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -16,28 +18,18 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const res = await requestAccess(email)
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-        shouldCreateUser: false,
-      },
-    })
-
-    if (error) {
-      setError(error.message)
+    if (res.status === 'error') {
+      setError(res.message)
     } else {
-      setSent(true)
+      setResult(res.status)
     }
     setLoading(false)
   }
 
-  if (sent) {
+  // Magic link sent to existing user
+  if (result === 'sent_link') {
     return (
       <div className="space-y-6 text-center">
         <div className="text-5xl">📬</div>
@@ -52,13 +44,42 @@ export default function LoginPage() {
         <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground space-y-1 text-left">
           <p>⏱ Link expires in 60 minutes</p>
           <p>📁 Check your spam folder if you don&apos;t see it</p>
-          <p>🔒 Not invited yet? Contact the admin to get access</p>
         </div>
         <button
-          onClick={() => { setSent(false); setEmail('') }}
+          onClick={() => { setResult(null); setEmail('') }}
           className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
         >
           Use a different email
+        </button>
+      </div>
+    )
+  }
+
+  // Invite request sent to admin
+  if (result === 'sent_invite_request') {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="text-5xl">🙋</div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Request sent!</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            <span className="font-semibold text-foreground">{email}</span> isn&apos;t
+            on the guest list yet. The admin has been notified and will send your
+            invite shortly.
+          </p>
+        </div>
+        <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm text-amber-600 dark:text-amber-400 space-y-1 text-left">
+          <p className="font-semibold">What happens next</p>
+          <p className="text-xs leading-relaxed">
+            The admin will review your request, collect the $10 entry fee, and send
+            your magic link. Keep an eye on your inbox.
+          </p>
+        </div>
+        <button
+          onClick={() => { setResult(null); setEmail('') }}
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+        >
+          Try a different email
         </button>
       </div>
     )
@@ -74,8 +95,7 @@ export default function LoginPage() {
         </div>
         <h2 className="text-2xl font-bold">Welcome back</h2>
         <p className="text-muted-foreground text-sm">
-          Enter your email to receive a sign-in link.{' '}
-          <span className="text-foreground font-medium">Invite only.</span>
+          Enter your email to sign in or request an invite.
         </p>
       </div>
 
@@ -97,7 +117,7 @@ export default function LoginPage() {
           </p>
         )}
         <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
-          {loading ? 'Sending link…' : 'Send magic link →'}
+          {loading ? 'Checking…' : 'Continue →'}
         </Button>
       </form>
 
@@ -107,11 +127,11 @@ export default function LoginPage() {
         <ol className="space-y-2 text-sm text-muted-foreground">
           <li className="flex items-start gap-2">
             <span className="text-amber-500 font-bold shrink-0">1</span>
-            Enter the email you were invited with
+            Enter your email — invited users get a magic link instantly
           </li>
           <li className="flex items-start gap-2">
             <span className="text-amber-500 font-bold shrink-0">2</span>
-            Click the link in your inbox — no password needed
+            New? Your request goes to the admin — invite + $10 entry required
           </li>
           <li className="flex items-start gap-2">
             <span className="text-amber-500 font-bold shrink-0">3</span>
