@@ -80,17 +80,35 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 ### Phase 5.5 — E2E Battle Testing (pre-Onboarding gate)
 > Must be 100% green before sending invites. Test against prod (`quiniela2026.space`).
 
-#### Auth
-- [ ] Magic link login — valid invite email lands on dashboard
-- [ ] Unknown email → neutral "check your email" message (no user creation)
+#### Login Page & Auth
+- [ ] Known email → magic link sent, "Check your inbox 📬" confirmation state shown
+- [ ] Unknown email → invite request email fires to `sergio.barrientos1401@gmail.com`, "Request sent 🙋" state shown with $10 fee explanation card
+- [ ] Resend email arrives with correct subject `⚽ Invite request — {email}` and link to `/admin/users`
+- [ ] "Try a different email" link resets form from both confirmation states
+- [ ] Login page is dark mode only — no theme toggle visible (unauthenticated)
+- [ ] Stadium hero image loads, dark overlay renders, all text is legible (no image bleed-through)
+- [ ] Trophy frosted glass card readable against hero image
+- [ ] Stat pills (`104 matches`, `48 teams`, etc.) visible and not washed out
+- [ ] Mobile: stadium image stacks above the form, not clipped or distorted
 - [ ] Unauthenticated access to `/dashboard`, `/predictions/*`, `/leaderboard` → redirected to `/login`
 - [ ] Unauthenticated access to `/admin/*` → redirected to `/login`
 - [ ] Non-admin user accessing `/admin/*` → redirected away (not just hidden in nav)
 - [ ] Sign out → session cleared, redirect to `/login`, back button does not re-enter
 
+#### Nav & Global UI
+- [ ] ⚽ `Quiniela` / `2026` logo renders with correct weight split and champion color
+- [ ] Nav logo color updates when champion changes (no page reload needed)
+- [ ] Theme toggle visible and functional when authenticated
+- [ ] Theme toggle NOT visible on login page
+- [ ] Page background wash updates when champion changes (5% color-mix tint, 0.6s transition)
+- [ ] Background wash works in both light and dark mode without breaking readability
+- [ ] Favicon displays correctly in browser tab (football icon)
+- [ ] Favicon shows on iOS home screen when added as PWA shortcut
+
 #### Pre-Tournament Predictions
 - [ ] Submit champion, runner-up, 3rd place — verify saved in DB
 - [ ] Champion color theme updates instantly on dropdown change (before save)
+- [ ] Page background wash shifts to team color immediately on champion select
 - [ ] Flag emojis appear in all dropdowns and on save confirmation
 - [ ] Individual awards (Golden Boot, Glove, Kopa) — text fields save correctly
 - [ ] Fun Bets (total goals, first eliminated, most yellows) — save and reload correctly
