@@ -65,13 +65,16 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] `/leaderboard` — ranked table, top-3 podium, Realtime subscription
 - [x] `/dashboard` — user score breakdown, champion pick, prediction fill progress
 
-### Phase 5 — Hardening + Deploy (Days 16–17)
+### Phase 5 — Hardening + Deploy (Days 16–17) ✅ COMPLETE (core)
+> **Day 4 (2026-05-25):** Deployed to Vercel prod. Custom domain `quiniela2026.space` live. Admin auth hardened via service-role pattern. Resend SMTP configured.
+
 - [ ] RLS policy audit: attempt cross-user data access in test env
 - [ ] Lock time edge case tests (UTC, timezone-naive clients)
 - [x] Mobile responsiveness pass — admin sidebar collapses to scrollable nav on mobile; matches table `overflow-x-auto`
 - [x] Error boundaries + loading states — `error.tsx`, 404 page, loading skeletons for all sections
-- [ ] Deploy to Vercel (connect Supabase prod env vars)
-- [ ] Smoke test: full user flow end-to-end
+- [x] Deploy to Vercel — connected Supabase prod env vars; live at `https://www.quiniela2026.space`
+- [x] Custom domain — `quiniela2026.space` (Namecheap) → Vercel CNAME; Resend SMTP + domain verified
+- [x] Smoke test: full user flow end-to-end — magic link → dashboard → predictions → admin tab (admin only)
 
 ### Phase 6 — Onboarding (Day 18)
 - [ ] Send magic link invites to 25 users via Resend

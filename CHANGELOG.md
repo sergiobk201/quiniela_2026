@@ -119,7 +119,7 @@
 
 ---
 
-## Session Log: 2026-05-25
+## Session Log: 2026-05-25 (Session 1 — Foundations Bootstrap)
 
 ### Major Lessons Learned Today
 
@@ -128,3 +128,40 @@
 | **Incorrect** | Running `find`/`ls` directory scans at session start to understand project state |
 | **Correct** | Read `plan.md` + `CHANGELOG.md` first — they are the canonical source of truth for what files exist, what's complete, and what's pending |
 | **Why** | Directory scans waste tokens and hit usage limits; the plan and changelog already contain the full project inventory and status |
+
+---
+
+## [Day 4] — 2026-05-25 (Phase 5: Deploy + Auth Hardening)
+
+### Deployed
+- **Production**: `https://www.quiniela2026.space` — Vercel + Supabase prod connected
+- **Custom domain**: `quiniela2026.space` registered on Namecheap; CNAME added to Vercel; DNS verified
+- **Resend SMTP**: `smtp.resend.com:465` configured as Supabase custom SMTP; `quiniela2026.space` domain verified in Resend (4 DNS records: SPF, DKIM ×2, DMARC)
+
+### Fixed
+- **Admin detection broken in production** — root cause: recursive RLS policy on `profiles` table (`"Admin reads all profiles"` uses `EXISTS (SELECT 1 FROM profiles WHERE is_admin = true)` — self-referential, returns null for all clients except service-role). Fixed by using `createAdminClient()` (service-role key) in both `nav.tsx` and `middleware.ts` for all `is_admin` reads.
+- **`emailRedirectTo` www-mismatch** — `window.location.origin` returned `https://www.quiniela2026.space` which did NOT match Supabase's allowlist entry `https://quiniela2026.space`. Fixed: use `NEXT_PUBLIC_SITE_URL` env var (always non-www).
+- **Supabase built-in SMTP rate limit** — 3 emails/hour cap, unextendable. Fixed: Resend SMTP via custom SMTP settings in Supabase Auth.
+- **Invite-only enforcement** — `shouldCreateUser: false` added to `signInWithOtp` options; unknown emails now get a neutral "check your email / contact admin" message.
+
+### Removed
+- `src/app/(auth)/admin-login/page.tsx` — deleted; admins use the same `/login` page
+- `src/app/auth/admin-callback/route.ts` — deleted; one callback route handles all users
+
+### Architecture Decisions
+- **Single login page for all users** — admin privilege is purely database-driven (`is_admin = true`), not a separate login path
+- **Service-role client for `is_admin` checks** — never use anon client for admin detection; RLS policies on `profiles` are recursive and will silently return null
+- **Admin nav tab** — `<NavLinks isAdmin={isAdmin} />` receives the flag from the server component; client never re-checks
+
+### Lessons Learned
+- **Recursive RLS is a silent failure** — if a policy on table `X` uses a subquery that reads table `X`, it will deadlock itself; only service-role bypasses this
+- **`window.location.origin` is unreliable** — in production it returns whatever variant the browser navigated to (www vs non-www); always use an env var for `emailRedirectTo`
+- **Email pre-fetching kills magic links** — production email security scanners follow links, consuming the one-time PKCE token before the user clicks; PKCE is resistant but not immune — domain reputation matters
+- **Supabase custom SMTP** — built-in SMTP is dev-only (3/hr); Resend is the correct free-tier fix for production
+- **Admin bootstrap** — no auto-trigger creates `profiles` rows on `auth.users` insert; admin must manually INSERT the first profile row via SQL Editor
+- **OTP (6-digit code) backfired** — Supabase email template overrides require custom SMTP + template edits; simpler to keep magic links and fix the root `emailRedirectTo` issue
+
+## Session Log: 2026-05-25 (Session 2 — Deploy + Admin Auth Hardening)
+
+### Summary
+Spent the session fighting a subtle 3-way bug: recursive RLS + www/non-www mismatch + Supabase SMTP rate limit. All three were masking each other and causing admin login to fail in production (not reproducible in dev). Resolved by adopting the service-role pattern consistently and fixing the env var. Custom domain fully wired. App is live and the admin tab works correctly.
