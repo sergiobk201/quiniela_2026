@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Trophy, Lock, FileText } from 'lucide-react'
+import { Users, Trophy, Lock, FileText, Calculator } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
-  { href: '/admin/users',   label: 'Users',   icon: Users },
-  { href: '/admin/matches', label: 'Matches', icon: Trophy },
-  { href: '/admin/locks',   label: 'Locks',   icon: Lock },
-  { href: '/admin/audit',   label: 'Audit',   icon: FileText },
+  { href: '/admin/users',   label: 'Users',    icon: Users },
+  { href: '/admin/matches', label: 'Matches',  icon: Trophy },
+  { href: '/admin/locks',   label: 'Locks',    icon: Lock },
+  { href: '/admin/audit',   label: 'Audit',    icon: FileText },
+  { href: '/admin/scoring', label: 'Scoring',  icon: Calculator },
 ]
 
 export function AdminNav() {

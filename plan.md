@@ -75,6 +75,16 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [ ] Schedule deadline reminder email (June 3 — 1 day before lock)
 - [ ] README
 
+### Phase 7 — Automations & UX Polish (Nice to Haves)
+> These require no paid services — all free-tier solutions.
+
+- [ ] **Auto-pull match scores** — scheduled Edge Function polls Football-Data.org (free tier: 10 req/min) every 5 min during match windows; auto-marks matches `finished` and triggers recompute
+- [ ] **Champion-themed UI** — color accent variables from champion flag hex already wired; extend to buttons, nav active states, and score highlights *(infrastructure done — needs CSS wiring)*
+- [ ] **Flag emoji on all team mentions** — add to team selects in pre-tournament form, group-stage rows, knockout rows, receipt *(mapping built — needs component-level integration)*
+- [ ] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
+- [ ] **Reminder push** — Resend email blast June 3 to all users who have incomplete predictions (< 104 match predictions submitted)
+- [ ] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
+
 ---
 
 ## Key Dates

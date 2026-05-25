@@ -44,3 +44,6 @@ quiniela-2026-blueprint.md
 next-env.d.ts
 *.local
 .env.local
+
+# supabase cli
+supabase/.temp/
