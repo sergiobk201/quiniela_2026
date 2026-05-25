@@ -63,6 +63,62 @@
 
 ---
 
+## [Day 3] — 2026-05-25 (Phase 3 Complete + Phase 4 Complete + Phase 5 Partial)
+
+### Added
+- **Phase 3: Prediction UX** — full prediction suite shipped
+  - `/predictions/pre-tournament`: trophy picks, awards, group standings A–L, 3rd-place qualifiers (3 tabs, per-section save)
+  - `/predictions/group-stage`: 72 match inputs paginated by group, auto-save on blur, per-row status dots
+  - `/predictions/[stage]`: reusable knockout page for r32/r16/qf/sf/3rd/final; TBD-team safe
+  - `/predictions/rebuy`: locked until scoring engine unlocks; submit is permanent
+  - `/predictions/receipt`: full print-to-PDF snapshot with print CSS hiding nav/button
+  - Predictions sub-nav (10 links, active state)
+  - `lib/utils/lock.ts`: `isMatchLocked` + `isPreTournamentLocked`
+  - `lib/scoring/defaults.ts`: 0-0 missing prediction default, home-wins tiebreaker, points constants
+- **Phase 4: Scoring Engine + Leaderboard**
+  - `compute-scores` Supabase Edge Function (Deno): match/group/pre-tournament/rebuy scoring in single invocation
+  - `/leaderboard`: top-3 podium, per-user rank card, Realtime subscription for live updates
+  - `/dashboard`: total pts breakdown, champion pick, rebuy status, prediction fill progress (X/104)
+  - `/admin/scoring`: manual recompute trigger, tournament results form, rebuy unlock by user
+  - Team meta: flag emojis + hex colors for all 48 teams
+  - Champion-themed UI: CSS vars set server-side from user champion pick (no flash on load)
+  - Auto-recompute scores (non-blocking) on match save
+  - Migration 003: `tournament_results` table + `winner_team_id` column
+- **Phase 5 (Partial): Hardening + UX Polish**
+  - Global error boundary (`error.tsx`) with retry button
+  - 404 not-found page
+  - Loading skeletons for dashboard, leaderboard, predictions, and all admin sections
+  - Admin sidebar responsive: collapses to horizontal scrollable nav on mobile (< lg)
+  - Admin matches table: `overflow-x-auto` wrapper for 7-column mobile scroll
+  - `/rules` page: match scoring, stage multipliers, pre-tournament picks, group standings, FAQ
+  - Rules link added to main nav
+- **Auth/Nav Improvements**
+  - Dedicated `/admin-login` page (iterated: OTP → reverted to magic link)
+  - Smart callback redirect based on `profile.is_admin` — admins → `/admin`, users → `/dashboard`
+  - Admin tab in `<Nav />` — visible only when `is_admin = true`
+  - Root `page.tsx` replaced with `redirect('/dashboard')` — middleware handles unauthenticated cases
+  - Sign-out via server action (eliminates race condition with SSR cookies)
+
+### Fixed
+- Admin route guard hardened in middleware (`is_admin` check before allowing `/admin/*`)
+- `emailRedirectTo` now uses `NEXT_PUBLIC_SITE_URL` instead of `window.location.origin` (avoids `www` variant mismatch)
+- Nav uses shared `createClient` for consistent session reads across components
+- Auto-recompute on match save: `type:'matches'` → `type:'all'` (was zeroing pre-tournament points)
+- `togglePaid`/`toggleAdmin`: `UPDATE` → `upsert` (profiles only exist after first login; admin may toggle before user has ever signed in)
+- Leaderboard champion flags: replaced broken PostgREST join with separate query (RLS-safe, handles pre-lock)
+- Dashboard `entry_paid` warning: guarded with `profile !== null` check
+- Dashboard profiles query: `.single()` → `.maybeSingle()` (avoids logged errors when row is absent)
+- Edge Function: early return when no profiles exist (avoids empty upsert error)
+
+### Lessons Learned
+- PostgREST joined relations on pre-lock data fail RLS silently — query champion picks separately and merge in JS
+- Server action sign-out eliminates cookie/SSR race; `router.push` after `signOut()` can race with middleware reads
+- `window.location.origin` returns the `www` variant — always use `NEXT_PUBLIC_SITE_URL` for `emailRedirectTo`
+- OTP adds friction for a family/friends audience; magic links were the right default
+- Use `upsert` over `update` for profile row toggles — profiles are only created on first login
+
+---
+
 ## Session Log: 2026-05-25
 
 ### Major Lessons Learned Today

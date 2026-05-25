@@ -43,14 +43,16 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] `/admin/users` — invite users, toggle paid/admin, remove; flexible user count
 - [x] `/admin/audit` — paginated (50/page) insert-only log viewer
 
-### Phase 3 — Prediction UX (Days 8–12)
-- [ ] `/predictions/pre-tournament` — champion, runner-up, 3rd, awards, group standings (A–L), 3rd-place qualifiers
-- [ ] `/predictions/group-stage` — 72 match score inputs, paginated by group
-- [ ] `/predictions/rebuy` — champion rebuy form (only visible when eligible)
-- [ ] `/predictions/[stage]` — reusable knockout round prediction page
-- [ ] Form locking: disable inputs when `locked_at < now()`
-- [ ] Optimistic UI updates + save indicators
-- [ ] **PDF prediction receipt** — user can download all their predictions at any point as a dated PDF (display name + timestamp + all predictions); serves as tamper-proof proof of submission (`@react-pdf/renderer`)
+### Phase 3 — Prediction UX (Days 8–12) ✅ COMPLETE
+> **Day 3 (2026-05-25):** Full prediction suite shipped — pre-tournament, group stage, knockout, rebuy, and receipt pages.
+
+- [x] `/predictions/pre-tournament` — champion, runner-up, 3rd, awards, group standings (A–L), 3rd-place qualifiers
+- [x] `/predictions/group-stage` — 72 match score inputs, paginated by group, auto-save on blur
+- [x] `/predictions/rebuy` — champion rebuy form (locked until scoring engine unlocks; submit is permanent)
+- [x] `/predictions/[stage]` — reusable knockout round prediction page (r32/r16/qf/sf/3rd/final; TBD-team safe)
+- [x] Form locking: disable inputs when `locked_at < now()` — `lib/utils/lock.ts`
+- [x] Optimistic UI updates + save indicators — per-row status dots, auto-save on blur
+- [x] **PDF prediction receipt** — `/predictions/receipt` print-to-PDF snapshot with print CSS (`@react-pdf/renderer`)
 
 ### Phase 4 — Scoring Engine + Leaderboard (Days 13–15) ✅ COMPLETE
 > **Day 3 (2026-05-25):** All scoring infrastructure built, Edge Function deployed.
@@ -66,14 +68,14 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 ### Phase 5 — Hardening + Deploy (Days 16–17)
 - [ ] RLS policy audit: attempt cross-user data access in test env
 - [ ] Lock time edge case tests (UTC, timezone-naive clients)
-- [ ] Mobile responsiveness pass (all pages)
-- [ ] Error boundaries + loading states
+- [x] Mobile responsiveness pass — admin sidebar collapses to scrollable nav on mobile; matches table `overflow-x-auto`
+- [x] Error boundaries + loading states — `error.tsx`, 404 page, loading skeletons for all sections
 - [ ] Deploy to Vercel (connect Supabase prod env vars)
 - [ ] Smoke test: full user flow end-to-end
 
 ### Phase 6 — Onboarding (Day 18)
 - [ ] Send magic link invites to 25 users via Resend
-- [ ] `/rules` page: scoring rules, deadlines, FAQ
+- [x] `/rules` page: scoring rules, deadlines, FAQ — shipped in Phase 5 hardening pass
 - [ ] Schedule deadline reminder email (June 3 — 1 day before lock)
 - [ ] README
 
