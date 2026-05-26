@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -28,12 +29,16 @@ export async function requestAccess(email: string): Promise<LoginResult> {
   )
 
   if (exists) {
-    // Known user — send magic link
-    const { error } = await admin.auth.admin.generateLink({
-      type: 'magiclink',
+    // Known user — use anon client signInWithOtp which triggers the email send
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        shouldCreateUser: false,
       },
     })
     if (error) return { status: 'error', message: error.message }
