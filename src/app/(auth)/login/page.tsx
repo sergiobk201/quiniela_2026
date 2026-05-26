@@ -160,14 +160,14 @@ export default function LoginPage() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-amber-500 font-bold shrink-0">3</span>
-            Submit your predictions before June 4, 2026
+            Submit your predictions before June 7, 2026
           </li>
         </ol>
       </div>
 
       {/* Deadline nudge */}
       <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm text-amber-600 dark:text-amber-400 font-medium">
-        ⏰ Pre-tournament deadline: <strong>June 4, 2026</strong> — one week before kickoff
+        ⏰ Pre-tournament deadline: <strong>June 7, 2026</strong> — four days before kickoff
       </div>
     </div>
   )

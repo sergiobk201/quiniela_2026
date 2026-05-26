@@ -34,7 +34,7 @@ export default async function PreTournamentPage() {
       <div>
         <h1 className="text-2xl font-bold">Pre-Tournament Predictions</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Locked June 4, 2026 · 00:00 UTC
+          Locked June 7, 2026 · 00:00 UTC
         </p>
       </div>
       <PreTournamentForm

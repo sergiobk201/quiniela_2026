@@ -1,7 +1,7 @@
 # Quiniela 2026 — Project Plan
 
 ## Objective
-Ship a full-stack World Cup prediction app for ~25 family/friends by June 4, 2026.
+Ship a full-stack World Cup prediction app for ~25 family/friends by June 7, 2026.
 Users submit pre-tournament + match predictions. Scoring is automated. Leaderboard is live.
 
 ## Timeline
@@ -210,6 +210,6 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 | Date       | Event                                     |
 |------------|-------------------------------------------|
 | 2026-05-24 | Project start                             |
-| 2026-06-04 | **PRE-TOURNAMENT SHEET LOCK (HARD)**      |
+| 2026-06-07 | **PRE-TOURNAMENT SHEET LOCK (HARD)**      |
 | 2026-06-11 | FIFA World Cup 2026 kickoff               |
 | 2026-07-19 | World Cup Final                           |

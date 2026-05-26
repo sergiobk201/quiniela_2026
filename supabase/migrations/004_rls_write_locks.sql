@@ -47,8 +47,8 @@ CREATE POLICY "match_predictions_delete" ON match_predictions FOR DELETE
 -- ============================================================
 DROP POLICY IF EXISTS "Own pre-tournament rw" ON pre_tournament_predictions;
 
--- INSERT: own row, only before the June 4 pre-tournament deadline.
--- Using a hardcoded timestamp because no existing row to check locked col.
+-- INSERT: own row, only before the pre-tournament deadline.
+-- Deadline updated to June 7 via migration 005. Using hardcoded timestamp.
 CREATE POLICY "pre_tournament_insert" ON pre_tournament_predictions FOR INSERT
   WITH CHECK (
     auth.uid() = user_id AND

@@ -23,7 +23,7 @@ export default async function RulesPage() {
         <h2 className="text-lg font-semibold">Key Dates</h2>
         <div className="border rounded-lg divide-y text-sm">
           {[
-            { date: 'June 4, 2026',  label: 'Pre-tournament sheet locks', highlight: true },
+            { date: 'June 7, 2026',  label: 'Pre-tournament sheet locks', highlight: true },
             { date: 'June 11, 2026', label: 'FIFA World Cup 2026 kicks off' },
             { date: 'July 19, 2026', label: 'World Cup Final' },
           ].map(({ date, label, highlight }) => (
@@ -85,7 +85,7 @@ export default async function RulesPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Pre-Tournament Picks</h2>
         <p className="text-sm text-muted-foreground">
-          Submit before June 4. Cannot be changed after the lock.
+          Submit before June 7. Cannot be changed after the lock.
         </p>
         <div className="border rounded-lg divide-y text-sm">
           {[
