@@ -19,11 +19,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Quiniela 2026",
   description: "World Cup 2026 prediction game",
-  icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
-  },
 };
 
 export default async function RootLayout({
