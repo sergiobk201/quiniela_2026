@@ -50,7 +50,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             {/* Stat pills */}
             <div className="flex flex-wrap gap-2">
-              {['104 matches', '48 teams', '32 nations', '1 champion'].map((s) => (
+              {['104 matches', '48 nations', '12 groups', '1 champion'].map((s) => (
                 <span
                   key={s}
                   className="px-3 py-1 rounded-full text-xs font-semibold bg-black/40 border border-white/25 backdrop-blur-md text-white"
