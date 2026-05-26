@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { requestAccess } from './actions'
+import { checkEmailExists, sendInviteRequest } from './actions'
 
 type Result = 'sent_link' | 'sent_invite_request' | null
 
@@ -18,13 +19,37 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const res = await requestAccess(email)
+    const exists = await checkEmailExists(email)
 
-    if (res.status === 'error') {
-      setError(res.message)
+    if (exists) {
+      // Known user — call signInWithOtp from browser so PKCE verifier
+      // is stored in cookies and the callback route can exchange the code
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+          shouldCreateUser: false,
+        },
+      })
+      if (otpError) {
+        setError(otpError.message)
+      } else {
+        setResult('sent_link')
+      }
     } else {
-      setResult(res.status)
+      // Unknown email — notify admin via server action
+      const { ok } = await sendInviteRequest(email)
+      if (ok) {
+        setResult('sent_invite_request')
+      } else {
+        setError('Could not send request. Try again.')
+      }
     }
+
     setLoading(false)
   }
 
