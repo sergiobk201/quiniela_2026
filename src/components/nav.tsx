@@ -25,7 +25,16 @@ export async function Nav() {
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-xl leading-none">⚽</span>
-          <span className="font-black text-base tracking-tight" style={{ color: 'var(--champion-primary)' }}>
+          <span
+            className="font-black text-base tracking-tight"
+            style={{
+              background: 'linear-gradient(135deg, var(--champion-primary), var(--champion-secondary))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              transition: 'background 0.7s ease',
+            }}
+          >
             Quiniela
           </span>
           <span className="font-light text-base tracking-tight text-muted-foreground">

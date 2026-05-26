@@ -131,8 +131,35 @@
   }
   body {
     @apply text-foreground;
-    background-color: color-mix(in oklch, var(--champion-primary) 5%, var(--background));
-    transition: background-color 0.6s ease;
+    background-color: color-mix(in oklch, var(--champion-primary) 12%, var(--background));
+    transition: background-color 0.7s ease;
+    position: relative;
+    min-height: 100vh;
+  }
+  /* Ambient champion glow — radial gradient anchored to top of page */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70vh;
+    background-image:
+      radial-gradient(ellipse 70% 100% at 30% 0%,
+        color-mix(in oklch, var(--champion-primary) 35%, transparent) 0%,
+        transparent 65%),
+      radial-gradient(ellipse 60% 90% at 80% 0%,
+        color-mix(in oklch, var(--champion-secondary) 30%, transparent) 0%,
+        transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.9;
+    transition: background-image 0.7s ease;
+  }
+  /* Ensure all content sits above the ambient glow */
+  body > * {
+    position: relative;
+    z-index: 1;
   }
   html {
     @apply font-sans;
