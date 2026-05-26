@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LeaderboardTable from './leaderboard-table'
 import { getFlag } from '@/lib/teams/meta'
@@ -6,9 +6,10 @@ import { getFlag } from '@/lib/teams/meta'
 export const dynamic = 'force-dynamic'
 
 export default async function LeaderboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: scores }, { data: champPreds }] = await Promise.all([
     supabase

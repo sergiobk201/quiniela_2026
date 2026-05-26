@@ -1,24 +1,13 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { getUser } from '@/lib/supabase/server'
+import { getIsAdmin } from '@/lib/supabase/admin'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SignOutButton } from '@/components/sign-out-button'
 import { NavLinks } from '@/components/nav-links'
 
 export async function Nav() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  let isAdmin = false
-  if (user) {
-    const admin = createAdminClient()
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .maybeSingle()
-    isAdmin = profile?.is_admin === true
-  }
+  const user = await getUser()
+  const isAdmin = user ? await getIsAdmin(user.id) : false
 
   return (
     <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50" style={{ borderBottomColor: 'color-mix(in oklch, var(--champion-primary) 35%, transparent)' }}>

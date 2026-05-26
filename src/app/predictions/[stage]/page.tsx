@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import KnockoutForm from './knockout-form'
 
@@ -38,9 +38,10 @@ export default async function KnockoutPage({
   const { stage } = await params
   if (!VALID_STAGES.includes(stage as KnockoutStage)) notFound()
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: rawMatches }, { data: rawPredictions }] = await Promise.all([
     supabase

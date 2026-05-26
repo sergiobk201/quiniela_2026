@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
@@ -6,8 +6,7 @@ export const metadata = {
 }
 
 export default async function RulesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
 
   return (

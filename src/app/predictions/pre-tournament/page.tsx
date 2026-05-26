@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { isPreTournamentLocked } from '@/lib/utils/lock'
 import PreTournamentForm from './pre-tournament-form'
@@ -6,9 +6,10 @@ import PreTournamentForm from './pre-tournament-form'
 export const dynamic = 'force-dynamic'
 
 export default async function PreTournamentPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [
     { data: teams },

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import GroupStageForm from './group-stage-form'
 
@@ -22,9 +22,10 @@ type Prediction = {
 }
 
 export default async function GroupStagePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: rawMatches }, { data: groups }, { data: rawPredictions }] =
     await Promise.all([

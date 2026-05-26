@@ -1,3 +1,4 @@
+import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -17,20 +18,20 @@ const PREDICTION_LINKS = [
 ]
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
 
+  const supabase = await createClient()
   const [
     { data: profile },
     { data: score },
-    { data: matchPredCount },
+    { count: matchPredCount },
     { data: prePred },
     { data: rebuy },
   ] = await Promise.all([
     supabase.from('profiles').select('display_name, entry_paid').eq('id', user.id).maybeSingle(),
     supabase.from('scores').select('*').eq('user_id', user.id).maybeSingle(),
-    supabase.from('match_predictions').select('match_id', { count: 'exact' }).eq('user_id', user.id),
+    supabase.from('match_predictions').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase.from('pre_tournament_predictions').select('champion_team_id, champion:teams!champion_team_id(name,code)').eq('user_id', user.id).maybeSingle(),
     supabase.from('champion_rebuys').select('submitted_at, team_id, rebuy_team:teams!team_id(name,code)').eq('user_id', user.id).maybeSingle(),
   ])
@@ -84,13 +85,13 @@ export default async function DashboardPage() {
           <div className="mt-4 space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Match predictions filled</span>
-              <span className="font-medium">{matchPredCount?.length ?? 0} / 104</span>
+              <span className="font-medium">{matchPredCount ?? 0} / 104</span>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${Math.min(((matchPredCount?.length ?? 0) / 104) * 100, 100)}%`,
+                  width: `${Math.min(((matchPredCount ?? 0) / 104) * 100, 100)}%`,
                   backgroundColor: 'var(--champion-primary)',
                 }}
               />
@@ -151,7 +152,7 @@ export default async function DashboardPage() {
           <CardTitle className="text-base">
             Predictions
             <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {matchPredCount?.length ?? 0} / 104 matches filled
+              {matchPredCount ?? 0} / 104 matches filled
             </span>
           </CardTitle>
         </CardHeader>

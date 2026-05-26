@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Nav } from "@/components/nav";
 import { ChampionTheme } from "@/components/champion-theme";
-import { createClient } from "@/lib/supabase/server";
+import { getUser, createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,9 +34,9 @@ export default async function RootLayout({
   // Fetch champion pick server-side to avoid theme flash
   let championCode: string | null = null
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getUser()
     if (user) {
+      const supabase = await createClient()
       const { data } = await supabase
         .from('pre_tournament_predictions')
         .select('champion:teams!champion_team_id(code)')

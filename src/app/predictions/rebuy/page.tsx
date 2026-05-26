@@ -1,13 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import RebuyForm from './rebuy-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function RebuyPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: rebuy }, { data: originalPrediction }, { data: teams }] =
     await Promise.all([

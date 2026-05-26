@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PrintButton from './print-button'
 import { getFlag } from '@/lib/teams/meta'
@@ -12,9 +12,10 @@ const STAGE_LABELS: Record<string, string> = {
 }
 
 export default async function ReceiptPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [
     { data: profile },
