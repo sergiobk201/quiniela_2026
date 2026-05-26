@@ -197,12 +197,127 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 ### Phase 7 — Automations & UX Polish (Nice to Haves)
 > These require no paid services — all free-tier solutions.
 
-- [ ] **Auto-pull match scores** — scheduled Edge Function polls Football-Data.org (free tier: 10 req/min) every 5 min during match windows; auto-marks matches `finished` and triggers recompute
+- [ ] **Auto-pull match scores** — full plan below; zero admin input needed during the tournament
+- [ ] **Pick comparison viewer** — `/leaderboard/[userId]` page showing any player's full prediction receipt post-lock; DB RLS already enforces visibility (returns empty pre-lock); link from leaderboard row; add missing post-lock SELECT policies for `group_standing_predictions`, `third_place_qualifier_predictions`, and `champion_rebuys` (migration 006)
 - [x] **Champion-themed UI** — live color update on champion/rebuy select; luminance clamping for dark/light mode; CSS vars on nav, score card, progress bar, leaderboard row
 - [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
 - [ ] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
-- [ ] **Reminder push** — Resend email blast June 3 to all users who have incomplete predictions (< 104 match predictions submitted)
+- [ ] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [ ] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
+- [ ] **Audit hardening + transparency** — full plan below; admin honesty guarantee for all players
+
+---
+
+## Auto-Score Pull — Implementation Plan
+
+### Provider: Football-Data.org (free tier)
+- Free forever for FIFA World Cup; 10 req/min limit
+- API key via `X-Auth-Token` header; endpoint: `GET /v4/competitions/WC/matches`
+- Match statuses: `SCHEDULED` → `IN_PLAY` → `PAUSED` → `FINISHED`
+- Final scores available on `score.fullTime.home` / `score.fullTime.away` when `FINISHED`
+- Filter by `dateFrom` + `dateTo` to fetch only today's matches
+- Team name mapping required: their English names must be verified against our seed data
+
+### Architecture: two-part system
+
+**Poller** — runs on a schedule (Vercel Cron every 5 min):
+1. Query our `matches` table first: any rows with `locked_at < now()` and `status != 'finished'`?
+2. If none → skip API call entirely (zero cost during off-hours)
+3. If yes → call Football-Data.org for today's matches
+4. For each `FINISHED` result, check if our DB row still needs updating
+5. Fire the processor for any delta
+
+**Processor** — Supabase Edge Function (extends or calls alongside `compute-scores`):
+1. Write `home_score` / `away_score` to `matches` row
+2. Set `status = 'finished'`
+3. Invoke `compute-scores` recompute (existing function, type: `'all'`)
+4. Insert to `audit_log` for traceability
+
+### Polling math
+- Poll every 5 min = 12 calls/hour max
+- Football-Data.org allows 600/hour → we use ~2% of the free limit
+- Worst case (3 simultaneous group-stage matches): still well within limit
+
+### Failure handling
+- API down → log failure, skip, retry in 5 min — no data loss
+- Team mapping miss → log to `audit_log`, notify admin, don't crash the recompute
+- Idempotent writes → `compute-scores` upserts scores; running twice never doubles points
+- Admin manual override always available via `/admin/matches` as fallback
+
+### What needs to be built
+1. Register Football-Data.org API key → add `FOOTBALL_DATA_API_KEY` to Vercel + Supabase env vars
+2. Verify team name mapping: their names vs our 48 seed team names (one-time check)
+3. New Edge Function `poll-scores` — smart poller with active-match guard
+4. Vercel Cron route `GET /api/cron/poll-scores` → invokes the Edge Function every 5 min
+5. Extend `audit_log` inserts to capture auto-score events for admin visibility
+
+---
+
+## Audit Hardening + Transparency — Implementation Plan
+
+### Goal
+Give every player proof that the admin (Sergio) played fair — predictions submitted on time, scores entered honestly, no backdating. The audit log becomes a public trust layer, not just an internal debug tool.
+
+### What gets logged (additions to current single trigger)
+
+**1. Match score entries** — server action level, fires when admin saves a result via `/admin/matches`
+- Fields: `action = 'match_score_entered'`, `table_name = 'matches'`, `record_id = match_id`
+- `new_value`: `{ match: "Mexico vs South Africa", home_score: 2, away_score: 1, entered_by: "Sergio", entered_at: <timestamp> }`
+- Proves: score was entered after the match, not before predictions were locked
+
+**2. Lock / unlock actions** — server action level, fires from `/admin/locks`
+- Fields: `action = 'stage_locked'` or `'stage_unlocked'`, `table_name = 'matches'`
+- `new_value`: `{ stage: "group", locked_at: <timestamp>, acted_by: "Sergio" }`
+- Proves: lock timestamps match scheduled kick-off windows, not manipulated post-submission
+
+**3. User management actions** — server action level, fires from `/admin/users`
+- Actions: `'user_invited'`, `'user_removed'`, `'paid_toggled'`, `'admin_toggled'`
+- `new_value`: `{ email, display_name, change, acted_by: "Sergio" }`
+- Proves: who was added/removed and when; no silent manipulation of the user list
+
+**4. Admin's own predictions** — same DB trigger already captures score recomputes; add explicit log on admin's prediction saves (same server actions regular users use)
+- `action = 'prediction_saved'`, `user_id = admin's UUID`
+- `new_value`: `{ type: "pre_tournament" | "match", submitted_at: <timestamp> }`
+- Proves: admin submitted picks before the June 7 lock, same as everyone else
+- Note: `submitted_at` timestamp is server-side, not client-trusted
+
+**5. Score recomputes** — already partially logged via DB trigger; add explicit log on manual recompute button press
+- `action = 'scores_recomputed'`, `user_id = null` (system) or admin UUID
+- Proves: recomputes happened after match results were entered, not before
+
+---
+
+### Audit report — user-facing request flow (semi-automated)
+
+**User side — "Request Audit Report" button**
+- Lives on `/dashboard` or `/leaderboard`, visible to all authenticated users
+- On click: fires a server action that sends an email to `sergio.barrientos1401@gmail.com` via Resend
+- Email subject: `⚽ Audit report requested — {display_name}`
+- Email body: who requested it, their user ID, and a direct link to `/admin/audit`
+- User sees a confirmation: "Your request has been sent. Sergio will send you the report shortly."
+- No throttle bypass — one request per user per day (store last request timestamp in `profiles`)
+
+**Admin side — generate + send the report**
+- `/admin/audit` gets a "Generate Report" button (or per-user filter)
+- Admin filters audit log by user (or exports all), clicks "Send Report"
+- Server action compiles the relevant audit entries into a clean HTML email (Resend)
+- Email goes directly to the requesting user's address with:
+  - Admin's prediction timestamps (proof of on-time submission)
+  - All score entry events (proof scores entered post-match)
+  - All lock/unlock events (proof locks fired correctly)
+  - Recompute history (proof of fair scoring)
+- Admin can also print the filtered audit view to PDF from the browser (`@media print` already in the app)
+
+---
+
+### What needs to be built
+
+1. Add `audit_log` inserts to 5 server actions: `saveMatchScore`, `lockStage`, `unlockStage`, `inviteUser`, `removeUser`, `togglePaid`, `toggleAdmin`
+2. Add `prediction_saved` log entry to admin's own pre-tournament and match prediction saves (same actions regular users call — just log `user_id` + timestamp)
+3. Add `last_audit_request_at` column to `profiles` table (migration 006 or 007) for rate-limiting
+4. "Request Audit Report" button on `/dashboard` — server action sends Resend email to admin
+5. `/admin/audit` — add per-user filter dropdown + "Send Report" button that emails the requesting user
+6. Resend email template for the audit report — clean, printable HTML with all relevant log entries
 
 ---
 
