@@ -1,4 +1,5 @@
-import { getUser, createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getFlag } from '@/lib/teams/meta'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
@@ -7,14 +8,14 @@ const MEDALS = ['🥇', '🥈', '🥉']
 
 export async function LeaderboardMiniWidget() {
   const user = await getUser()
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
   const [{ data: scores }, { data: champPreds }] = await Promise.all([
-    supabase
+    admin
       .from('scores')
       .select('user_id, total_points, profile:profiles(display_name)')
       .order('total_points', { ascending: false }),
-    supabase
+    admin
       .from('pre_tournament_predictions')
       .select('user_id, team:teams!champion_team_id(code)'),
   ])

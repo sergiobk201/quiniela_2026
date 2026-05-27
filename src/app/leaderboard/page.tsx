@@ -1,4 +1,5 @@
-import { getUser, createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import LeaderboardTable from './leaderboard-table'
 import { getFlag } from '@/lib/teams/meta'
@@ -9,10 +10,10 @@ export default async function LeaderboardPage() {
   const user = await getUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
   const [{ data: scores }, { data: champPreds }] = await Promise.all([
-    supabase
+    admin
       .from('scores')
       .select(`
         user_id, pre_tournament_points, group_stage_points,
@@ -21,7 +22,7 @@ export default async function LeaderboardPage() {
       `)
       .order('total_points', { ascending: false }),
     // RLS: returns own row pre-lock, all rows after lock (locked = TRUE)
-    supabase
+    admin
       .from('pre_tournament_predictions')
       .select('user_id, team:teams!champion_team_id(code)'),
   ])
