@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,14 @@ import { checkEmailExists, sendInviteRequest } from './actions'
 type Result = 'sent_link' | 'sent_invite_request' | null
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
+  )
+}
+
+function LoginContent() {
   const searchParams = useSearchParams()
   const linkExpired = searchParams.get('error') === 'auth'
   const [email, setEmail] = useState('')
