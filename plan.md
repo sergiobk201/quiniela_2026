@@ -203,9 +203,9 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [ ] **Daily prediction grid** — panel below the leaderboard table showing every player's picks for today's matches at a glance. Layout: rows = players (champion flag + name), columns = today's locked matches (team vs team). Each cell shows the player's predicted score (e.g. `2–1`). Only renders post-lock (same RLS gate). No separate page — embedded in `/leaderboard` below the standings table. Requires: post-lock SELECT policy on `match_predictions` (covered by migration 006), server query filtered by `DATE(scheduled_at) = today`, group by `user_id` + `match_id`.
 - [x] **Champion-themed UI** — live color update on champion/rebuy select; luminance clamping for dark/light mode; CSS vars on nav, score card, progress bar, leaderboard row
 - [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
-- [ ] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
+- [x] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
 - [ ] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
-- [ ] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
+- [x] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
 - [ ] **Audit hardening + transparency** — full plan below; admin honesty guarantee for all players
 
 ---

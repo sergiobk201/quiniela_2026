@@ -212,3 +212,34 @@ Spent the session fighting a subtle 3-way bug: recursive RLS + www/non-www misma
 
 ### Summary
 Full Phase 5 security hardening (RLS write-locks, server action guards, HTTP headers, server-side lock validation). Portfolio README written. Full UI overhaul: football color palette, live champion theming with luminance clamping, flag emojis on every team reference across all pages. Deployed to production. App is visually complete and production-hardened.
+
+---
+
+## [Day 6] — 2026-05-26 (Phase 5.5 E2E Testing + Phase 7 Quick Wins)
+
+### Completed
+
+**Phase 5.5 — E2E Battle Testing (partial)**
+- **Login & Auth** — 14/14 ✅ all checks passed on prod
+- **Nav & Global UI** — 8/8 ✅ all checks passed on prod
+- Remaining sections (Pre-Tournament, Group Stage, Knockout, Rebuy, Receipt, Leaderboard, Dashboard, Admin, Security) deferred to next session
+
+**Phase 7 — Quick Wins (both shipped)**
+- **Leaderboard mini-widget** (`src/components/leaderboard/mini-widget.tsx`) — embedded card on `/dashboard` below Predictions; shows top 3 with medals + champion flags; dashed divider + "your rank" row when user is outside top 3; champion-color highlight on current user row
+- **Public leaderboard** (`/leaderboard/public`) — shareable, no auth required; service-role client bypasses RLS; ranked table with champion flags; copy-link button; sign-in CTA
+
+### Fixed
+- **`?error=auth` on login page** — expired/consumed magic links now show a red banner instead of a blank form (`useSearchParams` + Suspense wrapper)
+- **iOS home screen icon** — added `src/app/apple-icon.png` (Next.js App Router `apple-touch-icon` convention)
+- **Leaderboard & mini-widget RLS bug** — `profiles` FK join via anon client silently returned null due to RLS; switched both to `createAdminClient()` (server-side only, safe)
+- **Vercel build failure** — `useSearchParams()` without Suspense boundary caused static prerender to crash; fixed by wrapping `LoginContent` in `<Suspense>`
+
+### Lessons Learned
+- PostgREST FK embeds (`profile:profiles(...)`) are subject to RLS on the child table — if RLS blocks the join, the parent query silently returns null data. Use `createAdminClient()` in server components for intentionally public data like leaderboard scores
+- `useSearchParams()` in a client page component requires a `<Suspense>` boundary in Next.js 16 for static prerender to succeed — wrap the content component, not the page export
+- Always wait for `git push` before running `vercel --prod` — Vercel CLI deploys from local files directly; git and Vercel state can diverge
+
+## Session Log: 2026-05-26 (Session 4 — E2E Testing + Phase 7 Quick Wins)
+
+### Summary
+Completed E2E testing for Login & Auth (14/14) and Nav & Global UI (8/8). Shipped both Phase 7 quick wins: leaderboard mini-widget on dashboard and public shareable leaderboard. Fixed 3 bugs found during testing: expired magic link UX, iOS home screen icon, and a silent RLS join failure on the leaderboard. 6 commits, all deployed to production.
