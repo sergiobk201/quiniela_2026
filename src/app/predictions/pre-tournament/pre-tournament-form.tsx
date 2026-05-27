@@ -189,13 +189,26 @@ export default function PreTournamentForm({
     return teams.filter(t => t.group_id === groupId && !usedIds.includes(t.id))
   }
 
-  function toggleQualifier(teamId: number) {
+  function getPosInGroup(teamId: number, groupId: number): 1 | 2 | 3 | 4 | null {
+    const s = groupStandings[groupId]
+    if (!s) return null
+    if (s.predicted_1st === teamId) return 1
+    if (s.predicted_2nd === teamId) return 2
+    if (s.predicted_3rd === teamId) return 3
+    if (s.predicted_4th === teamId) return 4
+    return null
+  }
+
+  function toggleQualifier(teamId: number, groupId: number) {
     setSelectedQualifiers(prev => {
       const next = new Set(prev)
       if (next.has(teamId)) {
         next.delete(teamId)
-      } else if (next.size < 8) {
-        next.add(teamId)
+      } else {
+        // One per group: remove any existing pick from this group
+        const groupTeamIds = teams.filter(t => t.group_id === groupId).map(t => t.id)
+        for (const id of groupTeamIds) next.delete(id)
+        if (next.size < 8) next.add(teamId)
       }
       return next
     })
@@ -367,6 +380,7 @@ export default function PreTournamentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {groups.map(group => {
             const groupTeams = teams.filter(t => t.group_id === group.id)
+            const groupHasSelection = groupTeams.some(t => selectedQualifiers.has(t.id))
             return (
               <Card key={group.id}>
                 <CardHeader>
@@ -375,24 +389,39 @@ export default function PreTournamentForm({
                 <CardContent className="space-y-1">
                   {groupTeams.map(team => {
                     const isSelected = selectedQualifiers.has(team.id)
-                    const isMaxed = !isSelected && selectedQualifiers.size >= 8
+                    const pos = getPosInGroup(team.id, group.id)
+                    const isIneligible = pos === 1 || pos === 2 || pos === 4
+                    const isMaxed = !isSelected && !groupHasSelection && selectedQualifiers.size >= 8
+                    const isDisabled = locked || isIneligible || (isMaxed && !isSelected)
+
                     return (
                       <label
                         key={team.id}
                         className={`flex items-center gap-2 text-sm rounded px-2 py-1 transition-colors ${
-                          locked || isMaxed
-                            ? 'opacity-40 cursor-not-allowed'
+                          isDisabled
+                            ? 'cursor-not-allowed'
                             : 'cursor-pointer hover:bg-muted'
-                        } ${isSelected ? 'bg-muted' : ''}`}
+                        } ${isIneligible ? 'opacity-30' : isMaxed ? 'opacity-40' : ''} ${
+                          isSelected ? 'bg-muted' : ''
+                        }`}
                       >
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => !locked && toggleQualifier(team.id)}
-                          disabled={locked || isMaxed}
+                          onChange={() => !locked && !isIneligible && toggleQualifier(team.id, group.id)}
+                          disabled={isDisabled}
                           className="accent-primary"
                         />
-                        {team.name}
+                        <span className={isIneligible ? 'text-muted-foreground' : ''}>
+                          {getFlag(team.code)} {team.name}
+                        </span>
+                        {pos !== null && (
+                          <span className={`ml-auto text-xs font-medium shrink-0 ${
+                            pos === 3 ? 'text-amber-500' : 'text-muted-foreground/50'
+                          }`}>
+                            {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd ✓' : '4th'}
+                          </span>
+                        )}
                       </label>
                     )
                   })}
