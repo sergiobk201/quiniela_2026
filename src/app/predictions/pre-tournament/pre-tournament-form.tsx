@@ -136,34 +136,22 @@ export default function PreTournamentForm({
 
   function handleSaveTrophy() {
     startTrophyTransition(async () => {
-      try {
-        await saveTrophyAndAwards(trophy)
-        toast.success('Trophy & Awards saved')
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Save failed')
-      }
+      const { error } = await saveTrophyAndAwards(trophy)
+      error ? toast.error(error) : toast.success('Trophy & Awards saved')
     })
   }
 
   function handleSaveStandings() {
     startStandingsTransition(async () => {
-      try {
-        await saveGroupStandings(Object.values(groupStandings))
-        toast.success('Group standings saved')
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Save failed')
-      }
+      const { error } = await saveGroupStandings(Object.values(groupStandings))
+      error ? toast.error(error) : toast.success('Group standings saved')
     })
   }
 
   function handleSaveQualifiers() {
     startQualifiersTransition(async () => {
-      try {
-        await saveThirdPlaceQualifiers(Array.from(selectedQualifiers))
-        toast.success('3rd-place qualifiers saved')
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Save failed')
-      }
+      const { error } = await saveThirdPlaceQualifiers(Array.from(selectedQualifiers))
+      error ? toast.error(error) : toast.success('3rd-place qualifiers saved')
     })
   }
 

@@ -17,7 +17,6 @@ export async function lockStage(stage: string) {
 export async function unlockStage(stage: string) {
   await assertAdmin()
   const admin = createAdminClient()
-  // Reset to 1 hour before each match's scheduled_at
   const { data: matches } = await admin
     .from('matches')
     .select('id, scheduled_at')
@@ -41,13 +40,21 @@ export async function unlockStage(stage: string) {
 export async function lockPreTournament() {
   await assertAdmin()
   const admin = createAdminClient()
-  await admin.from('pre_tournament_predictions').update({ locked: true }).neq('locked', true)
+  await admin
+    .from('pre_tournament_predictions')
+    .update({ locked: true })
+    .eq('locked', false)
   revalidatePath('/admin/locks')
+  revalidatePath('/predictions/pre-tournament')
 }
 
 export async function unlockPreTournament() {
   await assertAdmin()
   const admin = createAdminClient()
-  await admin.from('pre_tournament_predictions').update({ locked: false }).neq('locked', false)
+  await admin
+    .from('pre_tournament_predictions')
+    .update({ locked: false })
+    .eq('locked', true)
   revalidatePath('/admin/locks')
+  revalidatePath('/predictions/pre-tournament')
 }

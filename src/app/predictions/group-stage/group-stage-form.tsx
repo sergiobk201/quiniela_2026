@@ -68,12 +68,8 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
       if (!Number.isInteger(h) || !Number.isInteger(a) || h < 0 || a < 0) return
 
       setStatus(match.id, 'saving')
-      try {
-        await saveMatchPrediction(match.id, h, a)
-        setStatus(match.id, 'saved')
-      } catch {
-        setStatus(match.id, 'error')
-      }
+      const { error } = await saveMatchPrediction(match.id, h, a)
+      setStatus(match.id, error ? 'error' : 'saved')
     },
     [scores]
   )

@@ -7,10 +7,10 @@ export async function saveMatchPrediction(
   matchId: number,
   homeScore: number,
   awayScore: number
-) {
+): Promise<{ error: string | null }> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) throw new Error('Unauthenticated')
+  if (authError || !user) return { error: 'Not authenticated' }
 
   const { data: match, error: matchError } = await supabase
     .from('matches')
@@ -18,10 +18,10 @@ export async function saveMatchPrediction(
     .eq('id', matchId)
     .single()
 
-  if (matchError || !match) throw new Error('Match not found')
-  if (isMatchLocked(match.locked_at)) throw new Error('Match is locked')
+  if (matchError || !match) return { error: 'Match not found' }
+  if (isMatchLocked(match.locked_at)) return { error: 'This match is locked' }
   if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0 || homeScore > 20 || awayScore > 20) {
-    throw new Error('Invalid score')
+    return { error: 'Invalid score' }
   }
 
   const { error } = await supabase
@@ -36,5 +36,6 @@ export async function saveMatchPrediction(
       { onConflict: 'user_id,match_id' }
     )
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
+  return { error: null }
 }
