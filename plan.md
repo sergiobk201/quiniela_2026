@@ -92,9 +92,9 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Mobile: stadium image stacks above the form, not clipped or distorted
 - [x] Unauthenticated access to `/dashboard`, `/predictions/*`, `/leaderboard` → redirected to `/login`
 - [x] Unauthenticated access to `/admin/*` → redirected to `/login`
-- [ ] Non-admin user accessing `/admin/*` → redirected away (not just hidden in nav)
+- [x] Non-admin user accessing `/admin/*` → redirected away (not just hidden in nav)
 - [x] Sign out → session cleared, redirect to `/login`, back button does not re-enter
-- [ ] Expired magic link → `/login?error=auth` shows red banner "Magic link expired or already used" (deploy required)
+- [x] Expired magic link → `/login?error=auth` shows red banner "Magic link expired or already used"
 
 #### Nav & Global UI
 - [ ] ⚽ `Quiniela` / `2026` logo renders with correct weight split and champion color
