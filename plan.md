@@ -81,19 +81,20 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 > Must be 100% green before sending invites. Test against prod (`quiniela2026.space`).
 
 #### Login Page & Auth
-- [ ] Known email → magic link sent, "Check your inbox 📬" confirmation state shown
-- [ ] Unknown email → invite request email fires to `sergio.barrientos1401@gmail.com`, "Request sent 🙋" state shown with $10 fee explanation card
-- [ ] Resend email arrives with correct subject `⚽ Invite request — {email}` and link to `/admin/users`
-- [ ] "Try a different email" link resets form from both confirmation states
-- [ ] Login page is dark mode only — no theme toggle visible (unauthenticated)
-- [ ] Stadium hero image loads, dark overlay renders, all text is legible (no image bleed-through)
-- [ ] Trophy frosted glass card readable against hero image
-- [ ] Stat pills (`104 matches`, `48 teams`, etc.) visible and not washed out
-- [ ] Mobile: stadium image stacks above the form, not clipped or distorted
-- [ ] Unauthenticated access to `/dashboard`, `/predictions/*`, `/leaderboard` → redirected to `/login`
-- [ ] Unauthenticated access to `/admin/*` → redirected to `/login`
+- [x] Known email → magic link sent, "Check your inbox 📬" confirmation state shown
+- [x] Unknown email → invite request email fires to `sergio.barrientos1401@gmail.com`, "Request sent 🙋" state shown with $10 fee explanation card
+- [x] Resend email arrives with correct subject `⚽ Invite request — {email}` and link to `/admin/users`
+- [x] "Try a different email" link resets form from both confirmation states
+- [x] Login page is dark mode only — no theme toggle visible (unauthenticated)
+- [x] Stadium hero image loads, dark overlay renders, all text is legible (no image bleed-through)
+- [x] Trophy frosted glass card readable against hero image
+- [x] Stat pills (`104 matches`, `48 teams`, etc.) visible and not washed out
+- [x] Mobile: stadium image stacks above the form, not clipped or distorted
+- [x] Unauthenticated access to `/dashboard`, `/predictions/*`, `/leaderboard` → redirected to `/login`
+- [x] Unauthenticated access to `/admin/*` → redirected to `/login`
 - [ ] Non-admin user accessing `/admin/*` → redirected away (not just hidden in nav)
-- [ ] Sign out → session cleared, redirect to `/login`, back button does not re-enter
+- [x] Sign out → session cleared, redirect to `/login`, back button does not re-enter
+- [ ] Expired magic link → `/login?error=auth` shows red banner "Magic link expired or already used" (deploy required)
 
 #### Nav & Global UI
 - [ ] ⚽ `Quiniela` / `2026` logo renders with correct weight split and champion color
@@ -199,6 +200,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 
 - [ ] **Auto-pull match scores** — full plan below; zero admin input needed during the tournament
 - [ ] **Pick comparison viewer** — `/leaderboard/[userId]` page showing any player's full prediction receipt post-lock; DB RLS already enforces visibility (returns empty pre-lock); link from leaderboard row; add missing post-lock SELECT policies for `group_standing_predictions`, `third_place_qualifier_predictions`, and `champion_rebuys` (migration 006)
+- [ ] **Daily prediction grid** — panel below the leaderboard table showing every player's picks for today's matches at a glance. Layout: rows = players (champion flag + name), columns = today's locked matches (team vs team). Each cell shows the player's predicted score (e.g. `2–1`). Only renders post-lock (same RLS gate). No separate page — embedded in `/leaderboard` below the standings table. Requires: post-lock SELECT policy on `match_predictions` (covered by migration 006), server query filtered by `DATE(scheduled_at) = today`, group by `user_id` + `match_id`.
 - [x] **Champion-themed UI** — live color update on champion/rebuy select; luminance clamping for dark/light mode; CSS vars on nav, score card, progress bar, leaderboard row
 - [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
 - [ ] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*

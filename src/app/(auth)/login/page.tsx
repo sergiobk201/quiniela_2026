@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,8 @@ import { checkEmailExists, sendInviteRequest } from './actions'
 type Result = 'sent_link' | 'sent_invite_request' | null
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
+  const linkExpired = searchParams.get('error') === 'auth'
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<Result>(null)
@@ -123,6 +126,17 @@ export default function LoginPage() {
           Enter your email to sign in or request an invite.
         </p>
       </div>
+
+      {/* Expired / consumed link banner */}
+      {linkExpired && (
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive space-y-1">
+          <p className="font-semibold">Magic link expired or already used</p>
+          <p className="text-xs leading-relaxed opacity-90">
+            Email security scanners sometimes consume links before you click them.
+            Enter your email below to get a fresh one.
+          </p>
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-3">
