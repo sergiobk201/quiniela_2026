@@ -1,17 +1,26 @@
 import { getUser } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { isPreTournamentLocked } from '@/lib/utils/lock'
 import LeaderboardTable from './leaderboard-table'
+import PicksGrid, { type PlayerPick, type GroupStandingsRow, type MatchRow } from './picks-grid'
 import { getFlag } from '@/lib/teams/meta'
 
 export const dynamic = 'force-dynamic'
+
+const STAGE_LABELS: Record<string, string> = {
+  group: 'Group Stage', r32: 'R32', r16: 'R16',
+  qf: 'QF', sf: 'SF', '3rd': '3rd', final: 'Final',
+}
 
 export default async function LeaderboardPage() {
   const user = await getUser()
   if (!user) redirect('/login')
 
   const admin = createAdminClient()
+  const picksVisible = isPreTournamentLocked()
 
+  // Core leaderboard data — always fetched
   const [{ data: scores }, { data: champPreds }] = await Promise.all([
     admin
       .from('scores')
@@ -21,7 +30,6 @@ export default async function LeaderboardPage() {
         profile:profiles(display_name)
       `)
       .order('total_points', { ascending: false }),
-    // RLS: returns own row pre-lock, all rows after lock (locked = TRUE)
     admin
       .from('pre_tournament_predictions')
       .select('user_id, team:teams!champion_team_id(code)'),
@@ -52,6 +60,98 @@ export default async function LeaderboardPage() {
   const top3 = rows.slice(0, 3)
   const userRow = rows.find((r) => r.isCurrentUser)
   const userNotInTop3 = userRow && userRow.rank > 3
+
+  // Picks grid data — always fetched (gate is UI-only)
+  const [
+    { data: allTeams },
+    { data: allGroups },
+    { data: allMatches },
+    { data: prePreds },
+    { data: standingsPreds },
+    { data: qualifierPreds },
+    { data: matchPreds },
+    { data: rebuys },
+  ] = await Promise.all([
+    admin.from('teams').select('id, name, code'),
+    admin.from('groups').select('id, name').order('name'),
+    admin.from('matches').select('id, stage, scheduled_at, home_team:teams!home_team_id(name, code), away_team:teams!away_team_id(name, code)').order('scheduled_at'),
+    admin.from('pre_tournament_predictions').select('*'),
+    admin.from('group_standing_predictions').select('*'),
+    admin.from('third_place_qualifier_predictions').select('user_id, team_ids'),
+    admin.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score'),
+    admin.from('champion_rebuys').select('user_id, team_id'),
+  ])
+
+  // Build lookup maps
+  const teamName = new Map((allTeams ?? []).map(t => [t.id, t.name]))
+  const teamCode = new Map((allTeams ?? []).map(t => [t.id, t.code]))
+
+  function flaggedTeam(id: number | null | undefined): string {
+    if (!id) return '—'
+    const name = teamName.get(id)
+    const code = teamCode.get(id)
+    return name ? (code ? `${getFlag(code)} ${name}` : name) : '—'
+  }
+
+  // players list (ordered by leaderboard rank)
+  const players = rows.map(r => ({ userId: r.userId, displayName: r.displayName }))
+
+  // Pre-tournament picks per user
+  const playerPicks: PlayerPick[] = players.map(p => {
+    const pre = (prePreds ?? []).find(r => r.user_id === p.userId)
+    const qual = (qualifierPreds ?? []).find(r => r.user_id === p.userId)
+    const rebuy = (rebuys ?? []).find(r => r.user_id === p.userId)
+    return {
+      userId: p.userId,
+      displayName: p.displayName,
+      preTournament: pre ? {
+        champion: flaggedTeam(pre.champion_team_id),
+        runnerUp: flaggedTeam(pre.runner_up_team_id),
+        thirdPlace: flaggedTeam(pre.third_place_team_id),
+        goldenBoot: pre.golden_boot_player ?? '',
+        goldenGlove: pre.golden_glove_player ?? '',
+        kopa: pre.kopa_player ?? '',
+        totalGoals: pre.total_goals_prediction?.toString() ?? '—',
+        firstEliminated: flaggedTeam(pre.first_eliminated_team_id),
+        mostYellows: flaggedTeam(pre.most_yellows_team_id),
+      } : null,
+      qualifiers: ((qual?.team_ids ?? []) as number[]).map(id => flaggedTeam(id)),
+      rebuy: rebuy ? flaggedTeam(rebuy.team_id) : null,
+    }
+  })
+
+  // Group standings — one row per group, picks for each player
+  const groupStandings: GroupStandingsRow[] = (allGroups ?? []).map(g => ({
+    groupId: g.id,
+    groupName: g.name,
+    picks: players.map(p => {
+      const s = (standingsPreds ?? []).find(r => r.user_id === p.userId && r.group_id === g.id)
+      return {
+        userId: p.userId,
+        pos1: s ? flaggedTeam(s.predicted_1st) : '—',
+        pos2: s ? flaggedTeam(s.predicted_2nd) : '—',
+        pos3: s ? flaggedTeam(s.predicted_3rd) : '—',
+        pos4: s ? flaggedTeam(s.predicted_4th) : '—',
+      }
+    }),
+  }))
+
+  // Match predictions — one row per match, predictions per player
+  const matchRows: MatchRow[] = (allMatches ?? []).map(m => {
+    const home = m.home_team as unknown as { name: string; code: string } | null
+    const away = m.away_team as unknown as { name: string; code: string } | null
+    const date = new Date(m.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+    return {
+      matchId: m.id,
+      stage: m.stage as string,
+      homeTeam: home ? `${getFlag(home.code)} ${home.code}` : 'TBD',
+      awayTeam: away ? `${getFlag(away.code)} ${away.code}` : 'TBD',
+      label: `${STAGE_LABELS[m.stage as string] ?? m.stage} · ${date}`,
+      predictions: (matchPreds ?? [])
+        .filter(mp => mp.match_id === m.id)
+        .map(mp => ({ userId: mp.user_id, home: mp.predicted_home_score, away: mp.predicted_away_score })),
+    }
+  })
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -105,6 +205,17 @@ export default async function LeaderboardPage() {
       )}
 
       <LeaderboardTable initialRows={rows} currentUserId={user.id} />
+
+      {/* Picks comparison grid */}
+      <div className="border-t border-border pt-6">
+        <PicksGrid
+          players={players}
+          playerPicks={playerPicks}
+          groupStandings={groupStandings}
+          matches={matchRows}
+          picksVisible={picksVisible}
+        />
+      </div>
     </div>
   )
 }

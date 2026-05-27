@@ -243,3 +243,47 @@ Full Phase 5 security hardening (RLS write-locks, server action guards, HTTP hea
 
 ### Summary
 Completed E2E testing for Login & Auth (14/14) and Nav & Global UI (8/8). Shipped both Phase 7 quick wins: leaderboard mini-widget on dashboard and public shareable leaderboard. Fixed 3 bugs found during testing: expired magic link UX, iOS home screen icon, and a silent RLS join failure on the leaderboard. 6 commits, all deployed to production.
+
+---
+
+## [Day 7] — 2026-05-27 (Phase 5.5 E2E continued + Phase 7 Quick Win)
+
+### Shipped
+
+**Phase 7 — Join Request Payment Screen**
+- `/login` `sent_invite_request` state replaced with interactive two-tab payment screen
+- **Bolivian QR tab**: `qr_bob.jpeg` rendered via `next/image` on white card with banking app hint
+- **USDC/ETH tab**: wallet address in monospace, one-click clipboard copy with 3s green check, prominent ETH-network-only red warning
+- Tab toggle + copy state reset on "Try a different email"
+
+### Fixed (bugs found during E2E)
+
+- **Sonner `<Toaster>` never mounted** — imported in 6 components but missing from root layout; no toasts fired anywhere in the app except login. Fixed: added `<Toaster richColors position="bottom-right" />` to root layout.
+- **Trophy dropdowns allowed duplicate picks** — Champion/Runner-up/3rd Place all showed all 48 teams; same team selectable in all three slots. Fixed: derive `available` teams per slot by excluding the other two selected IDs (same pattern as group standings deduplication).
+- **3rd-Place Qualifiers UX** — no group constraint; any 4 teams from one group could be selected. Fixed:
+  - One selection per group enforced: selecting a new team auto-deselects the previous pick from the same group
+  - Position-aware styling from group standings state: 1st/2nd/4th → `opacity-30` + disabled; predicted 3rd → amber `3rd ✓` badge
+  - Flag emojis added to all qualifier rows
+- **Server action errors showed generic Next.js digest in production** — all prediction actions used `throw new Error(...)` which Next.js sanitizes to `"An error occurred in the Server Components render..."`. Fixed: all actions now return `{ error: string | null }` for expected errors; form handlers use `result.error` directly.
+- **Admin pre-tournament lock/unlock broken** — unlock did nothing visible; user remained locked. Root causes: (1) save actions only checked date-based `isPreTournamentLocked()`, not the DB `locked` column the admin sets; (2) `unlockPreTournament` used `.neq('locked', false)` and only revalidated `/admin/locks`, not `/predictions/pre-tournament`. Fixed: save actions now check DB `locked` column via `checkLocked()` helper; both lock/unlock actions use explicit `.eq()` filters and revalidate both paths.
+
+### Phase 5.5 E2E Progress
+
+| Section | Status |
+|---|---|
+| Login & Auth | ✅ 14/14 |
+| Nav & Global UI | ✅ 8/8 |
+| Pre-Tournament Predictions | ✅ 10/10 (incl. admin lock/unlock) |
+| Group Stage Predictions | 🔲 Next |
+| Knockout Predictions | 🔲 Pending |
+| Rebuy | 🔲 Pending |
+| Receipt | 🔲 Pending |
+| Leaderboard | 🔲 Pending |
+| Dashboard | 🔲 Pending |
+| Admin | 🔲 Pending |
+| Security | 🔲 Pending |
+
+### Lessons Learned
+- `throw` in Next.js server actions → production digest error (message sanitized). Always `return { error }` for user-facing validation failures; reserve `throw` for truly unexpected errors.
+- Admin DB-level lock (`locked = true` column) and app-level date lock (`isPreTournamentLocked()`) must both be checked in save actions — they are independent mechanisms.
+- `revalidatePath` in a lock/unlock action must revalidate BOTH the admin page and the affected user-facing page, or the user won't see the state change without a manual reload.

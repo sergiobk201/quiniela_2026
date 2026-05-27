@@ -107,16 +107,16 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Favicon shows on iOS home screen when added as PWA shortcut
 
 #### Pre-Tournament Predictions
-- [ ] Submit champion, runner-up, 3rd place — verify saved in DB
-- [ ] Champion color theme updates instantly on dropdown change (before save)
-- [ ] Page background wash shifts to team color immediately on champion select
-- [ ] Flag emojis appear in all dropdowns and on save confirmation
-- [ ] Individual awards (Golden Boot, Glove, Kopa) — text fields save correctly
-- [ ] Fun Bets (total goals, first eliminated, most yellows) — save and reload correctly
-- [ ] Group Standings — all 12 groups, each position deduplicated (no same team in 2 slots)
-- [ ] 3rd-Place Qualifiers — select exactly 8 of 12, save button disabled until 8 selected
-- [ ] Reload page — all saved values persist correctly across all 3 tabs
-- [ ] After June 4 lock: all inputs disabled, "Predictions are locked" shown
+- [x] Submit champion, runner-up, 3rd place — verify saved in DB
+- [x] Champion color theme updates instantly on dropdown change (before save)
+- [x] Page background wash shifts to team color immediately on champion select
+- [x] Flag emojis appear in all dropdowns and on save confirmation
+- [x] Individual awards (Golden Boot, Glove, Kopa) — text fields save correctly
+- [x] Fun Bets (total goals, first eliminated, most yellows) — save and reload correctly
+- [x] Group Standings — all 12 groups, each position deduplicated (no same team in 2 slots)
+- [x] 3rd-Place Qualifiers — select exactly 8 of 12, save button disabled until 8 selected; one per group enforced; position badges from standings
+- [x] Reload page — all saved values persist correctly across all 3 tabs
+- [x] After lock: admin lock/unlock via `/admin/locks` works; shows "Pre-tournament predictions are locked" toast
 
 #### Group Stage Predictions
 - [ ] 72 matches across 12 groups — auto-save on blur fires correctly (status dot: yellow → green)
@@ -204,7 +204,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] **Champion-themed UI** — live color update on champion/rebuy select; luminance clamping for dark/light mode; CSS vars on nav, score card, progress bar, leaderboard row
 - [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
 - [x] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
-- [ ] **Join request payment screen** — on the `sent_invite_request` state of `/login`, replace the static "What happens next" card with a two-step inline screen: (1) message "The admin is reviewing your request — please pay your entrance fee now"; (2) tabbed or stacked payment options: **Bolivian QR** (static image from `/public`) and **USDC on ETH** (wallet address with a one-click copy button using `navigator.clipboard.writeText`, green check on success, plus a prominent warning "Use the ETH network only — other networks will result in lost funds"). Copy must use the full address string with no whitespace to prevent bad pastes.
+- [x] **Join request payment screen** — two-tab inline screen on `sent_invite_request` state: Bolivian QR (static image) + USDC/ETH (wallet address + one-click copy + ETH-only warning). Shipped 2026-05-27.
 - [ ] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [x] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
 - [ ] **Audit hardening + transparency** — full plan below; admin honesty guarantee for all players
