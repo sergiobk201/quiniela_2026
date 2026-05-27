@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getFlag } from '@/lib/teams/meta'
+import { LeaderboardMiniWidget } from '@/components/leaderboard/mini-widget'
 
 export const dynamic = 'force-dynamic'
 
@@ -170,6 +171,8 @@ export default async function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <LeaderboardMiniWidget />
 
       <div className="flex gap-3">
         <Link href="/leaderboard" className="text-sm text-primary hover:underline">

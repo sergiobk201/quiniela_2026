@@ -97,14 +97,14 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Expired magic link → `/login?error=auth` shows red banner "Magic link expired or already used"
 
 #### Nav & Global UI
-- [ ] ⚽ `Quiniela` / `2026` logo renders with correct weight split and champion color
-- [ ] Nav logo color updates when champion changes (no page reload needed)
-- [ ] Theme toggle visible and functional when authenticated
-- [ ] Theme toggle NOT visible on login page
-- [ ] Page background wash updates when champion changes (5% color-mix tint, 0.6s transition)
-- [ ] Background wash works in both light and dark mode without breaking readability
-- [ ] Favicon displays correctly in browser tab (football icon)
-- [ ] Favicon shows on iOS home screen when added as PWA shortcut
+- [x] ⚽ `Quiniela` / `2026` logo renders with correct weight split and champion color
+- [x] Nav logo color updates when champion changes (no page reload needed)
+- [x] Theme toggle visible and functional when authenticated
+- [x] Theme toggle NOT visible on login page
+- [x] Page background wash updates when champion changes (5% color-mix tint, 0.6s transition)
+- [x] Background wash works in both light and dark mode without breaking readability
+- [x] Favicon displays correctly in browser tab (football icon)
+- [x] Favicon shows on iOS home screen when added as PWA shortcut
 
 #### Pre-Tournament Predictions
 - [ ] Submit champion, runner-up, 3rd place — verify saved in DB
