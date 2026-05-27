@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState } from 'react'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,9 @@ import { Input } from '@/components/ui/input'
 import { checkEmailExists, sendInviteRequest } from './actions'
 
 type Result = 'sent_link' | 'sent_invite_request' | null
+type PaymentTab = 'qr' | 'usdc'
+
+const ETH_WALLET = '0x60e4BEBF3a6Ea300867a20Ba4fde37f0183caEE4'
 
 export default function LoginPage() {
   return (
@@ -24,6 +28,8 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<Result>(null)
   const [error, setError] = useState<string | null>(null)
+  const [paymentTab, setPaymentTab] = useState<PaymentTab>('qr')
+  const [copied, setCopied] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -91,29 +97,115 @@ function LoginContent() {
     )
   }
 
-  // Invite request sent to admin
+  // Invite request sent to admin → payment screen
   if (result === 'sent_invite_request') {
+    async function copyWallet() {
+      await navigator.clipboard.writeText(ETH_WALLET)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 3000)
+    }
+
     return (
-      <div className="space-y-6 text-center">
-        <div className="text-5xl">🙋</div>
-        <div className="space-y-2">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="text-4xl">🙋</div>
           <h2 className="text-2xl font-bold">Request sent!</h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
             <span className="font-semibold text-foreground">{email}</span> isn&apos;t
-            on the guest list yet. The admin has been notified and will send your
-            invite shortly.
+            on the guest list yet. The admin is reviewing your request.
           </p>
         </div>
-        <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm text-amber-600 dark:text-amber-400 space-y-1 text-left">
-          <p className="font-semibold">What happens next</p>
-          <p className="text-xs leading-relaxed">
-            The admin will review your request, collect the $10 entry fee, and send
-            your magic link. Keep an eye on your inbox.
+
+        {/* Payment prompt */}
+        <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+          <p className="font-semibold">Pay your $10 entrance fee now</p>
+          <p className="text-xs mt-1 opacity-80 leading-relaxed">
+            Your invite will be sent once payment is confirmed. Choose your method below.
           </p>
         </div>
+
+        {/* Tab toggle */}
+        <div className="flex rounded-lg border border-border overflow-hidden text-sm font-medium">
+          <button
+            onClick={() => setPaymentTab('qr')}
+            className={`flex-1 py-2 transition-colors ${
+              paymentTab === 'qr'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+            }`}
+          >
+            🇧🇴 Bolivian QR
+          </button>
+          <button
+            onClick={() => setPaymentTab('usdc')}
+            className={`flex-1 py-2 transition-colors border-l border-border ${
+              paymentTab === 'usdc'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+            }`}
+          >
+            💠 USDC on ETH
+          </button>
+        </div>
+
+        {/* QR panel */}
+        {paymentTab === 'qr' && (
+          <div className="flex flex-col items-center gap-3">
+            <div className="rounded-xl border border-border bg-white p-3">
+              <Image
+                src="/qr_bob.jpeg"
+                alt="Bolivian QR payment code"
+                width={220}
+                height={220}
+                className="rounded-lg"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              Scan with your Bolivian banking app (Tigo Money, Banco Unión, etc.)
+            </p>
+          </div>
+        )}
+
+        {/* USDC panel */}
+        {paymentTab === 'usdc' && (
+          <div className="space-y-3">
+            {/* ETH-only warning */}
+            <div className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-xs text-destructive leading-relaxed">
+              <span className="font-bold">⚠ Use the ETH network only</span> — sending
+              USDC on any other network (Polygon, Arbitrum, Base, etc.) will result in
+              permanently lost funds.
+            </div>
+
+            {/* Wallet address + copy */}
+            <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 space-y-2">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Wallet address</p>
+              <p className="font-mono text-xs break-all text-foreground select-all leading-relaxed">
+                {ETH_WALLET}
+              </p>
+              <Button
+                onClick={copyWallet}
+                variant="outline"
+                size="sm"
+                className={`w-full text-xs transition-colors ${
+                  copied
+                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                    : ''
+                }`}
+              >
+                {copied ? '✓ Copied!' : 'Copy address'}
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              Send exactly $10 USDC. Include your email in a memo if your wallet supports it.
+            </p>
+          </div>
+        )}
+
         <button
-          onClick={() => { setResult(null); setEmail('') }}
-          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+          onClick={() => { setResult(null); setEmail(''); setPaymentTab('qr'); setCopied(false) }}
+          className="w-full text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
         >
           Try a different email
         </button>
