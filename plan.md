@@ -204,6 +204,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] **Champion-themed UI** — live color update on champion/rebuy select; luminance clamping for dark/light mode; CSS vars on nav, score card, progress bar, leaderboard row
 - [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
 - [x] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
+- [ ] **Join request payment screen** — on the `sent_invite_request` state of `/login`, replace the static "What happens next" card with a two-step inline screen: (1) message "The admin is reviewing your request — please pay your entrance fee now"; (2) tabbed or stacked payment options: **Bolivian QR** (static image from `/public`) and **USDC on ETH** (wallet address with a one-click copy button using `navigator.clipboard.writeText`, green check on success, plus a prominent warning "Use the ETH network only — other networks will result in lost funds"). Copy must use the full address string with no whitespace to prevent bad pastes.
 - [ ] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [x] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
 - [ ] **Audit hardening + transparency** — full plan below; admin honesty guarantee for all players
