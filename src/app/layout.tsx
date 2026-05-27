@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 import { Nav } from "@/components/nav";
 import { ChampionTheme } from "@/components/champion-theme";
 import { getUser, createClient } from "@/lib/supabase/server";
@@ -54,6 +55,7 @@ export default async function RootLayout({
           <ChampionTheme code={championCode} />
           <Nav />
           {children}
+          <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>
     </html>

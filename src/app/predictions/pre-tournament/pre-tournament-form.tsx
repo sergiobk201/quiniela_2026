@@ -216,23 +216,30 @@ export default function PreTournamentForm({
             <CardTitle>Top 3 Finishers</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {TROPHY_FIELDS.map(({ key, label }) => (
-              <div key={key}>
-                <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
-                <TeamSelect
-                  value={trophy[key]}
-                  onChange={id => {
-                    setTrophy(prev => ({ ...prev, [key]: id }))
-                    if (key === 'champion_team_id') {
-                      const code = id ? teams.find(t => t.id === id)?.code ?? null : null
-                      window.dispatchEvent(new CustomEvent('champion-changed', { detail: { code } }))
-                    }
-                  }}
-                  teams={teams}
-                  disabled={locked}
-                />
-              </div>
-            ))}
+            {TROPHY_FIELDS.map(({ key, label }) => {
+              const otherIds = TROPHY_FIELDS
+                .filter(f => f.key !== key)
+                .map(f => trophy[f.key])
+                .filter((id): id is number => id !== null)
+              const available = teams.filter(t => !otherIds.includes(t.id))
+              return (
+                <div key={key}>
+                  <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+                  <TeamSelect
+                    value={trophy[key]}
+                    onChange={id => {
+                      setTrophy(prev => ({ ...prev, [key]: id }))
+                      if (key === 'champion_team_id') {
+                        const code = id ? teams.find(t => t.id === id)?.code ?? null : null
+                        window.dispatchEvent(new CustomEvent('champion-changed', { detail: { code } }))
+                      }
+                    }}
+                    teams={available}
+                    disabled={locked}
+                  />
+                </div>
+              )
+            })}
           </CardContent>
         </Card>
 
