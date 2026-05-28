@@ -18,7 +18,7 @@ export default async function LeaderboardPage() {
   if (!user) redirect('/login')
 
   const admin = createAdminClient()
-  const picksVisible = true // TESTING: revert to isPreTournamentLocked()
+  const picksVisible = isPreTournamentLocked()
 
   // Core leaderboard data — always fetched
   const [{ data: scores }, { data: champPreds }] = await Promise.all([
