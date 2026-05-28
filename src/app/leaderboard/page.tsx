@@ -71,6 +71,7 @@ export default async function LeaderboardPage() {
     { data: qualifierPreds },
     { data: matchPreds },
     { data: rebuys },
+    { data: allProfiles },
   ] = await Promise.all([
     admin.from('teams').select('id, name, code'),
     admin.from('groups').select('id, name').order('name'),
@@ -80,6 +81,7 @@ export default async function LeaderboardPage() {
     admin.from('third_place_qualifier_predictions').select('user_id, team_ids'),
     admin.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score'),
     admin.from('champion_rebuys').select('user_id, team_id'),
+    admin.from('profiles').select('id, display_name').order('display_name'),
   ])
 
   // Build lookup maps
@@ -93,8 +95,14 @@ export default async function LeaderboardPage() {
     return name ? (code ? `${getFlag(code)} ${name}` : name) : '—'
   }
 
-  // players list (ordered by leaderboard rank)
-  const players = rows.map(r => ({ userId: r.userId, displayName: r.displayName }))
+  // players list: ranked users first, then everyone else from profiles alphabetically
+  // decoupled from scores so the grid works even before scoring runs
+  const scoredUserIds = new Set((scores ?? []).map(s => s.user_id))
+  const rankedPlayers = rows.map(r => ({ userId: r.userId, displayName: r.displayName }))
+  const unrankedPlayers = (allProfiles ?? [])
+    .filter(p => !scoredUserIds.has(p.id))
+    .map(p => ({ userId: p.id, displayName: p.display_name ?? 'Unknown' }))
+  const players = [...rankedPlayers, ...unrankedPlayers]
 
   // Pre-tournament picks per user
   const playerPicks: PlayerPick[] = players.map(p => {
@@ -137,19 +145,24 @@ export default async function LeaderboardPage() {
   }))
 
   // Match predictions — one row per match, predictions per player
+  // Only expose predictions for locked matches (59 min before kickoff) to prevent copying
+  const now = Date.now()
   const matchRows: MatchRow[] = (allMatches ?? []).map(m => {
     const home = m.home_team as unknown as { name: string; code: string } | null
     const away = m.away_team as unknown as { name: string; code: string } | null
     const date = new Date(m.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+    const matchLocked = now >= new Date(m.scheduled_at).getTime() - 59 * 60 * 1000
     return {
       matchId: m.id,
       stage: m.stage as string,
       homeTeam: home ? `${getFlag(home.code)} ${home.code}` : 'TBD',
       awayTeam: away ? `${getFlag(away.code)} ${away.code}` : 'TBD',
       label: `${STAGE_LABELS[m.stage as string] ?? m.stage} · ${date}`,
-      predictions: (matchPreds ?? [])
-        .filter(mp => mp.match_id === m.id)
-        .map(mp => ({ userId: mp.user_id, home: mp.predicted_home_score, away: mp.predicted_away_score })),
+      predictions: matchLocked
+        ? (matchPreds ?? [])
+            .filter(mp => mp.match_id === m.id)
+            .map(mp => ({ userId: mp.user_id, home: mp.predicted_home_score, away: mp.predicted_away_score }))
+        : [],
     }
   })
 
@@ -158,7 +171,7 @@ export default async function LeaderboardPage() {
       <div>
         <h1 className="text-2xl font-bold">Leaderboard</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Updates live · {rows.length} participants
+          Updates live · {players.length} participants
         </p>
       </div>
 
