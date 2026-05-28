@@ -287,3 +287,57 @@ Completed E2E testing for Login & Auth (14/14) and Nav & Global UI (8/8). Shippe
 - `throw` in Next.js server actions → production digest error (message sanitized). Always `return { error }` for user-facing validation failures; reserve `throw` for truly unexpected errors.
 - Admin DB-level lock (`locked = true` column) and app-level date lock (`isPreTournamentLocked()`) must both be checked in save actions — they are independent mechanisms.
 - `revalidatePath` in a lock/unlock action must revalidate BOTH the admin page and the affected user-facing page, or the user won't see the state change without a manual reload.
+
+## Session Log: 2026-05-27 (Session 7 — Picks Grid Polish + Code Audit + Testing)
+
+### Summary
+Completed the picks comparison grid feature end-to-end: built, audited, hardened, and tested on production. Decoupled the picks grid from the `scores` table so it works before scoring runs. Established match prediction visibility gating server-side (59 min before kickoff). Discovered and fixed 6 code quality issues found during audit. Ran manual E2E tests on production with `picksVisible = true` temporarily deployed.
+
+### Shipped
+
+**Picks Grid — Code Hardening (`src/app/leaderboard/picks-grid.tsx`)**
+- `stagesWithPicks` moved before state declarations; `matchStage` now initializes to `stagesWithPicks[0]` via lazy initializer instead of hardcoded `'group'`
+- `isSearchActive` flag derived from `search.trim().length > 0` — single source of truth for all empty-state messages
+- Empty states added to all 5 tabs when search yields no results:
+  - Trophy & Awards: `colSpan={10}` row in tbody
+  - Group Standings: message replaces entire grid
+  - 3rd-Place Qualifiers: message replaces table
+  - Match Predictions: message replaces table (stage pills still visible)
+  - Rebuys: context-aware message — "No rebuys for this player." vs "No rebuys submitted yet."
+
+**Picks Grid — Data Layer Fix (`src/app/leaderboard/page.tsx`)**
+- Added `profiles` query to picks grid `Promise.all` (9th parallel fetch)
+- `players` list now built from `profiles` directly: ranked users (from `scores`) appear first, unranked profiles append alphabetically — grid works even when `scores` table is empty
+- Match predictions now gated server-side: predictions only sent to client for matches where `now >= scheduled_at - 59 min`; unlocked matches send empty `predictions: []` so no picks are exposed pre-lock
+- Participant count updated to reflect `players.length` (all profiles) instead of `rows.length` (only scored users)
+
+### Fixed
+- **Picks grid empty when `scores` table has no data** — `players` list was built from `scores`; if no scores computed, no players shown. Fixed by sourcing `players` from `profiles` with scores-based ordering as a fallback.
+- **Match predictions leaked pre-kickoff** — all predictions were always sent to client regardless of match lock time. Fixed with server-side 59-min gate.
+
+### Testing
+- Deployed `picksVisible = true` to production for manual E2E grid testing
+- Confirmed picks grid shows all participants from `profiles` (8 with pre-tournament picks, 2 with group standings, 1 with match predictions, 8 with qualifiers, 0 rebuys)
+- Confirmed match prediction gating: all `—` before June 11 (no matches locked yet)
+- Confirmed gate message restores correctly after reverting to `isPreTournamentLocked()`
+
+### Phase 5.5 E2E Progress
+
+| Section | Status |
+|---|---|
+| Login & Auth | ✅ 14/14 |
+| Nav & Global UI | ✅ 8/8 |
+| Pre-Tournament Predictions | ✅ 10/10 |
+| Group Stage Predictions | 🔲 Next |
+| Knockout Predictions | 🔲 Pending |
+| Rebuy | 🔲 Pending |
+| Receipt | 🔲 Pending |
+| Leaderboard | 🔲 Pending |
+| Dashboard | 🔲 Pending |
+| Admin | 🔲 Pending |
+| Security | 🔲 Pending |
+
+### Lessons Learned
+- `scores` table is admin-triggered (via `/admin/scoring`), not auto-populated — never source participant lists from it; always use `profiles` as the source of truth for who exists in the system.
+- PostgREST + admin client bypasses RLS; match prediction visibility must be enforced in server component logic, not RLS alone, when using service-role key.
+- Empty states must be context-aware: "No players match your search" vs "No X submitted yet" — `isSearchActive` flag makes this clean without prop drilling.
