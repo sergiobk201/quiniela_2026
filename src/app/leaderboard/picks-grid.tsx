@@ -52,8 +52,9 @@ const STAGE_LABELS: Record<string, string> = {
 }
 
 export default function PicksGrid({ players, playerPicks, groupStandings, matches, picksVisible }: Props) {
+  const stagesWithPicks = STAGE_ORDER.filter(s => matches.some(m => m.stage === s))
   const [search, setSearch] = useState('')
-  const [matchStage, setMatchStage] = useState('group')
+  const [matchStage, setMatchStage] = useState<string>(() => stagesWithPicks[0] ?? 'group')
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -63,7 +64,7 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
 
   const filteredIds = new Set(filtered.map(p => p.userId))
   const filteredPicks = playerPicks.filter(p => filteredIds.has(p.userId))
-  const stagesWithPicks = STAGE_ORDER.filter(s => matches.some(m => m.stage === s))
+  const isSearchActive = search.trim().length > 0
 
   return (
     <div className="space-y-4">
@@ -113,7 +114,13 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPicks.map(p => (
+                  {filteredPicks.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground text-xs">
+                        {isSearchActive ? 'No players match your search.' : 'No picks submitted yet.'}
+                      </td>
+                    </tr>
+                  ) : filteredPicks.map(p => (
                     <tr key={p.userId} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="px-3 py-2 font-medium sticky left-0 bg-background border-r border-border">
                         {p.displayName}
@@ -142,6 +149,11 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
 
           {/* ── Group Standings ── */}
           <TabsContent value="standings" className="mt-4">
+            {filtered.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {isSearchActive ? 'No players match your search.' : 'No standings picks submitted yet.'}
+              </p>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {groupStandings.map(group => (
                 <div key={group.groupId} className="rounded-md border border-border overflow-x-auto">
@@ -175,10 +187,16 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                 </div>
               ))}
             </div>
+            )}
           </TabsContent>
 
           {/* ── 3rd-Place Qualifiers ── */}
           <TabsContent value="qualifiers" className="mt-4">
+            {filteredPicks.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {isSearchActive ? 'No players match your search.' : 'No qualifier picks submitted yet.'}
+              </p>
+            ) : (
             <div className="rounded-md border border-border overflow-hidden">
               <table className="text-xs w-full">
                 <thead>
@@ -207,6 +225,7 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                 </tbody>
               </table>
             </div>
+            )}
           </TabsContent>
 
           {/* ── Match Predictions ── */}
@@ -228,6 +247,11 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
               ))}
             </div>
 
+            {filtered.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {isSearchActive ? 'No players match your search.' : 'No match predictions submitted yet.'}
+              </p>
+            ) : (
             <div className="overflow-x-auto rounded-md border border-border">
               <table className="text-xs w-full min-w-[400px]">
                 <thead>
@@ -262,6 +286,7 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                 </tbody>
               </table>
             </div>
+            )}
           </TabsContent>
 
           {/* ── Rebuys ── */}
@@ -286,7 +311,9 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                 </table>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-6 text-center">No rebuys submitted yet.</p>
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {isSearchActive ? 'No rebuys for this player.' : 'No rebuys submitted yet.'}
+              </p>
             )}
           </TabsContent>
         </Tabs>
