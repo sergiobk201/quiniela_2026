@@ -81,7 +81,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       </div>
 
       {/* Right panel — form */}
-      <div className="flex items-center justify-center bg-background md:w-[420px] shrink-0 p-8 md:p-12">
+      <div className="flex items-start md:items-center justify-center bg-background md:w-[420px] shrink-0 p-8 md:p-12 overflow-y-auto">
         <div className="w-full max-w-sm">
           {/* Locale toggle — top right of form panel */}
           <div className="flex justify-end mb-4">

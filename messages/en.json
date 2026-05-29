@@ -52,7 +52,9 @@
     "copied": "✓ Copied!",
     "usdcHint": "Send exactly $10 USDC. Include your email in a memo if your wallet supports it.",
     "tryDifferentEmail": "Try a different email",
-    "sendError": "Could not send request. Try again."
+    "sendError": "Could not send request. Try again.",
+    "continue": "Continue",
+    "checking": "Checking…"
   },
   "authLayout": {
     "tagline": "The biggest stage.",
@@ -207,7 +209,10 @@
     "faq3q": "When do scores update?",
     "faq3a": "After each match, the admin enters the result and triggers a recompute. The leaderboard updates live.",
     "faq4q": "How is the upset bonus awarded?",
-    "faq4a": "When the admin marks a match as an upset AND you correctly predicted the result, you get +3 pts flat."
+    "faq4a": "When the admin marks a match as an upset AND you correctly predicted the result, you get +3 pts flat.",
+    "date1": "June 7, 2026",
+    "date2": "June 11, 2026",
+    "date3": "July 19, 2026"
   },
   "predictions": {
     "groupStageTitle": "Group Stage Predictions",

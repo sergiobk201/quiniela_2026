@@ -52,7 +52,9 @@
     "copied": "✓ ¡Copiado!",
     "usdcHint": "Envía exactamente $10 USDC. Incluye tu correo en el memo si tu billetera lo permite.",
     "tryDifferentEmail": "Probar con otro correo",
-    "sendError": "No se pudo enviar la solicitud. Intenta de nuevo."
+    "sendError": "No se pudo enviar la solicitud. Intenta de nuevo.",
+    "continue": "Continuar",
+    "checking": "Verificando…"
   },
   "authLayout": {
     "tagline": "El mayor escenario.",
@@ -207,7 +209,10 @@
     "faq3q": "¿Cuándo se actualizan los puntajes?",
     "faq3a": "Después de cada partido, el admin ingresa el resultado y actualiza el marcador. La clasificación se actualiza en tiempo real.",
     "faq4q": "¿Cómo se otorga el bono por sorpresa?",
-    "faq4a": "Cuando el admin marca un partido como sorpresa Y tú predijiste el resultado correctamente, obtienes +3 pts fijos."
+    "faq4a": "Cuando el admin marca un partido como sorpresa Y tú predijiste el resultado correctamente, obtienes +3 pts fijos.",
+    "date1": "7 de junio de 2026",
+    "date2": "11 de junio de 2026",
+    "date3": "19 de julio de 2026"
   },
   "predictions": {
     "groupStageTitle": "Pronósticos Fase de Grupos",

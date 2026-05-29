@@ -23,9 +23,9 @@ export default async function RulesPage() {
         <h2 className="text-lg font-semibold">{t('keyDates')}</h2>
         <div className="border rounded-lg divide-y text-sm">
           {[
-            { date: 'June 7, 2026',  label: t('date1Label'), highlight: true },
-            { date: 'June 11, 2026', label: t('date2Label') },
-            { date: 'July 19, 2026', label: t('date3Label') },
+            { date: t('date1'), label: t('date1Label'), highlight: true },
+            { date: t('date2'), label: t('date2Label') },
+            { date: t('date3'), label: t('date3Label') },
           ].map(({ date, label, highlight }) => (
             <div
               key={date}
