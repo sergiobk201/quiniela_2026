@@ -1,33 +1,37 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
-import { Nav } from "@/components/nav";
-import { ChampionTheme } from "@/components/champion-theme";
-import { getUser, createClient } from "@/lib/supabase/server";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { ThemeProvider } from 'next-themes'
+import { Toaster } from 'sonner'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages, getLocale } from 'next-intl/server'
+import { Nav } from '@/components/nav'
+import { ChampionTheme } from '@/components/champion-theme'
+import { getUser, createClient } from '@/lib/supabase/server'
+import './globals.css'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "Quiniela 2026",
-  description: "World Cup 2026 prediction game",
-};
+  title: 'Quiniela 2026',
+  description: 'World Cup 2026 prediction game',
+}
 
 export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
-  // Fetch champion pick server-side to avoid theme flash
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   let championCode: string | null = null
   try {
     const user = await getUser()
@@ -46,18 +50,20 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <ChampionTheme code={championCode} />
-          <Nav />
-          {children}
-          <Toaster richColors position="bottom-right" />
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+            <ChampionTheme code={championCode} />
+            <Nav locale={locale} />
+            {children}
+            <Toaster richColors position="bottom-right" />
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
-  );
+  )
 }

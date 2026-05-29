@@ -4,8 +4,9 @@ import { getIsAdmin } from '@/lib/supabase/admin'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SignOutButton } from '@/components/sign-out-button'
 import { NavLinks } from '@/components/nav-links'
+import { LocaleToggle } from '@/components/locale-toggle'
 
-export async function Nav() {
+export async function Nav({ locale }: { locale: string }) {
   const user = await getUser()
   const isAdmin = user ? await getIsAdmin(user.id) : false
 
@@ -33,6 +34,7 @@ export async function Nav() {
 
         <div className="flex items-center gap-3">
           {user && <NavLinks isAdmin={isAdmin} />}
+          <LocaleToggle locale={locale} />
           {user && <ThemeToggle />}
           {user && (
             <>

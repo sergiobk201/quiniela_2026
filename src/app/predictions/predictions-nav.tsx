@@ -2,22 +2,24 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const LINKS = [
-  { href: '/predictions/pre-tournament', label: 'Pre-Tournament' },
-  { href: '/predictions/group-stage', label: 'Groups' },
-  { href: '/predictions/r32', label: 'R32' },
-  { href: '/predictions/r16', label: 'R16' },
-  { href: '/predictions/qf', label: 'QF' },
-  { href: '/predictions/sf', label: 'SF' },
-  { href: '/predictions/3rd', label: '3rd' },
-  { href: '/predictions/final', label: 'Final' },
-  { href: '/predictions/rebuy', label: 'Rebuy' },
-  { href: '/predictions/receipt', label: 'Receipt' },
-]
+import { useTranslations } from 'next-intl'
 
 export default function PredictionsNav() {
+  const t = useTranslations('predictions')
   const pathname = usePathname()
+
+  const LINKS = [
+    { href: '/predictions/pre-tournament', label: t('preTournament') },
+    { href: '/predictions/group-stage',    label: t('groups') },
+    { href: '/predictions/r32',            label: t('r32') },
+    { href: '/predictions/r16',            label: t('r16') },
+    { href: '/predictions/qf',             label: t('qf') },
+    { href: '/predictions/sf',             label: t('sf') },
+    { href: '/predictions/3rd',            label: t('thirdPlace') },
+    { href: '/predictions/final',          label: t('final') },
+    { href: '/predictions/rebuy',          label: t('rebuy') },
+    { href: '/predictions/receipt',        label: t('receipt') },
+  ]
 
   return (
     <nav className="border-b bg-background print:hidden">

@@ -1,5 +1,6 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import GroupStageForm from './group-stage-form'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,7 @@ export default async function GroupStagePage() {
   const user = await getUser()
   if (!user) redirect('/login')
 
+  const t = await getTranslations('predictions')
   const supabase = await createClient()
 
   const [{ data: rawMatches }, { data: groups }, { data: rawPredictions }] =
@@ -54,7 +56,7 @@ export default async function GroupStagePage() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Group Stage Predictions</h1>
+        <h1 className="text-2xl font-bold">{t('groupStageTitle')}</h1>
       </div>
       <GroupStageForm
         matches={matches}

@@ -2,25 +2,18 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getFlag } from '@/lib/teams/meta'
 import { LeaderboardMiniWidget } from '@/components/leaderboard/mini-widget'
 
 export const dynamic = 'force-dynamic'
 
-const PREDICTION_LINKS = [
-  { href: '/predictions/pre-tournament', label: 'Pre-Tournament Picks' },
-  { href: '/predictions/group-stage',    label: 'Group Stage' },
-  { href: '/predictions/r32',            label: 'Round of 32' },
-  { href: '/predictions/r16',            label: 'Round of 16' },
-  { href: '/predictions/qf',             label: 'Quarter-Finals' },
-  { href: '/predictions/sf',             label: 'Semi-Finals' },
-  { href: '/predictions/final',          label: 'Final' },
-]
-
 export default async function DashboardPage() {
   const user = await getUser()
   if (!user) redirect('/login')
+
+  const t = await getTranslations('dashboard')
 
   const supabase = await createClient()
   const [
@@ -46,29 +39,38 @@ export default async function DashboardPage() {
   const totalPts = score?.total_points ?? 0
 
   const breakdown = [
-    { label: 'Pre-Tournament',  pts: score?.pre_tournament_points ?? 0 },
-    { label: 'Group Stage',     pts: score?.group_stage_points    ?? 0 },
-    { label: 'Knockout',        pts: score?.knockout_points       ?? 0 },
-    { label: 'Rebuy',           pts: score?.rebuy_points          ?? 0 },
+    { label: t('preTournament'), pts: score?.pre_tournament_points ?? 0 },
+    { label: t('groupStage'),    pts: score?.group_stage_points    ?? 0 },
+    { label: t('knockout'),      pts: score?.knockout_points       ?? 0 },
+    { label: t('rebuy'),         pts: score?.rebuy_points          ?? 0 },
+  ]
+
+  const predictionLinks = [
+    { href: '/predictions/pre-tournament', label: t('preTournamentPicks') },
+    { href: '/predictions/group-stage',    label: t('groupStageLabel') },
+    { href: '/predictions/r32',            label: t('r32') },
+    { href: '/predictions/r16',            label: t('r16') },
+    { href: '/predictions/qf',             label: t('quarterFinals') },
+    { href: '/predictions/sf',             label: t('semiFinals') },
+    { href: '/predictions/final',          label: t('final') },
   ]
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
-          Welcome back, {profile?.display_name ?? user.email}
+          {t('welcomeBack', { name: profile?.display_name ?? user.email })}
         </h1>
         {profile !== null && !profile.entry_paid && (
           <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
-            Entry fee not yet marked as paid — contact the admin.
+            {t('entryFeeWarning')}
           </p>
         )}
       </div>
 
-      {/* Score summary */}
       <Card style={{ borderTop: '3px solid var(--champion-primary)' }}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Your Score</CardTitle>
+          <CardTitle className="text-base">{t('yourScore')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-5xl font-bold mb-4 tabular-nums" style={{ color: 'var(--champion-primary)' }}>
@@ -82,10 +84,9 @@ export default async function DashboardPage() {
               </div>
             ))}
           </div>
-          {/* Prediction fill progress */}
           <div className="mt-4 space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Match predictions filled</span>
+              <span>{t('matchPredsFilled')}</span>
               <span className="font-medium">{matchPredCount ?? 0} / 104</span>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -100,17 +101,16 @@ export default async function DashboardPage() {
           </div>
           {score?.last_computed_at && (
             <p className="text-xs text-muted-foreground mt-3">
-              Last computed: {new Date(score.last_computed_at).toLocaleString()}
+              {t('lastComputed', { date: new Date(score.last_computed_at).toLocaleString() })}
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* Champion + rebuy */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Your Champion Pick</CardTitle>
+            <CardTitle className="text-base">{t('championPick')}</CardTitle>
           </CardHeader>
           <CardContent>
             {champion ? (
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <Link href="/predictions/pre-tournament" className="text-sm text-primary hover:underline">
-                Add your champion pick →
+                {t('addChampionPick')}
               </Link>
             )}
           </CardContent>
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Champion Rebuy</CardTitle>
+            <CardTitle className="text-base">{t('championRebuy')}</CardTitle>
           </CardHeader>
           <CardContent>
             {rebuy?.submitted_at ? (
@@ -138,28 +138,27 @@ export default async function DashboardPage() {
               </p>
             ) : rebuy ? (
               <Link href="/predictions/rebuy" className="text-sm text-primary hover:underline">
-                Rebuy available — pick now →
+                {t('rebuyAvailable')}
               </Link>
             ) : (
-              <p className="text-sm text-muted-foreground">Not yet unlocked</p>
+              <p className="text-sm text-muted-foreground">{t('rebuyNotUnlocked')}</p>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Predictions quick-links */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">
-            Predictions
+            {t('predictions')}
             <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {matchPredCount ?? 0} / 104 matches filled
+              {t('matchesFilled', { count: matchPredCount ?? 0 })}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {PREDICTION_LINKS.map(({ href, label }) => (
+            {predictionLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
@@ -176,10 +175,10 @@ export default async function DashboardPage() {
 
       <div className="flex gap-3">
         <Link href="/leaderboard" className="text-sm text-primary hover:underline">
-          View leaderboard →
+          {t('viewLeaderboard')}
         </Link>
         <Link href="/predictions/receipt" className="text-sm text-primary hover:underline">
-          Download receipt →
+          {t('downloadReceipt')}
         </Link>
       </div>
     </div>

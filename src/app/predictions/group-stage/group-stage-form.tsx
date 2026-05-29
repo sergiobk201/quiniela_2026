@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useTranslations } from 'next-intl'
 import { saveMatchPrediction } from './actions'
 import { isMatchLocked } from '@/lib/utils/lock'
 import { getFlag } from '@/lib/teams/meta'
@@ -42,6 +43,7 @@ function StatusDot({ status }: { status: SaveStatus }) {
 }
 
 export default function GroupStageForm({ matches, groups, predictions }: Props) {
+  const t = useTranslations('predictions')
   const [scores, setScores] = useState<Record<number, { home: string; away: string }>>(() => {
     const init: Record<number, { home: string; away: string }> = {}
     for (const m of matches) {
@@ -85,7 +87,7 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
   return (
     <Tabs defaultValue={String(groups[0]?.id)}>
       <p className="text-muted-foreground text-sm mb-3">
-        {totalFilled} / {matches.length} matches filled · Each match locks 1 hour before kickoff
+        {t('groupStageSub', { filled: totalFilled, total: matches.length })}
       </p>
       <TabsList className="flex-wrap h-auto gap-1 justify-start">
         {groups.map((g) => {
@@ -113,10 +115,10 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50 text-muted-foreground text-xs">
-                    <th className="px-3 py-2 text-left">Date</th>
-                    <th className="px-3 py-2 text-right">Home</th>
-                    <th className="px-3 py-2 text-center w-24">Score</th>
-                    <th className="px-3 py-2 text-left">Away</th>
+                    <th className="px-3 py-2 text-left">{t('date')}</th>
+                    <th className="px-3 py-2 text-right">{t('home')}</th>
+                    <th className="px-3 py-2 text-center w-24">{t('score')}</th>
+                    <th className="px-3 py-2 text-left">{t('away')}</th>
                     <th className="px-3 py-2 w-4" />
                   </tr>
                 </thead>
