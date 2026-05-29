@@ -89,7 +89,7 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
       <p className="text-muted-foreground text-sm mb-3">
         {t('groupStageSub', { filled: totalFilled, total: matches.length })}
       </p>
-      <TabsList className="flex-wrap h-auto gap-1 justify-start">
+      <TabsList className="flex-wrap !h-auto w-full gap-1 justify-start">
         {groups.map((g) => {
           const groupMatches = matches.filter((m) => m.group_id === g.id)
           const filled = groupMatches.filter((m) => {
@@ -97,8 +97,8 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
             return s?.home !== '' && s?.away !== ''
           }).length
           return (
-            <TabsTrigger key={g.id} value={String(g.id)} className="text-xs">
-              Group {g.name}
+            <TabsTrigger key={g.id} value={String(g.id)} className="text-xs flex-none">
+              {t('groupLabel', { name: g.name })}
               <span className="ml-1 text-muted-foreground">
                 {filled}/{groupMatches.length}
               </span>
