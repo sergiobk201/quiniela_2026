@@ -119,11 +119,12 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] After lock: admin lock/unlock via `/admin/locks` works; shows "Pre-tournament predictions are locked" toast
 
 #### Group Stage Predictions
-- [ ] 72 matches across 12 groups — auto-save on blur fires correctly (status dot: yellow → green)
-- [ ] Invalid input (letters, > 20) rejected without error thrown
-- [ ] Locked match (`locked_at < now()`) — input disabled, score not editable
-- [ ] Group tab completion counter updates as matches are filled (X/6)
-- [ ] Reload — all saved scores persist
+- [x] 72 matches across 12 groups — auto-save on blur fires correctly (status dot: yellow → green)
+- [x] Invalid input (letters, > 20, leading zeros) rejected without error thrown
+- [x] Locked match (`locked_at < now()`) — input disabled, score not editable
+- [x] Group tab completion counter updates live as matches are filled (X/6)
+- [x] All 12 group tabs visible including K/L — tab height and flex behavior fixed
+- [x] Reload — all saved scores persist
 
 #### Knockout Predictions
 - [ ] All 6 stages (r32/r16/qf/sf/3rd/final) load correctly
@@ -205,6 +206,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] **Flag emoji on all team mentions** — pre-tournament form, group-stage, knockout, rebuy, receipt, admin match-row, dashboard, leaderboard
 - [x] **Leaderboard mini-widget** — floating card on `/dashboard` showing top 3 + user rank without leaving the page *(top-3 podium on `/leaderboard` already done)*
 - [x] **Join request payment screen** — two-tab inline screen on `sent_invite_request` state: Bolivian QR (static image) + USDC/ETH (wallet address + one-click copy + ETH-only warning). Shipped 2026-05-27.
+- [x] **EN/ES i18n** — cookie-based locale via `next-intl`; 480+ strings; flag emoji toggle on every page including login; no URL restructure. Shipped 2026-05-28.
 - [ ] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [x] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
 - [ ] **Audit hardening + transparency** — full plan below; admin honesty guarantee for all players

@@ -341,3 +341,65 @@ Completed the picks comparison grid feature end-to-end: built, audited, hardened
 - `scores` table is admin-triggered (via `/admin/scoring`), not auto-populated — never source participant lists from it; always use `profiles` as the source of truth for who exists in the system.
 - PostgREST + admin client bypasses RLS; match prediction visibility must be enforced in server component logic, not RLS alone, when using service-role key.
 - Empty states must be context-aware: "No players match your search" vs "No X submitted yet" — `isSearchActive` flag makes this clean without prop drilling.
+
+---
+
+## [Day 8] — 2026-05-28 (i18n + Bug Fixes + UX Polish)
+
+### Shipped
+
+**Phase 7 — Full EN/ES Internationalization**
+- `next-intl` v4 installed and wired via `getRequestConfig` → reads `NEXT_LOCALE` cookie; no URL restructure (routes stay `/dashboard`, `/leaderboard`, etc.)
+- `NextIntlClientProvider` wraps root layout; `getLocale()` / `getMessages()` server helpers used throughout
+- `LocaleToggle` client component — `useTransition` + `router.refresh()` on cookie set; renders 🇺🇸/🇪🇸 flag emoji; present on every page including login
+- `setLocale` server action writes `NEXT_LOCALE` cookie (1-year expiry, `sameSite: lax`)
+- **480+ strings** across namespaces: `common`, `nav`, `login`, `authLayout`, `dashboard`, `leaderboard`, `rules`, `predictions`, `admin`, `error`, `notFound`
+- All user-facing pages translated: nav, login, auth layout, dashboard, rules, group-stage form + page, pre-tournament form, knockout form + page, rebuy form + page, receipt, leaderboard table + mini-widget + public page, picks grid (all 5 tabs), error/not-found
+- Admin pages intentionally kept in English (user decision)
+- `STAGE_LABELS`, `TROPHY_FIELDS`, `AWARD_FIELDS`, `STANDING_POSITION_KEYS` arrays moved inside components to use `t()` calls
+
+**Phase 5.5 — Group Stage Input Hardening**
+- Leading-zero guard: `value.length > 1 && value.startsWith('0')` rejects `"00"`, `"007"`, etc.
+- Live x/72 counter: moved from server-rendered subtitle to `GroupStageForm` client state; derived from `scores` state — updates on every keystroke
+
+### Fixed
+
+- **Group K/L hidden/stretched** — `TabsList` base class bakes `group-data-horizontal/tabs:h-8` (a CSS variant selector that beats plain `h-auto`); wrapped row was clipped to 32px. Fix: `!h-auto` (Tailwind important modifier) forces override; `w-full` gives flex container a proper wrap boundary; `flex-none` on each `TabsTrigger` prevents K/L from ballooning to 50% width when alone on last row.
+- **Login "Continue" button showing raw key** — `continue` and `checking` keys absent from both `en.json` and `es.json`; added to both files.
+- **Rules dates not translating** — dates were hardcoded English strings (`'June 7, 2026'`). Moved to `t('date1/2/3')` with Spanish equivalents (`7 de junio de 2026`).
+- **Mobile login hero clipping** — hero panel `h-56` (224px) + `overflow-hidden` + `justify-end`; full content stack (logo + tagline + description + stats + trophy) was ~360px; ~200px overflowed upward and got clipped. Fix: hide description (`hidden md:block`), stat pills (`hidden md:flex`), and trophy card (`hidden md:flex`) on mobile; reduce spacing to `space-y-3` and tagline to `text-3xl`. Visible content (logo + tagline) now fits within 224px.
+- **Mobile form panel positioning** — right panel `items-center` vertically centered the form; on small viewports the form was taller than remaining height and top was clipped. Fix: `items-start md:items-center` + `overflow-y-auto`.
+- **`dangerouslySetInnerHTML` in rules page** — was used to render `<strong>{max}</strong>` inside translation strings. XSS risk removed; numbers embedded directly in translation strings.
+- **TypeScript: `matchesByStage[stage]?.length` type error in receipt page** — `number | undefined` not assignable to next-intl param type. Fixed: `?? 0` fallback.
+
+### Phase 5.5 E2E Progress
+
+| Section | Status |
+|---|---|
+| Login & Auth | ✅ 14/14 |
+| Nav & Global UI | ✅ 8/8 |
+| Pre-Tournament Predictions | ✅ 10/10 |
+| Group Stage Predictions | ✅ Bugs found and fixed (zero guard, live counter, K/L tabs) |
+| Knockout Predictions | 🔲 Pending |
+| Rebuy | 🔲 Pending |
+| Receipt | 🔲 Pending |
+| Leaderboard | 🔲 Pending |
+| Dashboard | 🔲 Pending |
+| Admin | 🔲 Pending |
+| Security | 🔲 Pending |
+
+### Deployed
+- `vercel --prod` → `https://www.quiniela2026.space`
+- Build: 21 routes, TypeScript clean, 0 errors, Turbopack
+
+### Lessons Learned
+- `next-intl` v4 cookie-based locale avoids URL restructuring entirely — `getRequestConfig` reads `NEXT_LOCALE` cookie; all existing routes stay unchanged; no `[locale]` segment required.
+- Tailwind CSS variant selectors (e.g. `group-data-horizontal/tabs:h-8`) beat unconditional utilities (`h-auto`) on specificity — use Tailwind's `!` important modifier to force the override when you can't edit the component source.
+- `flex-1` on wrapping flex items causes last-row items to stretch across the full row width — `flex-none` is required on each item when the container uses `flex-wrap`.
+- On mobile Safari, a hero panel with `overflow-hidden` + `justify-end` and content taller than the container clips the TOP (overflow goes upward) — content below the viewport bottom is not the issue; content above the panel top is.
+- Always keep `dangerouslySetInnerHTML` out of translation strings — embed dynamic values as interpolation params (`{count}`) instead.
+
+## Session Log: 2026-05-28 (Session 8 — i18n + E2E Bug Fixes)
+
+### Summary
+Shipped full EN/ES internationalization across the entire user-facing app (480+ strings, 21 routes) using `next-intl` v4 with cookie-based locale — no URL restructure. Group stage hardened: leading-zero input guard and live x/72 counter. Fixed 5 bugs found during live mobile testing: login button key missing, rules dates hardcoded in English, mobile hero overflow clipping all content above the tagline, groups K/L clipped by shadcn's fixed tab height, and locale toggle showing text labels instead of flags. All fixes deployed to production. 8 commits total.
