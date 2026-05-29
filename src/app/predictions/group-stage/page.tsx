@@ -55,9 +55,6 @@ export default async function GroupStagePage() {
     <div className="max-w-4xl mx-auto p-6 space-y-4">
       <div>
         <h1 className="text-2xl font-bold">Group Stage Predictions</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {predictions.length} / {matches.length} matches filled · Each match locks 1 hour before kickoff
-        </p>
       </div>
       <GroupStageForm
         matches={matches}

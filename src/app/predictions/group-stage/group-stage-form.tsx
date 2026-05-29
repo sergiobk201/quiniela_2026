@@ -75,14 +75,19 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
   )
 
   function updateScore(matchId: number, side: 'home' | 'away', value: string) {
-    if (value !== '' && (!/^\d+$/.test(value) || Number(value) > 20)) return
+    if (value !== '' && (!/^\d+$/.test(value) || Number(value) > 20 || (value.length > 1 && value.startsWith('0')))) return
     setScores((prev) => ({ ...prev, [matchId]: { ...prev[matchId], [side]: value } }))
     setStatus(matchId, 'idle')
   }
 
+  const totalFilled = Object.values(scores).filter((s) => s.home !== '' && s.away !== '').length
+
   return (
     <Tabs defaultValue={String(groups[0]?.id)}>
-      <TabsList className="flex-wrap h-auto gap-1">
+      <p className="text-muted-foreground text-sm mb-3">
+        {totalFilled} / {matches.length} matches filled · Each match locks 1 hour before kickoff
+      </p>
+      <TabsList className="flex-wrap h-auto gap-1 justify-start">
         {groups.map((g) => {
           const groupMatches = matches.filter((m) => m.group_id === g.id)
           const filled = groupMatches.filter((m) => {
