@@ -36,6 +36,11 @@ The system enforces hard prediction deadlines via dual-layer lock enforcement: R
 - 📡 **Real-time leaderboard** — Supabase Realtime subscription pushes score updates to all clients without polling.
 - 🛡 **Hardened admin panel** — Full CRUD for matches, locks, scores, and users. All 11 admin Server Actions gated by `assertAdmin()` (service-role `is_admin` check) to block action-endpoint abuse.
 - 🖨 **Prediction receipt** — Print-to-PDF snapshot of all predictions with dedicated print CSS, shareable before the lock date.
+- 🌐 **EN/ES language toggle** — Cookie-based locale switching via `next-intl`; 480+ strings translated across all user-facing pages; toggle present on every route including login — no URL restructure required.
+- 📋 **Picks comparison grid** — Leaderboard section showing every user's predictions side-by-side across all 7 match stages with search, stage tabs, and score overlays.
+- 🌍 **Public leaderboard** — `/leaderboard/public` serves a live ranked standings page with no authentication required; shareable link for non-participants.
+- 🏆 **Live champion theming** — Selected champion pick propagates a trophy glow + gradient across the leaderboard row in real time via a custom DOM event bus.
+- 📱 **PWA-ready icons** — Custom favicon and Apple touch icon for iOS home screen installation.
 
 ---
 
@@ -181,9 +186,12 @@ UPDATE profiles SET is_admin = TRUE WHERE id = '<your-auth-user-id>';
 - [x] Real-time leaderboard — Supabase Realtime, top-3 podium, per-user rank card
 - [x] Security hardening — RLS write locks, admin action guards, HTTP security headers
 - [x] Production deploy — Vercel · `quiniela2026.space` · Resend SMTP · custom domain DNS
+- [x] Public leaderboard — `/leaderboard/public`, no auth required, live ranked standings
+- [x] Picks comparison grid — side-by-side view of all users' predictions across all stages
+- [x] EN/ES i18n — `next-intl` cookie-based locale, 480+ strings, full site coverage
+- [x] PWA icons — custom favicon + Apple touch icon for iOS home screen
 - [ ] Auto-pull match scores — scheduled Edge Function polling Football-Data.org free tier
-- [ ] Public read-only leaderboard — `/leaderboard/public`, no auth required
-- [ ] Onboard 25 users — magic link invites via admin panel
+- [ ] Onboard 25 users — magic link invites via admin panel (deadline: June 7, 2026)
 
 See [plan.md](plan.md) for the full session-by-session breakdown.
 
@@ -191,6 +199,10 @@ See [plan.md](plan.md) for the full session-by-session breakdown.
 
 ## 📝 Changelog
 
+- **Day 8** — Full EN/ES i18n via `next-intl` (cookie-based, 480+ strings, all user pages). Group-stage input hardening: leading-zero guard, live x/72 counter. Production deploy.
+- **Day 7** — Picks comparison grid (5 stage tabs, search, score overlays). Leaderboard hardening: decoupled grid from scores table, admin client for score queries, edge-case guards.
+- **Day 6** — Smarter 3rd-place qualifier UX (position-based eligibility). Toast/Toaster mount fix. Join request payment screen for waitlisted users. Admin lock fix.
+- **Day 5** — Login redesign (animated stat pills, champion glow). Flag emojis everywhere. Live champion theming. Public leaderboard + mini-widget. PKCE auth restore, expired-link handling, React `cache()` dedup. PWA icons.
 - **Day 4** — Production deploy, custom domain (`quiniela2026.space`), Resend SMTP, admin auth hardening via service-role pattern
 - **Day 3** — Full prediction suite, Deno scoring engine, real-time leaderboard, dashboard, `/rules` page, loading skeletons, error boundaries
 - **Day 2** — DB seeded (48 teams, 104 matches), magic link auth, layout shell, all 4 admin sections
