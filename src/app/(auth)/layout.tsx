@@ -21,7 +21,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/85 via-black/70 to-black/30" />
 
         <div className="relative z-10 flex flex-col justify-end md:justify-center h-full p-8 md:p-12 text-white">
-          <div className="max-w-md space-y-6">
+          <div className="max-w-md space-y-3 md:space-y-6">
             <div className="flex items-center gap-2">
               <span className="text-2xl" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.8))' }}>⚽</span>
               <span
@@ -34,21 +34,21 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
             <div className="space-y-3">
               <h1
-                className="text-4xl md:text-5xl font-black leading-tight tracking-tight"
+                className="text-3xl md:text-5xl font-black leading-tight tracking-tight"
                 style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
               >
                 {t('tagline')}{' '}
                 <span className="text-amber-400">{t('taglineHighlight')}</span>
               </h1>
               <p
-                className="text-base md:text-lg leading-relaxed"
+                className="hidden md:block text-base md:text-lg leading-relaxed"
                 style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
               >
                 {t('description')}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="hidden md:flex flex-wrap gap-2">
               {(['stat1', 'stat2', 'stat3', 'stat4'] as const).map((key) => (
                 <span
                   key={key}
@@ -61,7 +61,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
             </div>
 
             <div
-              className="flex items-center gap-4 pt-2 rounded-xl px-4 py-3"
+              className="hidden md:flex items-center gap-4 pt-2 rounded-xl px-4 py-3"
               style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
             >
               <div className="relative w-12 h-12 shrink-0">
