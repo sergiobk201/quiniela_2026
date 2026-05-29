@@ -20,10 +20,10 @@ export function LocaleToggle({ locale }: { locale: string }) {
     <button
       onClick={toggle}
       disabled={isPending}
-      className="text-xs font-semibold px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors disabled:opacity-50"
+      className="text-base px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors disabled:opacity-50"
       aria-label="Toggle language"
     >
-      {locale === 'en' ? 'ES' : 'EN'}
+      {locale === 'en' ? '🇪🇸' : '🇺🇸'}
     </button>
   )
 }
