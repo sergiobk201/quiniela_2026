@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { submitRebuy } from './actions'
@@ -21,12 +22,14 @@ interface Props {
   teams: { id: number; name: string; code: string }[]
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-Finals',
-  sf: 'Semi-Finals', '3rd': '3rd Place', final: 'Final',
-}
-
 export default function RebuyForm({ rebuy, originalChampion, originalChampionCode, teams }: Props) {
+  const t = useTranslations('predictions')
+
+  const STAGE_LABELS: Record<string, string> = {
+    r32: t('stageR32'), r16: t('stageR16'), qf: t('stageQF'),
+    sf: t('stageSF'), '3rd': t('stage3rd'), final: t('stageFinal'),
+  }
+
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(
     rebuy?.team_id ?? null
   )
@@ -34,63 +37,62 @@ export default function RebuyForm({ rebuy, originalChampion, originalChampionCod
 
   function handleTeamChange(id: number | null) {
     setSelectedTeamId(id)
-    const code = id ? teams.find(t => t.id === id)?.code ?? null : null
+    const code = id ? teams.find(tm => tm.id === id)?.code ?? null : null
     window.dispatchEvent(new CustomEvent('champion-changed', { detail: { code } }))
   }
 
-  // No rebuy available
   if (!rebuy) {
     return (
       <Card>
         <CardContent className="py-8 text-center space-y-2">
-          <p className="font-medium">No rebuy available yet</p>
+          <p className="font-medium">{t('noRebuyYet')}</p>
           <p className="text-sm text-muted-foreground">
             {originalChampion
-              ? `Your predicted champion (${originalChampionCode ? getFlag(originalChampionCode) + ' ' : ''}${originalChampion}) is still in the tournament.`
-              : 'Submit your pre-tournament champion pick first.'}
+              ? t('championStillInNamed', { champion: `${originalChampionCode ? getFlag(originalChampionCode) + ' ' : ''}${originalChampion}` })
+              : t('noPick')}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            Your rebuy unlocks automatically when your predicted champion is eliminated.
+            {t('rebuyAutoUnlocks')}
           </p>
         </CardContent>
       </Card>
     )
   }
 
-  // Already submitted
   if (rebuy.submitted_at) {
-    const submittedTeam = teams.find((t) => t.id === rebuy.team_id)
+    const submittedTeam = teams.find((tm) => tm.id === rebuy.team_id)
     return (
       <Card>
         <CardContent className="py-8 text-center space-y-2">
-          <p className="font-medium text-green-600 dark:text-green-400">Rebuy Submitted</p>
+          <p className="font-medium text-green-600 dark:text-green-400">{t('rebuySubmittedTitle')}</p>
           <p className="text-sm text-muted-foreground">
-            New champion pick:{' '}
+            {t('newChampionPick')}{' '}
             <strong>
-              {submittedTeam ? `${getFlag(submittedTeam.code)} ${submittedTeam.name}` : 'Unknown'}
+              {submittedTeam ? `${getFlag(submittedTeam.code)} ${submittedTeam.name}` : '—'}
             </strong>
           </p>
           <p className="text-xs text-muted-foreground">
-            Potential bonus: {rebuy.points_available} pts · Unlocked at{' '}
-            {STAGE_LABELS[rebuy.unlocked_at_stage] ?? rebuy.unlocked_at_stage}
+            {t('potentialBonusPts', {
+              pts: rebuy.points_available,
+              stage: STAGE_LABELS[rebuy.unlocked_at_stage] ?? rebuy.unlocked_at_stage,
+            })}
           </p>
         </CardContent>
       </Card>
     )
   }
 
-  // Rebuy available — show form
   function handleSubmit() {
     if (!selectedTeamId) {
-      toast.error('Select a team first')
+      toast.error(t('selectFirst'))
       return
     }
     startTransition(async () => {
       try {
         await submitRebuy(selectedTeamId)
-        toast.success('Rebuy submitted — good luck!')
+        toast.success(t('rebuySuccess'))
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Submit failed')
+        toast.error(e instanceof Error ? e.message : 'Error')
       }
     })
   }
@@ -100,7 +102,7 @@ export default function RebuyForm({ rebuy, originalChampion, originalChampionCod
       <Card>
         <CardContent className="py-4 space-y-1">
           <p className="text-sm">
-            <span className="text-muted-foreground">Original champion: </span>
+            <span className="text-muted-foreground">{t('originalChampionLabel')} </span>
             <strong>
               {originalChampion
                 ? `${originalChampionCode ? getFlag(originalChampionCode) + ' ' : ''}${originalChampion}`
@@ -108,27 +110,27 @@ export default function RebuyForm({ rebuy, originalChampion, originalChampionCod
             </strong>
           </p>
           <p className="text-sm">
-            <span className="text-muted-foreground">Unlocked at: </span>
+            <span className="text-muted-foreground">{t('unlockedAtLabel')} </span>
             {STAGE_LABELS[rebuy.unlocked_at_stage] ?? rebuy.unlocked_at_stage}
           </p>
           <p className="text-sm">
-            <span className="text-muted-foreground">Potential bonus: </span>
+            <span className="text-muted-foreground">{t('potentialBonusLabel')} </span>
             <strong>{rebuy.points_available} pts</strong>
           </p>
         </CardContent>
       </Card>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Pick your new champion</label>
+        <label className="text-sm font-medium">{t('pickNewChampion')}</label>
         <select
           value={selectedTeamId ?? ''}
           onChange={(e) => handleTeamChange(e.target.value ? Number(e.target.value) : null)}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
-          <option value="">Select team…</option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {getFlag(t.code)} {t.name}
+          <option value="">{t('selectTeam')}</option>
+          {teams.map((tm) => (
+            <option key={tm.id} value={tm.id}>
+              {getFlag(tm.code)} {tm.name}
             </option>
           ))}
         </select>
@@ -139,7 +141,7 @@ export default function RebuyForm({ rebuy, originalChampion, originalChampionCod
         disabled={!selectedTeamId || pending}
         className="w-full"
       >
-        {pending ? 'Submitting…' : 'Lock In Rebuy — This Cannot Be Changed'}
+        {pending ? t('submitting') : t('lockIn')}
       </Button>
     </div>
   )

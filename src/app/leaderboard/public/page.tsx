@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getFlag } from '@/lib/teams/meta'
+import { getTranslations } from 'next-intl/server'
 import { CopyUrlButton } from './copy-url-button'
 import Link from 'next/link'
 
@@ -11,6 +12,7 @@ const PUBLIC_URL = `${SITE_URL}/leaderboard/public`
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export default async function PublicLeaderboardPage() {
+  const t = await getTranslations('leaderboard')
   const admin = createAdminClient()
 
   const [{ data: scores }, { data: champPreds }] = await Promise.all([
@@ -42,22 +44,20 @@ export default async function PublicLeaderboardPage() {
       <div>
         <h1 className="text-2xl font-bold">⚽ Quiniela 2026</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Live standings · {rows.length} participants
+          {t('liveStandings', { count: rows.length })}
         </p>
       </div>
 
-      {/* Share bar */}
       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
         <p className="text-xs text-muted-foreground truncate">{PUBLIC_URL}</p>
         <CopyUrlButton url={PUBLIC_URL} />
       </div>
 
-      {/* Ranked table */}
       <div className="rounded-lg border border-border overflow-hidden">
         <div className="grid grid-cols-[3rem_1fr_5rem] text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-2 border-b border-border bg-muted/30">
           <span>#</span>
-          <span>Player</span>
-          <span className="text-right">Points</span>
+          <span>{t('player')}</span>
+          <span className="text-right">{t('total')}</span>
         </div>
         {rows.map((row) => (
           <div
@@ -76,14 +76,10 @@ export default async function PublicLeaderboardPage() {
         ))}
       </div>
 
-      {/* CTA */}
       <div className="text-center space-y-1">
-        <p className="text-xs text-muted-foreground">Want to see the full breakdown?</p>
-        <Link
-          href="/login"
-          className="text-sm text-primary hover:underline font-medium"
-        >
-          Sign in to Quiniela 2026 →
+        <p className="text-xs text-muted-foreground">{t('wantBreakdown')}</p>
+        <Link href="/login" className="text-sm text-primary hover:underline font-medium">
+          {t('signIn')}
         </Link>
       </div>
     </div>

@@ -1,20 +1,12 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import KnockoutForm from './knockout-form'
 
 export const dynamic = 'force-dynamic'
 
 const VALID_STAGES = ['r32', 'r16', 'qf', 'sf', '3rd', 'final'] as const
 type KnockoutStage = (typeof VALID_STAGES)[number]
-
-const STAGE_LABELS: Record<KnockoutStage, string> = {
-  r32: 'Round of 32',
-  r16: 'Round of 16',
-  qf: 'Quarter-Finals',
-  sf: 'Semi-Finals',
-  '3rd': '3rd Place Match',
-  final: 'Final',
-}
 
 const STAGE_MULTIPLIERS: Record<KnockoutStage, number> = {
   r32: 2, r16: 3, qf: 4, sf: 5, '3rd': 5, final: 7,
@@ -40,6 +32,17 @@ export default async function KnockoutPage({
 
   const user = await getUser()
   if (!user) redirect('/login')
+
+  const t = await getTranslations('predictions')
+
+  const STAGE_LABELS: Record<KnockoutStage, string> = {
+    r32:   t('stageR32'),
+    r16:   t('stageR16'),
+    qf:    t('stageQF'),
+    sf:    t('stageSF'),
+    '3rd': t('stage3rd'),
+    final: t('stageFinal'),
+  }
 
   const supabase = await createClient()
 
@@ -75,8 +78,8 @@ export default async function KnockoutPage({
       <div>
         <h1 className="text-2xl font-bold">{label}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {filled} / {matches.length} filled ·{' '}
-          Exact score = {5 * multiplier} pts · Correct result = {2 * multiplier} pts · Upset +3 pts
+          {t('knockoutFilled', { filled, total: matches.length })} ·{' '}
+          {t('knockoutFormulaPts', { exact: 5 * multiplier, result: 2 * multiplier })}
         </p>
       </div>
       <KnockoutForm

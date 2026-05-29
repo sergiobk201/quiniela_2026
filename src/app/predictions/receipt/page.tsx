@@ -1,19 +1,28 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import PrintButton from './print-button'
 import { getFlag } from '@/lib/teams/meta'
 
 export const dynamic = 'force-dynamic'
 
 const STAGE_ORDER = ['group', 'r32', 'r16', 'qf', 'sf', '3rd', 'final'] as const
-const STAGE_LABELS: Record<string, string> = {
-  group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16',
-  qf: 'Quarter-Finals', sf: 'Semi-Finals', '3rd': '3rd Place Match', final: 'Final',
-}
 
 export default async function ReceiptPage() {
   const user = await getUser()
   if (!user) redirect('/login')
+
+  const t = await getTranslations('predictions')
+
+  const STAGE_LABELS: Record<string, string> = {
+    group: t('stageGroup'),
+    r32:   t('stageR32'),
+    r16:   t('stageR16'),
+    qf:    t('stageQF'),
+    sf:    t('stageSF'),
+    '3rd': t('stage3rd'),
+    final: t('stageFinal'),
+  }
 
   const supabase = await createClient()
 
@@ -40,12 +49,10 @@ export default async function ReceiptPage() {
     supabase.from('champion_rebuys').select('team_id, submitted_at').eq('user_id', user.id).maybeSingle(),
   ])
 
-  // Build team lookup maps
-  const teamMap = Object.fromEntries((allTeams ?? []).map((t) => [t.id, t.name]))
-  const teamCodeMap = Object.fromEntries((allTeams ?? []).map((t) => [t.id, t.code]))
+  const teamMap = Object.fromEntries((allTeams ?? []).map((tm) => [tm.id, tm.name]))
+  const teamCodeMap = Object.fromEntries((allTeams ?? []).map((tm) => [tm.id, tm.code]))
   const groupMap = Object.fromEntries((groups ?? []).map((g) => [g.id, g.name]))
 
-  // Group match predictions by stage
   const matchesByStage: Record<string, typeof matchPreds> = {}
   for (const mp of matchPreds ?? []) {
     const stage = (mp.match as unknown as { stage: string } | null)?.stage ?? 'unknown'
@@ -63,66 +70,64 @@ export default async function ReceiptPage() {
 
   return (
     <>
-      {/* Print button — hidden in print mode */}
       <div className="max-w-3xl mx-auto px-6 pt-6 print:hidden">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Prediction Receipt</h1>
+            <h1 className="text-2xl font-bold">{t('receiptTitle')}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Generated {generatedAt}
+              {t('generatedAt', { date: generatedAt })}
             </p>
           </div>
           <PrintButton />
         </div>
       </div>
 
-      {/* Receipt content */}
       <div className="max-w-3xl mx-auto p-6 space-y-8 print:p-4 print:space-y-6">
         {/* Header — visible in print */}
         <div className="hidden print:block border-b pb-4">
-          <h1 className="text-xl font-bold">Quiniela 2026 — Prediction Receipt</h1>
-          <p className="text-sm">Submitted by: <strong>{displayName}</strong></p>
-          <p className="text-sm">Generated: {generatedAt}</p>
+          <h1 className="text-xl font-bold">Quiniela 2026 — {t('receiptTitle')}</h1>
+          <p className="text-sm">{t('submittedBy')} <strong>{displayName}</strong></p>
+          <p className="text-sm">{t('generatedLabel')} {generatedAt}</p>
         </div>
 
         {/* Pre-Tournament Picks */}
         <section>
-          <h2 className="text-base font-semibold mb-3 border-b pb-1">Pre-Tournament Picks</h2>
+          <h2 className="text-base font-semibold mb-3 border-b pb-1">{t('preTournamentSection')}</h2>
           {prePred ? (
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
-              <Row label="Champion" value={flaggedTeam(prePred.champion_team_id, teamMap, teamCodeMap)} />
-              <Row label="Runner-up" value={flaggedTeam(prePred.runner_up_team_id, teamMap, teamCodeMap)} />
-              <Row label="3rd Place" value={flaggedTeam(prePred.third_place_team_id, teamMap, teamCodeMap)} />
-              <Row label="Golden Boot" value={prePred.golden_boot_player ?? '—'} />
-              <Row label="Golden Glove" value={prePred.golden_glove_player ?? '—'} />
-              <Row label="Kopa Award" value={prePred.kopa_player ?? '—'} />
-              <Row label="Total Goals" value={prePred.total_goals_prediction?.toString() ?? '—'} />
-              <Row label="First Eliminated" value={flaggedTeam(prePred.first_eliminated_team_id, teamMap, teamCodeMap)} />
-              <Row label="Most Yellow Cards" value={flaggedTeam(prePred.most_yellows_team_id, teamMap, teamCodeMap)} />
+              <Row label={t('champion')}        value={flaggedTeam(prePred.champion_team_id, teamMap, teamCodeMap)} />
+              <Row label={t('runnerUp')}        value={flaggedTeam(prePred.runner_up_team_id, teamMap, teamCodeMap)} />
+              <Row label={t('thirdPlacePick')}  value={flaggedTeam(prePred.third_place_team_id, teamMap, teamCodeMap)} />
+              <Row label={t('goldenBoot')}      value={prePred.golden_boot_player ?? '—'} />
+              <Row label={t('goldenGlove')}     value={prePred.golden_glove_player ?? '—'} />
+              <Row label={t('kopaAward')}       value={prePred.kopa_player ?? '—'} />
+              <Row label={t('totalGoals')}      value={prePred.total_goals_prediction?.toString() ?? '—'} />
+              <Row label={t('firstEliminated')} value={flaggedTeam(prePred.first_eliminated_team_id, teamMap, teamCodeMap)} />
+              <Row label={t('mostYellows')}     value={flaggedTeam(prePred.most_yellows_team_id, teamMap, teamCodeMap)} />
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No pre-tournament picks submitted.</p>
+            <p className="text-sm text-muted-foreground">{t('noPicks')}</p>
           )}
         </section>
 
         {/* Champion Rebuy */}
         {rebuy?.submitted_at && (
           <section>
-            <h2 className="text-base font-semibold mb-3 border-b pb-1">Champion Rebuy</h2>
+            <h2 className="text-base font-semibold mb-3 border-b pb-1">{t('rebuySection')}</h2>
             <p className="text-sm">
-              New champion: <strong>{flaggedTeam(rebuy.team_id, teamMap, teamCodeMap)}</strong>
+              {t('newChampionLabel')} <strong>{flaggedTeam(rebuy.team_id, teamMap, teamCodeMap)}</strong>
             </p>
           </section>
         )}
 
         {/* Group Standings */}
         <section>
-          <h2 className="text-base font-semibold mb-3 border-b pb-1">Group Standings</h2>
+          <h2 className="text-base font-semibold mb-3 border-b pb-1">{t('groupStandingsSection')}</h2>
           {groupStandings && groupStandings.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               {groupStandings.map((gs) => (
                 <div key={gs.group_id}>
-                  <p className="font-medium mb-1">Group {groupMap[gs.group_id] ?? gs.group_id}</p>
+                  <p className="font-medium mb-1">{t('groupLabel', { name: groupMap[gs.group_id] ?? gs.group_id })}</p>
                   <ol className="list-decimal list-inside space-y-0.5 text-muted-foreground">
                     <li>{flaggedTeam(gs.predicted_1st, teamMap, teamCodeMap)}</li>
                     <li>{flaggedTeam(gs.predicted_2nd, teamMap, teamCodeMap)}</li>
@@ -133,14 +138,14 @@ export default async function ReceiptPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No group standings submitted.</p>
+            <p className="text-sm text-muted-foreground">{t('noGroupStandings')}</p>
           )}
         </section>
 
         {/* 3rd-Place Qualifiers */}
         <section>
           <h2 className="text-base font-semibold mb-3 border-b pb-1">
-            3rd-Place Qualifiers ({(qualifiers?.team_ids as number[] | null)?.length ?? 0}/8)
+            {t('qualifiersSection')} ({(qualifiers?.team_ids as number[] | null)?.length ?? 0}/8)
           </h2>
           {qualifiers?.team_ids && (qualifiers.team_ids as number[]).length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -151,7 +156,7 @@ export default async function ReceiptPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No 3rd-place qualifiers submitted.</p>
+            <p className="text-sm text-muted-foreground">{t('noQualifiers')}</p>
           )}
         </section>
 
@@ -159,7 +164,7 @@ export default async function ReceiptPage() {
         {STAGE_ORDER.filter((s) => matchesByStage[s]?.length).map((stage) => (
           <section key={stage}>
             <h2 className="text-base font-semibold mb-3 border-b pb-1">
-              {STAGE_LABELS[stage]} ({matchesByStage[stage]?.length} predictions)
+              {STAGE_LABELS[stage]} ({t('predCount', { count: matchesByStage[stage]?.length ?? 0 })})
             </h2>
             <table className="w-full text-sm">
               <tbody>
@@ -180,13 +185,13 @@ export default async function ReceiptPage() {
                           : '—'}
                       </td>
                       <td className="py-1 text-right w-24">
-                        {m?.home_team ? `${getFlag(m.home_team.code)} ${m.home_team.code}` : 'TBD'}
+                        {m?.home_team ? `${getFlag(m.home_team.code)} ${m.home_team.code}` : t('tbdTeam')}
                       </td>
                       <td className="py-1 text-center font-mono w-16">
                         {mp.predicted_home_score} : {mp.predicted_away_score}
                       </td>
                       <td className="py-1 w-24">
-                        {m?.away_team ? `${getFlag(m.away_team.code)} ${m.away_team.code}` : 'TBD'}
+                        {m?.away_team ? `${getFlag(m.away_team.code)} ${m.away_team.code}` : t('tbdTeam')}
                       </td>
                     </tr>
                   )
@@ -196,9 +201,8 @@ export default async function ReceiptPage() {
           </section>
         ))}
 
-        {/* Print footer */}
         <div className="hidden print:block border-t pt-4 text-xs text-muted-foreground">
-          This receipt was generated from quiniela2026.vercel.app and reflects predictions
+          This receipt was generated from quiniela2026.space and reflects predictions
           at the time of printing. Predictions are locked server-side and cannot be altered
           after their respective deadlines.
         </div>

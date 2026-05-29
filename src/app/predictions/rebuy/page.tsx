@@ -1,5 +1,6 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import RebuyForm from './rebuy-form'
 
 export const dynamic = 'force-dynamic'
@@ -8,6 +9,7 @@ export default async function RebuyPage() {
   const user = await getUser()
   if (!user) redirect('/login')
 
+  const t = await getTranslations('predictions')
   const supabase = await createClient()
 
   const [{ data: rebuy }, { data: originalPrediction }, { data: teams }] =
@@ -32,10 +34,8 @@ export default async function RebuyPage() {
   return (
     <div className="max-w-xl mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Champion Rebuy</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          1 rebuy per user · Only available when your predicted champion is eliminated
-        </p>
+        <h1 className="text-2xl font-bold">{t('rebuyTitle')}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t('rebuyPageSub')}</p>
       </div>
       <RebuyForm
         rebuy={rebuy}

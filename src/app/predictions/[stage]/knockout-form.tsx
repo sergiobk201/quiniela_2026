@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { saveMatchPrediction } from './actions'
 import { isMatchLocked } from '@/lib/utils/lock'
 import { getFlag } from '@/lib/teams/meta'
@@ -40,6 +41,8 @@ function StatusDot({ status }: { status: SaveStatus }) {
 }
 
 export default function KnockoutForm({ matches, predictions }: Props) {
+  const t = useTranslations('predictions')
+
   const [scores, setScores] = useState<Record<number, { home: string; away: string }>>(() => {
     const init: Record<number, { home: string; away: string }> = {}
     for (const m of matches) {
@@ -73,7 +76,7 @@ export default function KnockoutForm({ matches, predictions }: Props) {
   )
 
   function updateScore(matchId: number, side: 'home' | 'away', value: string) {
-    if (value !== '' && (!/^\d+$/.test(value) || Number(value) > 20)) return
+    if (value !== '' && (!/^\d+$/.test(value) || Number(value) > 20 || (value.length > 1 && value.startsWith('0')))) return
     setScores((prev) => ({ ...prev, [matchId]: { ...prev[matchId], [side]: value } }))
     setStatus(matchId, 'idle')
   }
@@ -81,7 +84,7 @@ export default function KnockoutForm({ matches, predictions }: Props) {
   if (matches.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-8 text-center">
-        No matches scheduled for this stage yet.
+        {t('noMatchesYet')}
       </p>
     )
   }
@@ -91,10 +94,10 @@ export default function KnockoutForm({ matches, predictions }: Props) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50 text-muted-foreground text-xs">
-            <th className="px-3 py-2 text-left">Date</th>
-            <th className="px-3 py-2 text-right">Home</th>
-            <th className="px-3 py-2 text-center w-28">Score</th>
-            <th className="px-3 py-2 text-left">Away</th>
+            <th className="px-3 py-2 text-left">{t('date')}</th>
+            <th className="px-3 py-2 text-right">{t('home')}</th>
+            <th className="px-3 py-2 text-center w-28">{t('score')}</th>
+            <th className="px-3 py-2 text-left">{t('away')}</th>
             <th className="px-3 py-2 w-4" />
           </tr>
         </thead>
@@ -104,8 +107,8 @@ export default function KnockoutForm({ matches, predictions }: Props) {
             const { home, away } = scores[match.id]
             const status = statuses[match.id] ?? 'idle'
             const kickoff = new Date(match.scheduled_at)
-            const homeName = match.home_team?.code ?? 'TBD'
-            const awayName = match.away_team?.code ?? 'TBD'
+            const homeName = match.home_team?.code ?? t('tbdTeam')
+            const awayName = match.away_team?.code ?? t('tbdTeam')
             const homeFlag = match.home_team?.code ? getFlag(match.home_team.code) : '🏳️'
             const awayFlag = match.away_team?.code ? getFlag(match.away_team.code) : '🏳️'
 

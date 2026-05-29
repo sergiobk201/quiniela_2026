@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createBrowserClient } from '@supabase/ssr'
 
 type Row = {
@@ -22,10 +23,10 @@ interface Props {
 }
 
 export default function LeaderboardTable({ initialRows, currentUserId }: Props) {
+  const t = useTranslations('leaderboard')
   const [rows, setRows] = useState<Row[]>(initialRows)
 
   useEffect(() => {
-    // createBrowserClient inside useEffect to avoid SSR pre-render failure
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -37,7 +38,6 @@ export default function LeaderboardTable({ initialRows, currentUserId }: Props) 
         'postgres_changes',
         { event: '*', schema: 'public', table: 'scores' },
         async () => {
-          // Re-fetch full leaderboard on any scores change
           const { data } = await supabase
             .from('scores')
             .select('user_id, pre_tournament_points, group_stage_points, knockout_points, rebuy_points, total_points, profile:profiles(display_name)')
@@ -67,7 +67,7 @@ export default function LeaderboardTable({ initialRows, currentUserId }: Props) 
   if (rows.length === 0) {
     return (
       <div className="border rounded-md py-12 text-center text-muted-foreground text-sm">
-        No scores yet. Scores are computed after matches finish.
+        {t('noScores')}
       </div>
     )
   }
@@ -84,12 +84,12 @@ export default function LeaderboardTable({ initialRows, currentUserId }: Props) 
         <thead>
           <tr className="border-b bg-muted/50 text-muted-foreground text-xs">
             <th className="px-4 py-2 text-center w-10">#</th>
-            <th className="px-4 py-2 text-left">Player</th>
-            <th className="px-4 py-2 text-right hidden md:table-cell">Pre-Tourn.</th>
-            <th className="px-4 py-2 text-right hidden md:table-cell">Groups</th>
-            <th className="px-4 py-2 text-right hidden md:table-cell">Knockout</th>
-            <th className="px-4 py-2 text-right hidden md:table-cell">Rebuy</th>
-            <th className="px-4 py-2 text-right font-semibold">Total</th>
+            <th className="px-4 py-2 text-left">{t('player')}</th>
+            <th className="px-4 py-2 text-right hidden md:table-cell">{t('preTournament')}</th>
+            <th className="px-4 py-2 text-right hidden md:table-cell">{t('groupStage')}</th>
+            <th className="px-4 py-2 text-right hidden md:table-cell">{t('knockout')}</th>
+            <th className="px-4 py-2 text-right hidden md:table-cell">{t('rebuy')}</th>
+            <th className="px-4 py-2 text-right font-semibold">{t('total')}</th>
           </tr>
         </thead>
         <tbody>
@@ -111,21 +111,13 @@ export default function LeaderboardTable({ initialRows, currentUserId }: Props) 
                 {row.championFlag && <span className="mr-1.5">{row.championFlag}</span>}
                 {row.displayName}
                 {row.isCurrentUser && (
-                  <span className="ml-2 text-xs text-muted-foreground">(you)</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{t('you')}</span>
                 )}
               </td>
-              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
-                {row.preTournament}
-              </td>
-              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
-                {row.groupStage}
-              </td>
-              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
-                {row.knockout}
-              </td>
-              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
-                {row.rebuy}
-              </td>
+              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">{row.preTournament}</td>
+              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">{row.groupStage}</td>
+              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">{row.knockout}</td>
+              <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">{row.rebuy}</td>
               <td className="px-4 py-3 text-right font-bold">{row.total}</td>
             </tr>
           ))}

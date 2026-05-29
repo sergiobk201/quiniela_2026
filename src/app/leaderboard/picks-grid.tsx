@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 
@@ -46,12 +47,21 @@ interface Props {
 }
 
 const STAGE_ORDER = ['group', 'r32', 'r16', 'qf', 'sf', '3rd', 'final'] as const
-const STAGE_LABELS: Record<string, string> = {
-  group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16',
-  qf: 'Quarter-Finals', sf: 'Semi-Finals', '3rd': '3rd Place Match', final: 'Final',
-}
 
 export default function PicksGrid({ players, playerPicks, groupStandings, matches, picksVisible }: Props) {
+  const t = useTranslations('leaderboard')
+  const tPred = useTranslations('predictions')
+
+  const STAGE_LABELS: Record<string, string> = {
+    group: t('stageGroup'),
+    r32: t('stageR32'),
+    r16: t('stageR16'),
+    qf: t('stageQF'),
+    sf: t('stageSF'),
+    '3rd': t('stage3rd'),
+    final: t('stageFinal'),
+  }
+
   const stagesWithPicks = STAGE_ORDER.filter(s => matches.some(m => m.stage === s))
   const [search, setSearch] = useState('')
   const [matchStage, setMatchStage] = useState<string>(() => stagesWithPicks[0] ?? 'group')
@@ -69,10 +79,10 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-bold">All Picks</h2>
+        <h2 className="text-lg font-bold">{t('allPicks')}</h2>
         {picksVisible && (
           <Input
-            placeholder="Search player..."
+            placeholder={t('searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="max-w-xs h-8 text-sm"
@@ -82,17 +92,17 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
 
       {!picksVisible ? (
         <div className="rounded-lg border border-border bg-muted/30 py-10 text-center space-y-1">
-          <p className="text-sm font-medium">Picks are hidden until the lock date</p>
-          <p className="text-xs text-muted-foreground">June 7, 2026 · 00:00 UTC</p>
+          <p className="text-sm font-medium">{t('pickHidden')}</p>
+          <p className="text-xs text-muted-foreground">{t('pickHiddenDate')}</p>
         </div>
       ) : (
         <Tabs defaultValue="trophy">
           <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="trophy">Trophy &amp; Awards</TabsTrigger>
-            <TabsTrigger value="standings">Group Standings</TabsTrigger>
-            <TabsTrigger value="qualifiers">3rd-Place Qualifiers</TabsTrigger>
-            <TabsTrigger value="matches">Match Predictions</TabsTrigger>
-            <TabsTrigger value="rebuys">Rebuys</TabsTrigger>
+            <TabsTrigger value="trophy">{t('tabs.trophy')}</TabsTrigger>
+            <TabsTrigger value="standings">{t('tabs.standings')}</TabsTrigger>
+            <TabsTrigger value="qualifiers">{t('tabs.qualifiers')}</TabsTrigger>
+            <TabsTrigger value="matches">{t('tabs.matches')}</TabsTrigger>
+            <TabsTrigger value="rebuys">{t('tabs.rebuys')}</TabsTrigger>
           </TabsList>
 
           {/* ── Trophy & Awards ── */}
@@ -101,23 +111,23 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
               <table className="text-xs w-full min-w-[720px]">
                 <thead>
                   <tr className="border-b bg-muted/50 text-muted-foreground">
-                    <th className="px-3 py-2 text-left sticky left-0 bg-muted/80 backdrop-blur z-10 min-w-[120px]">Player</th>
-                    <th className="px-3 py-2 text-left">Champion</th>
-                    <th className="px-3 py-2 text-left">Runner-up</th>
-                    <th className="px-3 py-2 text-left">3rd Place</th>
-                    <th className="px-3 py-2 text-left">Golden Boot</th>
-                    <th className="px-3 py-2 text-left">Golden Glove</th>
-                    <th className="px-3 py-2 text-left">Kopa</th>
-                    <th className="px-3 py-2 text-center">Goals</th>
-                    <th className="px-3 py-2 text-left">1st Out</th>
-                    <th className="px-3 py-2 text-left">Most Yellows</th>
+                    <th className="px-3 py-2 text-left sticky left-0 bg-muted/80 backdrop-blur z-10 min-w-[120px]">{t('player')}</th>
+                    <th className="px-3 py-2 text-left">{tPred('champion')}</th>
+                    <th className="px-3 py-2 text-left">{tPred('runnerUp')}</th>
+                    <th className="px-3 py-2 text-left">{tPred('thirdPlacePick')}</th>
+                    <th className="px-3 py-2 text-left">{tPred('goldenBoot')}</th>
+                    <th className="px-3 py-2 text-left">{tPred('goldenGlove')}</th>
+                    <th className="px-3 py-2 text-left">{tPred('kopaAward')}</th>
+                    <th className="px-3 py-2 text-center">{t('goals')}</th>
+                    <th className="px-3 py-2 text-left">{t('firstOut')}</th>
+                    <th className="px-3 py-2 text-left">{t('mostYellows')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredPicks.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground text-xs">
-                        {isSearchActive ? 'No players match your search.' : 'No picks submitted yet.'}
+                        {isSearchActive ? t('noResults') : t('noPicksYet')}
                       </td>
                     </tr>
                   ) : filteredPicks.map(p => (
@@ -138,7 +148,7 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                           <td className="px-3 py-2">{p.preTournament.mostYellows}</td>
                         </>
                       ) : (
-                        <td colSpan={9} className="px-3 py-2 text-muted-foreground italic">No picks submitted</td>
+                        <td colSpan={9} className="px-3 py-2 text-muted-foreground italic">{t('noPicksYet')}</td>
                       )}
                     </tr>
                   ))}
@@ -151,42 +161,42 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
           <TabsContent value="standings" className="mt-4">
             {filtered.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
-                {isSearchActive ? 'No players match your search.' : 'No standings picks submitted yet.'}
+                {isSearchActive ? t('noResults') : t('noStandingsYet')}
               </p>
             ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {groupStandings.map(group => (
-                <div key={group.groupId} className="rounded-md border border-border overflow-x-auto">
-                  <table className="text-xs w-full">
-                    <thead>
-                      <tr className="border-b bg-muted/50 text-muted-foreground">
-                        <th className="px-3 py-2 text-left">Group {group.groupName}</th>
-                        <th className="px-3 py-2 text-left">1st</th>
-                        <th className="px-3 py-2 text-left">2nd</th>
-                        <th className="px-3 py-2 text-left">3rd</th>
-                        <th className="px-3 py-2 text-left">4th</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.picks
-                        .filter(pk => filteredIds.has(pk.userId))
-                        .map(pk => {
-                          const player = players.find(p => p.userId === pk.userId)
-                          return (
-                            <tr key={pk.userId} className="border-b last:border-0 hover:bg-muted/30">
-                              <td className="px-3 py-2 font-medium">{player?.displayName ?? '—'}</td>
-                              <td className="px-3 py-2">{pk.pos1}</td>
-                              <td className="px-3 py-2">{pk.pos2}</td>
-                              <td className="px-3 py-2">{pk.pos3}</td>
-                              <td className="px-3 py-2">{pk.pos4}</td>
-                            </tr>
-                          )
-                        })}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {groupStandings.map(group => (
+                  <div key={group.groupId} className="rounded-md border border-border overflow-x-auto">
+                    <table className="text-xs w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/50 text-muted-foreground">
+                          <th className="px-3 py-2 text-left">{t('groupPrefix', { name: group.groupName })}</th>
+                          <th className="px-3 py-2 text-left">{tPred('position1')}</th>
+                          <th className="px-3 py-2 text-left">{tPred('position2')}</th>
+                          <th className="px-3 py-2 text-left">{tPred('position3')}</th>
+                          <th className="px-3 py-2 text-left">{tPred('position4')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.picks
+                          .filter(pk => filteredIds.has(pk.userId))
+                          .map(pk => {
+                            const player = players.find(p => p.userId === pk.userId)
+                            return (
+                              <tr key={pk.userId} className="border-b last:border-0 hover:bg-muted/30">
+                                <td className="px-3 py-2 font-medium">{player?.displayName ?? '—'}</td>
+                                <td className="px-3 py-2">{pk.pos1}</td>
+                                <td className="px-3 py-2">{pk.pos2}</td>
+                                <td className="px-3 py-2">{pk.pos3}</td>
+                                <td className="px-3 py-2">{pk.pos4}</td>
+                              </tr>
+                            )
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
             )}
           </TabsContent>
 
@@ -194,43 +204,42 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
           <TabsContent value="qualifiers" className="mt-4">
             {filteredPicks.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
-                {isSearchActive ? 'No players match your search.' : 'No qualifier picks submitted yet.'}
+                {isSearchActive ? t('noResults') : t('noQualifiersYet')}
               </p>
             ) : (
-            <div className="rounded-md border border-border overflow-hidden">
-              <table className="text-xs w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50 text-muted-foreground">
-                    <th className="px-3 py-2 text-left w-32">Player</th>
-                    <th className="px-3 py-2 text-left">8 Teams Selected</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPicks.map(p => (
-                    <tr key={p.userId} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="px-3 py-2 font-medium align-top">{p.displayName}</td>
-                      <td className="px-3 py-2">
-                        {p.qualifiers.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {p.qualifiers.map((t, i) => (
-                              <span key={i} className="px-1.5 py-0.5 rounded bg-muted text-xs">{t}</span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground italic">—</span>
-                        )}
-                      </td>
+              <div className="rounded-md border border-border overflow-hidden">
+                <table className="text-xs w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50 text-muted-foreground">
+                      <th className="px-3 py-2 text-left w-32">{t('player')}</th>
+                      <th className="px-3 py-2 text-left">{t('teamsSelected')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredPicks.map(p => (
+                      <tr key={p.userId} className="border-b last:border-0 hover:bg-muted/30">
+                        <td className="px-3 py-2 font-medium align-top">{p.displayName}</td>
+                        <td className="px-3 py-2">
+                          {p.qualifiers.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {p.qualifiers.map((team, i) => (
+                                <span key={i} className="px-1.5 py-0.5 rounded bg-muted text-xs">{team}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground italic">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </TabsContent>
 
           {/* ── Match Predictions ── */}
           <TabsContent value="matches" className="mt-4 space-y-3">
-            {/* Stage sub-tabs */}
             <div className="flex flex-wrap gap-1">
               {stagesWithPicks.map(s => (
                 <button
@@ -249,71 +258,73 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
 
             {filtered.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
-                {isSearchActive ? 'No players match your search.' : 'No match predictions submitted yet.'}
+                {isSearchActive ? t('noResults') : t('noMatchPredsYet')}
               </p>
             ) : (
-            <div className="overflow-x-auto rounded-md border border-border">
-              <table className="text-xs w-full min-w-[400px]">
-                <thead>
-                  <tr className="border-b bg-muted/50 text-muted-foreground">
-                    <th className="px-3 py-2 text-left sticky left-0 bg-muted/80 backdrop-blur z-10 min-w-[140px]">Match</th>
-                    {filtered.map(p => (
-                      <th key={p.userId} className="px-3 py-2 text-center whitespace-nowrap">{p.displayName}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {matches
-                    .filter(m => m.stage === matchStage)
-                    .map(m => (
-                      <tr key={m.matchId} className="border-b last:border-0 hover:bg-muted/30">
-                        <td className="px-3 py-2 sticky left-0 bg-background border-r border-border">
-                          <span className="font-medium">{m.homeTeam}</span>
-                          <span className="text-muted-foreground mx-1">vs</span>
-                          <span className="font-medium">{m.awayTeam}</span>
-                          <div className="text-muted-foreground/70 text-[10px]">{m.label}</div>
-                        </td>
-                        {filtered.map(p => {
-                          const pred = m.predictions.find(pr => pr.userId === p.userId)
-                          return (
-                            <td key={p.userId} className="px-3 py-2 text-center font-mono">
-                              {pred ? `${pred.home}–${pred.away}` : <span className="text-muted-foreground">—</span>}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+              <div className="overflow-x-auto rounded-md border border-border">
+                <table className="text-xs w-full min-w-[400px]">
+                  <thead>
+                    <tr className="border-b bg-muted/50 text-muted-foreground">
+                      <th className="px-3 py-2 text-left sticky left-0 bg-muted/80 backdrop-blur z-10 min-w-[140px]">{t('matchCol')}</th>
+                      {filtered.map(p => (
+                        <th key={p.userId} className="px-3 py-2 text-center whitespace-nowrap">{p.displayName}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matches
+                      .filter(m => m.stage === matchStage)
+                      .map(m => (
+                        <tr key={m.matchId} className="border-b last:border-0 hover:bg-muted/30">
+                          <td className="px-3 py-2 sticky left-0 bg-background border-r border-border">
+                            <span className="font-medium">{m.homeTeam}</span>
+                            <span className="text-muted-foreground mx-1">vs</span>
+                            <span className="font-medium">{m.awayTeam}</span>
+                            <div className="text-muted-foreground/70 text-[10px]">{m.label}</div>
+                          </td>
+                          {filtered.map(p => {
+                            const pred = m.predictions.find(pr => pr.userId === p.userId)
+                            return (
+                              <td key={p.userId} className="px-3 py-2 text-center font-mono">
+                                {pred ? `${pred.home}–${pred.away}` : '—'}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </TabsContent>
 
           {/* ── Rebuys ── */}
           <TabsContent value="rebuys" className="mt-4">
-            {filteredPicks.some(p => p.rebuy) ? (
+            {filteredPicks.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {isSearchActive ? t('noResults') : t('noRebuysYet')}
+              </p>
+            ) : (
               <div className="rounded-md border border-border overflow-hidden">
                 <table className="text-xs w-full">
                   <thead>
                     <tr className="border-b bg-muted/50 text-muted-foreground">
-                      <th className="px-3 py-2 text-left">Player</th>
-                      <th className="px-3 py-2 text-left">New Champion</th>
+                      <th className="px-3 py-2 text-left">{t('player')}</th>
+                      <th className="px-3 py-2 text-left">{tPred('rebuyTitle')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPicks.filter(p => p.rebuy).map(p => (
+                    {filteredPicks.map(p => (
                       <tr key={p.userId} className="border-b last:border-0 hover:bg-muted/30">
                         <td className="px-3 py-2 font-medium">{p.displayName}</td>
-                        <td className="px-3 py-2">{p.rebuy}</td>
+                        <td className="px-3 py-2">
+                          {p.rebuy ?? <span className="text-muted-foreground italic">{isSearchActive ? t('noRebuyFor') : t('noRebuysYet')}</span>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                {isSearchActive ? 'No rebuys for this player.' : 'No rebuys submitted yet.'}
-              </p>
             )}
           </TabsContent>
         </Tabs>

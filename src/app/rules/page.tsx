@@ -102,9 +102,7 @@ export default async function RulesPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('groupStandingsTitle')}</h2>
-        <p className="text-sm text-muted-foreground"
-          dangerouslySetInnerHTML={{ __html: t('groupStandingsSubtitle', { max: '<strong>132</strong>' }) }}
-        />
+        <p className="text-sm text-muted-foreground">{t('groupStandingsSubtitle')}</p>
         <div className="border rounded-lg divide-y text-sm">
           {[
             { pos: t('pos1'), pts: '5 pts' },
@@ -122,9 +120,7 @@ export default async function RulesPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('thirdPlaceQualifiers')}</h2>
-        <p className="text-sm text-muted-foreground"
-          dangerouslySetInnerHTML={{ __html: t('thirdPlaceSubtitle', { max: '<strong>24</strong>' }) }}
-        />
+        <p className="text-sm text-muted-foreground">{t('thirdPlaceSubtitle')}</p>
       </section>
 
       <section className="space-y-3">

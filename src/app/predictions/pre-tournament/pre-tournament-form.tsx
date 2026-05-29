@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -72,24 +73,12 @@ function TeamSelect({
   )
 }
 
-const TROPHY_FIELDS = [
-  { key: 'champion_team_id', label: 'Champion' },
-  { key: 'runner_up_team_id', label: 'Runner-up' },
-  { key: 'third_place_team_id', label: '3rd Place' },
-] as const
-
-const AWARD_FIELDS = [
-  { key: 'golden_boot_player', label: 'Golden Boot' },
-  { key: 'golden_glove_player', label: 'Golden Glove' },
-  { key: 'kopa_player', label: 'Kopa Award' },
-] as const
-
-const STANDING_POSITIONS = [
-  { key: 'predicted_1st', label: '1st' },
-  { key: 'predicted_2nd', label: '2nd' },
-  { key: 'predicted_3rd', label: '3rd' },
-  { key: 'predicted_4th', label: '4th' },
-] as const
+const STANDING_POSITION_KEYS = [
+  { key: 'predicted_1st' as const, posKey: 'position1' },
+  { key: 'predicted_2nd' as const, posKey: 'position2' },
+  { key: 'predicted_3rd' as const, posKey: 'position3' },
+  { key: 'predicted_4th' as const, posKey: 'position4' },
+]
 
 export default function PreTournamentForm({
   teams,
@@ -99,6 +88,20 @@ export default function PreTournamentForm({
   qualifierTeamIds,
   locked,
 }: Props) {
+  const t = useTranslations('predictions')
+
+  const TROPHY_FIELDS = [
+    { key: 'champion_team_id' as const,    label: t('champion') },
+    { key: 'runner_up_team_id' as const,   label: t('runnerUp') },
+    { key: 'third_place_team_id' as const, label: t('thirdPlacePick') },
+  ]
+
+  const AWARD_FIELDS = [
+    { key: 'golden_boot_player' as const,  label: t('goldenBoot') },
+    { key: 'golden_glove_player' as const, label: t('goldenGlove') },
+    { key: 'kopa_player' as const,         label: t('kopaAward') },
+  ]
+
   const [trophy, setTrophy] = useState({
     champion_team_id: prediction?.champion_team_id ?? null,
     runner_up_team_id: prediction?.runner_up_team_id ?? null,
@@ -137,21 +140,21 @@ export default function PreTournamentForm({
   function handleSaveTrophy() {
     startTrophyTransition(async () => {
       const { error } = await saveTrophyAndAwards(trophy)
-      error ? toast.error(error) : toast.success('Trophy & Awards saved')
+      error ? toast.error(error) : toast.success(t('saveTrophy'))
     })
   }
 
   function handleSaveStandings() {
     startStandingsTransition(async () => {
       const { error } = await saveGroupStandings(Object.values(groupStandings))
-      error ? toast.error(error) : toast.success('Group standings saved')
+      error ? toast.error(error) : toast.success(t('saveAllStandings'))
     })
   }
 
   function handleSaveQualifiers() {
     startQualifiersTransition(async () => {
       const { error } = await saveThirdPlaceQualifiers(Array.from(selectedQualifiers))
-      error ? toast.error(error) : toast.success('3rd-place qualifiers saved')
+      error ? toast.error(error) : toast.success(t('saveQualifiers'))
     })
   }
 
@@ -171,10 +174,10 @@ export default function PreTournamentForm({
     pos: keyof Omit<GroupStandingRow, 'group_id'>
   ): Team[] {
     const standing = groupStandings[groupId]
-    const usedIds = STANDING_POSITIONS.filter(p => p.key !== pos)
+    const usedIds = STANDING_POSITION_KEYS.filter(p => p.key !== pos)
       .map(p => standing[p.key])
       .filter((id): id is number => id !== null)
-    return teams.filter(t => t.group_id === groupId && !usedIds.includes(t.id))
+    return teams.filter(tm => tm.group_id === groupId && !usedIds.includes(tm.id))
   }
 
   function getPosInGroup(teamId: number, groupId: number): 1 | 2 | 3 | 4 | null {
@@ -193,8 +196,7 @@ export default function PreTournamentForm({
       if (next.has(teamId)) {
         next.delete(teamId)
       } else {
-        // One per group: remove any existing pick from this group
-        const groupTeamIds = teams.filter(t => t.group_id === groupId).map(t => t.id)
+        const groupTeamIds = teams.filter(tm => tm.group_id === groupId).map(tm => tm.id)
         for (const id of groupTeamIds) next.delete(id)
         if (next.size < 8) next.add(teamId)
       }
@@ -202,19 +204,21 @@ export default function PreTournamentForm({
     })
   }
 
+  const posLabels = [t('position1'), t('position2'), t('position3'), t('position4')]
+
   return (
     <Tabs defaultValue="trophy">
       <TabsList className="flex-wrap h-auto gap-1">
-        <TabsTrigger value="trophy">Trophy &amp; Awards</TabsTrigger>
-        <TabsTrigger value="standings">Group Standings</TabsTrigger>
-        <TabsTrigger value="qualifiers">3rd-Place Qualifiers</TabsTrigger>
+        <TabsTrigger value="trophy">{t('trophy')}</TabsTrigger>
+        <TabsTrigger value="standings">{t('standings')}</TabsTrigger>
+        <TabsTrigger value="qualifiers">{t('qualifiers3rdTitle')}</TabsTrigger>
       </TabsList>
 
       {/* ── Tab 1: Trophy & Awards ── */}
       <TabsContent value="trophy" className="space-y-4 mt-4">
         <Card>
           <CardHeader>
-            <CardTitle>Top 3 Finishers</CardTitle>
+            <CardTitle>{t('top3Finishers')}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {TROPHY_FIELDS.map(({ key, label }) => {
@@ -222,7 +226,7 @@ export default function PreTournamentForm({
                 .filter(f => f.key !== key)
                 .map(f => trophy[f.key])
                 .filter((id): id is number => id !== null)
-              const available = teams.filter(t => !otherIds.includes(t.id))
+              const available = teams.filter(tm => !otherIds.includes(tm.id))
               return (
                 <div key={key}>
                   <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
@@ -231,12 +235,13 @@ export default function PreTournamentForm({
                     onChange={id => {
                       setTrophy(prev => ({ ...prev, [key]: id }))
                       if (key === 'champion_team_id') {
-                        const code = id ? teams.find(t => t.id === id)?.code ?? null : null
+                        const code = id ? teams.find(tm => tm.id === id)?.code ?? null : null
                         window.dispatchEvent(new CustomEvent('champion-changed', { detail: { code } }))
                       }
                     }}
                     teams={available}
                     disabled={locked}
+                    placeholder={t('selectTeam')}
                   />
                 </div>
               )
@@ -246,7 +251,7 @@ export default function PreTournamentForm({
 
         <Card>
           <CardHeader>
-            <CardTitle>Individual Awards</CardTitle>
+            <CardTitle>{t('individualAwards')}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {AWARD_FIELDS.map(({ key, label }) => (
@@ -256,7 +261,7 @@ export default function PreTournamentForm({
                   value={trophy[key] as string}
                   onChange={e => setTrophy(prev => ({ ...prev, [key]: e.target.value }))}
                   disabled={locked}
-                  placeholder="Player name"
+                  placeholder={t('playerNamePlaceholder')}
                 />
               </div>
             ))}
@@ -265,11 +270,11 @@ export default function PreTournamentForm({
 
         <Card>
           <CardHeader>
-            <CardTitle>Fun Bets</CardTitle>
+            <CardTitle>{t('funBets')}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Total Goals</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('totalGoals')}</label>
               <Input
                 type="number"
                 min={0}
@@ -281,36 +286,38 @@ export default function PreTournamentForm({
                   }))
                 }
                 disabled={locked}
-                placeholder="e.g. 180"
+                placeholder={t('goalsPlaceholder')}
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">First Eliminated</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('firstEliminated')}</label>
               <TeamSelect
                 value={trophy.first_eliminated_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, first_eliminated_team_id: id }))}
                 teams={teams}
                 disabled={locked}
+                placeholder={t('selectTeam')}
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Most Yellow Cards</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('mostYellows')}</label>
               <TeamSelect
                 value={trophy.most_yellows_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, most_yellows_team_id: id }))}
                 teams={teams}
                 disabled={locked}
+                placeholder={t('selectTeam')}
               />
             </div>
           </CardContent>
         </Card>
 
         {locked ? (
-          <p className="text-sm text-destructive text-right">Predictions are locked.</p>
+          <p className="text-sm text-destructive text-right">{t('predictionsLocked')}</p>
         ) : (
           <div className="flex justify-end">
             <Button onClick={handleSaveTrophy} disabled={pendingTrophy}>
-              {pendingTrophy ? 'Saving…' : 'Save Trophy & Awards'}
+              {pendingTrophy ? '…' : t('saveTrophy')}
             </Button>
           </div>
         )}
@@ -324,12 +331,12 @@ export default function PreTournamentForm({
             return (
               <Card key={group.id}>
                 <CardHeader>
-                  <CardTitle>Group {group.name}</CardTitle>
+                  <CardTitle>{t('groupLabel', { name: group.name })}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {STANDING_POSITIONS.map(({ key, label }) => (
+                  {STANDING_POSITION_KEYS.map(({ key }, idx) => (
                     <div key={key} className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground w-6 shrink-0">{label}</span>
+                      <span className="text-xs text-muted-foreground w-6 shrink-0">{posLabels[idx]}</span>
                       <TeamSelect
                         value={standing[key]}
                         onChange={id => updateStanding(group.id, key, id)}
@@ -346,11 +353,11 @@ export default function PreTournamentForm({
         </div>
 
         {locked ? (
-          <p className="text-sm text-destructive text-right mt-4">Predictions are locked.</p>
+          <p className="text-sm text-destructive text-right mt-4">{t('predictionsLocked')}</p>
         ) : (
           <div className="flex justify-end mt-4">
             <Button onClick={handleSaveStandings} disabled={pendingStandings}>
-              {pendingStandings ? 'Saving…' : 'Save All Standings'}
+              {pendingStandings ? '…' : t('saveAllStandings')}
             </Button>
           </div>
         )}
@@ -359,20 +366,20 @@ export default function PreTournamentForm({
       {/* ── Tab 3: 3rd-Place Qualifiers ── */}
       <TabsContent value="qualifiers" className="mt-4 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Pick <strong>8 of 12</strong> teams you predict will advance as 3rd-place qualifiers.{' '}
+          {t('qualifiersSub')}{' '}
           <span className={selectedQualifiers.size === 8 ? 'text-green-500 font-medium' : 'text-yellow-500 font-medium'}>
-            {selectedQualifiers.size} / 8 selected
+            {t('qualifiersSelected', { count: selectedQualifiers.size })}
           </span>
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {groups.map(group => {
-            const groupTeams = teams.filter(t => t.group_id === group.id)
-            const groupHasSelection = groupTeams.some(t => selectedQualifiers.has(t.id))
+            const groupTeams = teams.filter(tm => tm.group_id === group.id)
+            const groupHasSelection = groupTeams.some(tm => selectedQualifiers.has(tm.id))
             return (
               <Card key={group.id}>
                 <CardHeader>
-                  <CardTitle>Group {group.name}</CardTitle>
+                  <CardTitle>{t('groupLabel', { name: group.name })}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1">
                   {groupTeams.map(team => {
@@ -386,9 +393,7 @@ export default function PreTournamentForm({
                       <label
                         key={team.id}
                         className={`flex items-center gap-2 text-sm rounded px-2 py-1 transition-colors ${
-                          isDisabled
-                            ? 'cursor-not-allowed'
-                            : 'cursor-pointer hover:bg-muted'
+                          isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted'
                         } ${isIneligible ? 'opacity-30' : isMaxed ? 'opacity-40' : ''} ${
                           isSelected ? 'bg-muted' : ''
                         }`}
@@ -407,7 +412,7 @@ export default function PreTournamentForm({
                           <span className={`ml-auto text-xs font-medium shrink-0 ${
                             pos === 3 ? 'text-amber-500' : 'text-muted-foreground/50'
                           }`}>
-                            {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd ✓' : '4th'}
+                            {pos === 1 ? t('position1') : pos === 2 ? t('position2') : pos === 3 ? `${t('position3')} ✓` : t('position4')}
                           </span>
                         )}
                       </label>
@@ -420,14 +425,14 @@ export default function PreTournamentForm({
         </div>
 
         {locked ? (
-          <p className="text-sm text-destructive text-right">Predictions are locked.</p>
+          <p className="text-sm text-destructive text-right">{t('predictionsLocked')}</p>
         ) : (
           <div className="flex justify-end">
             <Button
               onClick={handleSaveQualifiers}
               disabled={pendingQualifiers || selectedQualifiers.size !== 8}
             >
-              {pendingQualifiers ? 'Saving…' : 'Save Qualifiers'}
+              {pendingQualifiers ? '…' : t('saveQualifiers')}
             </Button>
           </div>
         )}

@@ -1,12 +1,14 @@
 import { getUser } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getFlag } from '@/lib/teams/meta'
+import { getTranslations } from 'next-intl/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
 export async function LeaderboardMiniWidget() {
+  const t = await getTranslations('leaderboard')
   const user = await getUser()
   const admin = createAdminClient()
 
@@ -44,9 +46,9 @@ export async function LeaderboardMiniWidget() {
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">Leaderboard</CardTitle>
+        <CardTitle className="text-base">{t('miniTitle')}</CardTitle>
         <Link href="/leaderboard" className="text-xs text-primary hover:underline">
-          Full standings →
+          {t('fullStandings')}
         </Link>
       </CardHeader>
       <CardContent className="space-y-1.5">
@@ -66,7 +68,7 @@ export async function LeaderboardMiniWidget() {
               <span className={row.isCurrentUser ? 'font-semibold' : ''}>
                 {row.displayName}
                 {row.isCurrentUser && (
-                  <span className="ml-1 text-xs text-muted-foreground">(you)</span>
+                  <span className="ml-1 text-xs text-muted-foreground">{t('you')}</span>
                 )}
               </span>
             </div>
@@ -78,7 +80,7 @@ export async function LeaderboardMiniWidget() {
           <>
             <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground px-1">
               <div className="flex-1 border-t border-dashed border-border" />
-              <span>your rank</span>
+              <span>{t('yourRankLabel')}</span>
               <div className="flex-1 border-t border-dashed border-border" />
             </div>
             <div
@@ -90,7 +92,7 @@ export async function LeaderboardMiniWidget() {
                 {userRow.championFlag && <span>{userRow.championFlag}</span>}
                 <span className="font-semibold">
                   {userRow.displayName}
-                  <span className="ml-1 text-xs text-muted-foreground">(you)</span>
+                  <span className="ml-1 text-xs text-muted-foreground">{t('you')}</span>
                 </span>
               </div>
               <span className="text-sm font-bold tabular-nums">{userRow.total} pts</span>
