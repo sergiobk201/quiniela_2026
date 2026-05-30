@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
 
@@ -30,20 +31,41 @@ export async function inviteUser(formData: FormData) {
 export async function togglePaid(userId: string, current: boolean) {
   await assertAdmin()
   const admin = createAdminClient()
-  await admin.from('profiles').upsert({ id: userId, entry_paid: !current }, { onConflict: 'id' })
+  const { error } = await admin
+    .from('profiles')
+    .update({ entry_paid: !current })
+    .eq('id', userId)
+  if (error) throw new Error(error.message)
   revalidatePath('/admin/users')
 }
 
 export async function toggleAdmin(userId: string, current: boolean) {
   await assertAdmin()
   const admin = createAdminClient()
-  await admin.from('profiles').upsert({ id: userId, is_admin: !current }, { onConflict: 'id' })
+  const { error } = await admin
+    .from('profiles')
+    .update({ is_admin: !current })
+    .eq('id', userId)
+  if (error) throw new Error(error.message)
   revalidatePath('/admin/users')
 }
 
 export async function deleteUser(userId: string) {
   await assertAdmin()
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user?.id === userId) throw new Error('Cannot delete your own account')
+
   const admin = createAdminClient()
-  await admin.auth.admin.deleteUser(userId)
+  // audit_log.user_id has no ON DELETE CASCADE — null it out first to avoid FK violation
+  const { error: auditError } = await admin
+    .from('audit_log')
+    .update({ user_id: null })
+    .eq('user_id', userId)
+  if (auditError) throw new Error(auditError.message)
+
+  const { error } = await admin.auth.admin.deleteUser(userId)
+  if (error) throw new Error(error.message)
   revalidatePath('/admin/users')
 }
