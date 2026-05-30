@@ -82,7 +82,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 
 #### Login Page & Auth
 - [x] Known email → magic link sent, "Check your inbox 📬" confirmation state shown
-- [x] Unknown email → invite request email fires to `sergio.barrientos1401@gmail.com`, "Request sent 🙋" state shown with $10 fee explanation card
+- [x] Unknown email → invite request email fires to admin via `ADMIN_NOTIFICATION_EMAIL`, "Request sent 🙋" state shown with $10 fee explanation card
 - [x] Resend email arrives with correct subject `⚽ Invite request — {email}` and link to `/admin/users`
 - [x] "Try a different email" link resets form from both confirmation states
 - [x] Login page is dark mode only — no theme toggle visible (unauthenticated)
@@ -300,7 +300,7 @@ Give every player proof that the admin (Sergio) played fair — predictions subm
 
 **User side — "Request Audit Report" button**
 - Lives on `/dashboard` or `/leaderboard`, visible to all authenticated users
-- On click: fires a server action that sends an email to `sergio.barrientos1401@gmail.com` via Resend
+- On click: fires a server action that sends an email to admin via `ADMIN_NOTIFICATION_EMAIL` via Resend
 - Email subject: `⚽ Audit report requested — {display_name}`
 - Email body: who requested it, their user ID, and a direct link to `/admin/audit`
 - User sees a confirmation: "Your request has been sent. Sergio will send you the report shortly."
