@@ -489,3 +489,35 @@ Shipped full EN/ES internationalization across the entire user-facing app (480+ 
 - Never swallow errors from prerequisite steps (audit nulling) before a destructive operation (user delete) — check each error in sequence.
 
 ## Session Log: 2026-05-30 (Session 10 — Group I Seed Fix + Admin E2E)
+
+---
+
+## [Day 10 continued] — 2026-05-30 (Security E2E + Full Admin E2E)
+
+### E2E Complete ✅
+
+All Phase 5.5 E2E sections now green:
+
+| Section | Status |
+|---|---|
+| Login & Auth | ✅ 14/14 |
+| Nav & Global UI | ✅ 8/8 |
+| Pre-Tournament Predictions | ✅ 10/10 |
+| Group Stage Predictions | ✅ |
+| Knockout Predictions | ✅ |
+| Rebuy | ✅ |
+| Receipt | ✅ |
+| Leaderboard | ✅ |
+| Dashboard | ✅ |
+| Admin (Matches, Locks, Users, Scoring) | ✅ |
+| Security | ✅ 8/8 |
+
+### Security Tests Passed (8/8)
+1. Non-admin navigating to `/admin/*` → redirected
+2. Unauthenticated navigating to `/admin/*` → redirected to `/login`
+3. Force-write match prediction after lock (disabled input via DevTools) → server action blocks, value does not persist
+4. Force-write pre-tournament prediction after admin lock → server action blocks, value does not persist
+5. Read another user's pre-tournament picks via direct API call → RLS returns `[]`
+6. Read another user's match predictions via direct API call before lock → RLS returns `[]`
+7. Non-admin accessing all 6 `/admin/*` routes directly → all redirect
+8. Unauthenticated accessing `/dashboard`, `/predictions/*`, `/leaderboard` → all redirect to `/login`

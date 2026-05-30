@@ -162,16 +162,16 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Entry fee warning shown when `entry_paid = false`
 
 #### Admin — Matches
-- [ ] Enter score for a match → saved correctly, audit log entry created
-- [ ] Status cycle: scheduled → live → finished → scheduled
-- [ ] Upset toggle: on/off
-- [ ] Non-admin user cannot call admin server actions (assertAdmin guard) — test via curl or direct POST
+- [x] Enter score for a match → saved correctly, audit log entry created
+- [x] Status cycle: scheduled → live → finished → scheduled
+- [x] Upset toggle: on/off
+- [x] Non-admin user cannot call admin server actions (assertAdmin guard) — test via curl or direct POST
 
 #### Admin — Locks
-- [ ] Lock a stage → `locked_at` set to now, predictions for that stage disabled in UX
-- [ ] Unlock a stage → `locked_at` reset to original `scheduled_at - 1h`
-- [ ] Lock pre-tournament → pre-tournament form shows locked state
-- [ ] Lock confirmation dialog prevents accidental clicks
+- [x] Lock a stage → `locked_at` set to now, predictions for that stage disabled in UX
+- [x] Unlock a stage → `locked_at` reset to original `scheduled_at - 1h`
+- [x] Lock pre-tournament → pre-tournament form shows locked state
+- [x] Lock confirmation dialog prevents accidental clicks
 
 #### Admin — Users
 - [x] Invite new user → magic link email received
@@ -180,15 +180,19 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Delete user — removed from list and from Supabase Auth
 
 #### Admin — Scoring
-- [ ] Recompute scores → leaderboard updates
-- [ ] Save tournament results (3rd/runner-up/champion/top scorer) → stored correctly
-- [ ] Rebuy unlock by user → `champion_rebuys` row created for that user
+- [x] Recompute scores → leaderboard updates
+- [x] Save tournament results (3rd/runner-up/champion/top scorer) → stored correctly
+- [x] Rebuy unlock by user → `champion_rebuys` row created for that user
 
 #### Security
-- [ ] Direct POST to admin server action as non-admin → `Unauthorized` error returned
-- [ ] Direct POST to `saveMatchPrediction` with a locked `match_id` → blocked by DB RLS
-- [ ] Direct POST to `saveTrophyAndAwards` after June 4 → blocked by DB RLS
-- [ ] Cross-user data: logged in as User A, try to read User B's predictions → empty (RLS)
+- [x] Direct POST to admin server action as non-admin → `Unauthorized` error returned
+- [x] Direct POST to `saveMatchPrediction` with a locked `match_id` → blocked by DB RLS
+- [x] Direct POST to `saveTrophyAndAwards` after June 4 → blocked by DB RLS
+- [x] Cross-user data: logged in as User A, try to read User B's predictions → empty (RLS)
+- [x] Unauthenticated access to `/admin/*` → redirect to `/login`
+- [x] Non-admin access to `/admin/*` → redirect away
+- [x] Unauthenticated access to `/dashboard`, `/predictions/*`, `/leaderboard` → redirect to `/login`
+- [x] Cross-user match predictions hidden before lock (post-lock RLS gate confirmed)
 
 ### Phase 6 — Onboarding (Day 18)
 - [ ] Send magic link invites to 25 users via Resend
