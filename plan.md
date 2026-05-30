@@ -174,10 +174,10 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [ ] Lock confirmation dialog prevents accidental clicks
 
 #### Admin — Users
-- [ ] Invite new user → magic link email received
-- [ ] Toggle `entry_paid` — persists on reload
-- [ ] Toggle `is_admin` — user gains/loses admin tab without re-login (next page load)
-- [ ] Delete user — removed from list and from Supabase Auth
+- [x] Invite new user → magic link email received
+- [x] Toggle `entry_paid` — persists on reload
+- [x] Toggle `is_admin` — user gains/loses admin tab without re-login (next page load)
+- [x] Delete user — removed from list and from Supabase Auth
 
 #### Admin — Scoring
 - [ ] Recompute scores → leaderboard updates

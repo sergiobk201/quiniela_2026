@@ -447,3 +447,45 @@ Shipped full EN/ES internationalization across the entire user-facing app (480+ 
 - Recursive RLS on `profiles` affects ALL anon client reads, not just admin detection — any server component reading a user's own profile via session client will silently return null. Rule: always use `createAdminClient()` for `profiles` queries in server components.
 
 ## Session Log: 2026-05-29 (Session 9 — E2E Battle Testing + Dashboard Fixes)
+
+---
+
+## [Day 10] — 2026-05-30 (Admin E2E + Seed Fix)
+
+### Fixed
+
+- **Group I seed: Iraq/Norway team IDs swapped** — `supabase/seed/001_seed_data.sql` had Iraq (35) and Norway (36) inverted across 5 of 6 Group I matches. Patched via SQL UPDATE in prod DB; seed file corrected to match.
+  - Walter Jesus's 5 affected match predictions deleted (clean slate for re-submission).
+
+- **`togglePaid` broken** — `upsert({ id, entry_paid })` silently failed `display_name TEXT NOT NULL` constraint for any user without a profile row. Changed to `.update().eq('id', userId)` with error check.
+
+- **`deleteUser` broken** — `audit_log.user_id` references `profiles(id)` with no `ON DELETE CASCADE`; profile cascade delete from `auth.users` was blocked by the FK. Fix: null out `audit_log.user_id` for the target user before calling `deleteUser`, with checked error.
+
+- **`deleteUser` self-deletion** — no guard prevented an admin from deleting their own account. Added `user.id === userId` check that throws before any DB operation.
+
+- **`toggleAdmin` error swallowed** — same `upsert` pattern as `togglePaid`; switched to `update()` with error check for consistency.
+
+### Admin E2E Status
+
+| Section | Status |
+|---|---|
+| Users — invite | ✅ |
+| Users — toggle paid | ✅ (fixed this session) |
+| Users — toggle admin | ✅ |
+| Users — delete | ✅ (fixed this session) |
+| Matches — score entry, status, upset | ✅ |
+| Locks — lock/unlock per stage | ✅ |
+| Audit — log viewer, pagination | ✅ |
+| Scoring — recompute, tournament results, rebuy unlock | ✅ |
+
+### Commits
+- `172eee5` fix(seed): correct Iraq/Norway swap in Group I matches
+- `bd2633b` fix(admin): harden user management actions
+
+### Lessons Learned
+- `upsert` with partial columns fails silently on INSERT when required columns (NOT NULL) are absent — always use `update()` when the row is guaranteed to exist; reserve `upsert` for true insert-or-update flows where all NOT NULL columns are provided.
+- FK constraints without `ON DELETE CASCADE` are silent delete-blockers — always check every FK referencing a table before writing a delete path.
+- Audit log `user_id` FK must be nulled before deleting a user; audit history is preserved (rows remain), only the attribution is lost.
+- Never swallow errors from prerequisite steps (audit nulling) before a destructive operation (user delete) — check each error in sequence.
+
+## Session Log: 2026-05-30 (Session 10 — Group I Seed Fix + Admin E2E)
