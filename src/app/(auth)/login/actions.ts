@@ -15,7 +15,7 @@ export async function checkEmailExists(email: string): Promise<boolean> {
 export async function sendInviteRequest(email: string): Promise<{ ok: boolean }> {
   const { error } = await resend.emails.send({
     from: 'Quiniela 2026 <noreply@quiniela2026.space>',
-    to: 'sergio.barrientos1401@gmail.com',
+    to: process.env.ADMIN_NOTIFICATION_EMAIL!,
     subject: `⚽ Invite request — ${email}`,
     html: `
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto;">
