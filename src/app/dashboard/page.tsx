@@ -1,5 +1,6 @@
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
@@ -16,6 +17,7 @@ export default async function DashboardPage() {
   const t = await getTranslations('dashboard')
 
   const supabase = await createClient()
+  const admin = createAdminClient()
   const [
     { data: profile },
     { data: score },
@@ -23,7 +25,7 @@ export default async function DashboardPage() {
     { data: prePred },
     { data: rebuy },
   ] = await Promise.all([
-    supabase.from('profiles').select('display_name, entry_paid').eq('id', user.id).maybeSingle(),
+    admin.from('profiles').select('display_name, entry_paid').eq('id', user.id).maybeSingle(),
     supabase.from('scores').select('*').eq('user_id', user.id).maybeSingle(),
     supabase.from('match_predictions').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase.from('pre_tournament_predictions').select('champion_team_id, champion:teams!champion_team_id(name,code)').eq('user_id', user.id).maybeSingle(),
