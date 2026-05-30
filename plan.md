@@ -127,32 +127,32 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Reload — all saved scores persist
 
 #### Knockout Predictions
-- [ ] All 6 stages (r32/r16/qf/sf/3rd/final) load correctly
-- [ ] TBD teams shown as `🏳️ TBD` — input still enabled pre-lock
-- [ ] Flag emojis correct for confirmed teams
-- [ ] Auto-save on blur, status dot behavior
-- [ ] Locked match inputs disabled
+- [x] All 6 stages (r32/r16/qf/sf/3rd/final) load correctly
+- [x] TBD teams shown as `🏳️ TBD` — input still enabled pre-lock
+- [x] Flag emojis correct for confirmed teams
+- [x] Auto-save on blur, status dot behavior
+- [x] Locked match inputs disabled
 
 #### Rebuy
-- [ ] No rebuy available state renders correctly (original champion name + flag shown)
-- [ ] Rebuy unlocked: team dropdown shows flags, champion-changed event fires on select
-- [ ] Submit is permanent — form replaced with "Rebuy Submitted" confirmation card
-- [ ] Already-submitted state shows correct team + flag
+- [x] No rebuy available state renders correctly (original champion name + flag shown)
+- [x] Rebuy unlocked: team dropdown shows flags, champion-changed event fires on select
+- [x] Submit is permanent — form replaced with "Rebuy Submitted" confirmation card
+- [x] Already-submitted state shows correct team + flag
 
 #### Receipt
-- [ ] All pre-tournament picks shown with flags
-- [ ] Group standings: all 12 groups, 4 positions each with flags
-- [ ] 3rd-place qualifiers listed with flags
-- [ ] Match predictions by stage: flags + scores correct
-- [ ] Rebuy section appears only when rebuy submitted
-- [ ] Print/PDF — layout clean, nav and button hidden in print mode
+- [x] All pre-tournament picks shown with flags
+- [x] Group standings: all 12 groups, 4 positions each with flags
+- [x] 3rd-place qualifiers listed with flags
+- [x] Match predictions by stage: flags + scores correct
+- [x] Rebuy section appears only when rebuy submitted
+- [x] Print/PDF — layout clean, nav and button hidden in print mode
 
 #### Leaderboard
-- [ ] All users ranked correctly by total points
-- [ ] Current user row highlighted (champion color tint + left border)
-- [ ] Champion flags shown before each player name
-- [ ] Realtime update: trigger score recompute in admin → leaderboard updates without page refresh
-- [ ] Medal colors: gold #1, silver #2, bronze #3
+- [x] All users ranked correctly by total points
+- [x] Current user row highlighted (champion color tint + left border)
+- [x] Champion flags shown before each player name
+- [x] Realtime update: trigger score recompute in admin → leaderboard updates without page refresh
+- [x] Medal colors: gold #1, silver #2, bronze #3
 
 #### Dashboard
 - [ ] Score breakdown cards correct (pre-tournament, group, knockout, rebuy)

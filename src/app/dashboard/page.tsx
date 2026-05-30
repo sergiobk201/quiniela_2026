@@ -59,7 +59,7 @@ export default async function DashboardPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
-          {t('welcomeBack', { name: profile?.display_name ?? user.email })}
+          {t('welcomeBack', { name: profile?.display_name ?? user.email?.split('@')[0] ?? 'Player' })}
         </h1>
         {profile !== null && !profile.entry_paid && (
           <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
