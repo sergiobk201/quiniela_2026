@@ -403,3 +403,47 @@ Completed the picks comparison grid feature end-to-end: built, audited, hardened
 
 ### Summary
 Shipped full EN/ES internationalization across the entire user-facing app (480+ strings, 21 routes) using `next-intl` v4 with cookie-based locale — no URL restructure. Group stage hardened: leading-zero input guard and live x/72 counter. Fixed 5 bugs found during live mobile testing: login button key missing, rules dates hardcoded in English, mobile hero overflow clipping all content above the tagline, groups K/L clipped by shadcn's fixed tab height, and locale toggle showing text labels instead of flags. All fixes deployed to production. 8 commits total.
+
+---
+
+## [Day 9] — 2026-05-29 (Phase 5.5 E2E Complete + Dashboard Fix)
+
+### E2E Testing Completed
+- **Knockout Predictions** ✅ — all 6 stages (r32/r16/qf/sf/3rd/final), TBD teams, flags, auto-save, lock behavior
+- **Rebuy** ✅ — locked state, unlock flow, permanent submit, already-submitted state; test data reset via SQL after
+- **Receipt** ✅ — pre-tournament picks, group standings, 3rd-place qualifiers, match predictions by stage, rebuy section gating, print/PDF
+- **Leaderboard** ✅ — podium, rank table, champion flags, realtime update, picks grid gate, public leaderboard, i18n
+- **Dashboard** ✅ — score card, champion pick, rebuy card, progress bar, quick links, mini-widget, i18n
+
+### Fixed
+
+- **Dashboard welcome greeting showed raw email** — `profile?.display_name` was null for manually bootstrapped admin account; fallback `?? user.email` exposed full email address. Fixed: better fallback (`user.email?.split('@')[0] ?? 'Player'`).
+- **Dashboard profile query returning null** — anon client + recursive RLS on `profiles` silently blocked the SELECT even with "Read own profile" policy present. Root cause: same recursive policy issue as `nav.tsx` and leaderboard. Fixed: switched `profiles` fetch to `createAdminClient()` (service-role bypasses RLS). Pattern now consistent across all profile reads in the app.
+
+### Phase 5.5 E2E Final Status
+
+| Section | Status |
+|---|---|
+| Login & Auth | ✅ 14/14 |
+| Nav & Global UI | ✅ 8/8 |
+| Pre-Tournament Predictions | ✅ 10/10 |
+| Group Stage Predictions | ✅ |
+| Knockout Predictions | ✅ |
+| Rebuy | ✅ |
+| Receipt | ✅ |
+| Leaderboard | ✅ |
+| Dashboard | ✅ |
+| Admin | 🔲 Pending |
+| Security | 🔲 Pending |
+
+### Onboarding
+- Magic link invites sent to family & friends. Users onboarding now, waiting on payments.
+
+### Commits
+- `a3fae33` fix(dashboard): hide raw email in welcome greeting
+- `6f0dda7` fix(dashboard): use service-role for profile query
+
+### Lessons Learned
+- Recursive RLS on `profiles` affects ALL anon client reads, not just admin detection — any server component reading a user's own profile via session client will silently return null. Rule: always use `createAdminClient()` for `profiles` queries in server components.
+
+## Session Log: 2026-05-29 (Session 9 — E2E Battle Testing + Dashboard Fixes)

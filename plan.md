@@ -155,11 +155,11 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Medal colors: gold #1, silver #2, bronze #3
 
 #### Dashboard
-- [ ] Score breakdown cards correct (pre-tournament, group, knockout, rebuy)
-- [ ] Champion pick shows flag + name; missing pick shows "Add your champion pick →" link
-- [ ] Progress bar fills correctly (match predictions / 104)
-- [ ] Rebuy card: shows team + flag when submitted, "Rebuy available" link when unlocked, "Not yet unlocked" when inactive
-- [ ] Entry fee warning shown when `entry_paid = false`
+- [x] Score breakdown cards correct (pre-tournament, group, knockout, rebuy)
+- [x] Champion pick shows flag + name; missing pick shows "Add your champion pick →" link
+- [x] Progress bar fills correctly (match predictions / 104)
+- [x] Rebuy card: shows team + flag when submitted, "Rebuy available" link when unlocked, "Not yet unlocked" when inactive
+- [x] Entry fee warning shown when `entry_paid = false`
 
 #### Admin — Matches
 - [ ] Enter score for a match → saved correctly, audit log entry created
