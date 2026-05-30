@@ -195,7 +195,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Cross-user match predictions hidden before lock (post-lock RLS gate confirmed)
 
 ### Phase 6 — Onboarding (Day 18)
-- [ ] Send magic link invites to 25 users via Resend
+- [x] Send magic link invites to 25 users via Resend
 - [x] `/rules` page: scoring rules, deadlines, FAQ — shipped in Phase 5 hardening pass
 - [ ] Schedule deadline reminder email (June 3 — 1 day before lock)
 - [ ] README

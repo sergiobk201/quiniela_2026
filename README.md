@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <!-- TODO: add hero screenshot → docs/hero.png (suggested: leaderboard or dashboard view) -->
+  <img src="docs/dashboard_page.png" alt="Dashboard" width="800">
 </p>
 
 ---
@@ -48,13 +48,24 @@ The system enforces hard prediction deadlines via dual-layer lock enforcement: R
 
 ## 📸 Screenshots
 
-<!-- TODO: add screenshots to docs/ — suggested captures:
-  docs/login.png        → magic link form with stadium hero
-  docs/dashboard.png    → score breakdown + champion pick + mini-widget
-  docs/leaderboard.png  → podium + ranked table + picks grid
-  docs/predictions.png  → group stage match score inputs
-  docs/admin.png        → admin matches panel
--->
+<table>
+  <tr>
+    <td><img src="docs/login_page.png" alt="Login" width="400"></td>
+    <td><img src="docs/dashboard_page.png" alt="Dashboard" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Magic link login with stadium hero</em></td>
+    <td align="center"><em>Dashboard — scores, champion pick, leaderboard widget</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/predictions_group.png" alt="Group Stage Predictions" width="400"></td>
+    <td><img src="docs/admin_matches.png" alt="Admin Matches" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Group stage score predictions</em></td>
+    <td align="center"><em>Admin — match score entry panel</em></td>
+  </tr>
+</table>
 
 ---
 
