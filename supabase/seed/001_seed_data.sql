@@ -143,11 +143,11 @@ FROM (VALUES
   (32, 29, 'group', 8, '2026-06-27 00:00:00+00', 1),  -- Uruguay vs Spain        [MD3 simultaneous]
   -- ── Group I ─────────────────────────────────────────────
   (33, 34, 'group', 9, '2026-06-16 19:00:00+00', 1),  -- France vs Senegal
-  (36, 35, 'group', 9, '2026-06-16 22:00:00+00', 1),  -- Iraq vs Norway
-  (33, 36, 'group', 9, '2026-06-22 21:00:00+00', 1),  -- France vs Iraq
-  (35, 34, 'group', 9, '2026-06-23 00:00:00+00', 1),  -- Norway vs Senegal
-  (35, 33, 'group', 9, '2026-06-26 19:00:00+00', 1),  -- Norway vs France        [MD3 simultaneous]
-  (34, 36, 'group', 9, '2026-06-26 19:00:00+00', 1),  -- Senegal vs Iraq         [MD3 simultaneous]
+  (35, 36, 'group', 9, '2026-06-16 22:00:00+00', 1),  -- Iraq vs Norway
+  (33, 35, 'group', 9, '2026-06-22 21:00:00+00', 1),  -- France vs Iraq
+  (36, 34, 'group', 9, '2026-06-23 00:00:00+00', 1),  -- Norway vs Senegal
+  (36, 33, 'group', 9, '2026-06-26 19:00:00+00', 1),  -- Norway vs France        [MD3 simultaneous]
+  (34, 35, 'group', 9, '2026-06-26 19:00:00+00', 1),  -- Senegal vs Iraq         [MD3 simultaneous]
   -- ── Group J ─────────────────────────────────────────────
   (37, 38, 'group', 10, '2026-06-17 01:00:00+00', 1), -- Argentina vs Algeria
   (39, 40, 'group', 10, '2026-06-16 04:00:00+00', 1), -- Austria vs Jordan
