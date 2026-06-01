@@ -37,6 +37,12 @@ interface Props {
     total_goals_prediction: number | null
     first_eliminated_team_id: number | null
     most_yellows_team_id: number | null
+    first_goal_scorer: string | null
+    first_red_card_player: string | null
+    total_red_cards_prediction: number | null
+    final_goes_to_penalties: boolean | null
+    total_own_goals_prediction: number | null
+    most_goals_team_id: number | null
   } | null
   standings: GroupStandingRow[]
   qualifierTeamIds: number[]
@@ -112,6 +118,12 @@ export default function PreTournamentForm({
     total_goals_prediction: prediction?.total_goals_prediction ?? null,
     first_eliminated_team_id: prediction?.first_eliminated_team_id ?? null,
     most_yellows_team_id: prediction?.most_yellows_team_id ?? null,
+    first_goal_scorer: prediction?.first_goal_scorer ?? '',
+    first_red_card_player: prediction?.first_red_card_player ?? '',
+    total_red_cards_prediction: prediction?.total_red_cards_prediction ?? null,
+    final_goes_to_penalties: prediction?.final_goes_to_penalties ?? null,
+    total_own_goals_prediction: prediction?.total_own_goals_prediction ?? null,
+    most_goals_team_id: prediction?.most_goals_team_id ?? null,
   })
 
   const [groupStandings, setGroupStandings] = useState<Record<number, GroupStandingRow>>(() => {
@@ -271,8 +283,10 @@ export default function PreTournamentForm({
         <Card>
           <CardHeader>
             <CardTitle>{t('funBets')}</CardTitle>
+            <p className="text-xs text-muted-foreground">{t('funBetsSub')}</p>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* ── Row 1: existing bets ── */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">{t('totalGoals')}</label>
               <Input
@@ -304,6 +318,99 @@ export default function PreTournamentForm({
               <TeamSelect
                 value={trophy.most_yellows_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, most_yellows_team_id: id }))}
+                teams={teams}
+                disabled={locked}
+                placeholder={t('selectTeam')}
+              />
+            </div>
+
+            {/* ── Row 2: new bets ── */}
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('firstGoalScorer')}</label>
+              <Input
+                value={trophy.first_goal_scorer}
+                onChange={e => setTrophy(prev => ({ ...prev, first_goal_scorer: e.target.value }))}
+                disabled={locked}
+                placeholder={t('playerNamePlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('firstRedCard')}</label>
+              <Input
+                value={trophy.first_red_card_player}
+                onChange={e => setTrophy(prev => ({ ...prev, first_red_card_player: e.target.value }))}
+                disabled={locked}
+                placeholder={t('playerNamePlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('totalRedCards')}</label>
+              <Input
+                type="number"
+                min={0}
+                value={trophy.total_red_cards_prediction ?? ''}
+                onChange={e =>
+                  setTrophy(prev => ({
+                    ...prev,
+                    total_red_cards_prediction: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                disabled={locked}
+                placeholder={t('numberPlaceholder')}
+              />
+            </div>
+
+            {/* ── Row 3: new bets ── */}
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('finalToPenalties')}</label>
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => !locked && setTrophy(prev => ({ ...prev, final_goes_to_penalties: true }))}
+                  disabled={locked}
+                  className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                    trophy.final_goes_to_penalties === true
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background border-input hover:bg-muted'
+                  }`}
+                >
+                  {t('penaltiesYes')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => !locked && setTrophy(prev => ({ ...prev, final_goes_to_penalties: false }))}
+                  disabled={locked}
+                  className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                    trophy.final_goes_to_penalties === false
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background border-input hover:bg-muted'
+                  }`}
+                >
+                  {t('penaltiesNo')}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('totalOwnGoals')}</label>
+              <Input
+                type="number"
+                min={0}
+                value={trophy.total_own_goals_prediction ?? ''}
+                onChange={e =>
+                  setTrophy(prev => ({
+                    ...prev,
+                    total_own_goals_prediction: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                disabled={locked}
+                placeholder={t('numberPlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('mostGoalsTeam')}</label>
+              <TeamSelect
+                value={trophy.most_goals_team_id}
+                onChange={id => setTrophy(prev => ({ ...prev, most_goals_team_id: id }))}
                 teams={teams}
                 disabled={locked}
                 placeholder={t('selectTeam')}

@@ -101,6 +101,26 @@ export default async function RulesPage() {
       </section>
 
       <section className="space-y-3">
+        <h2 className="text-lg font-semibold">{t('funBetsTitle')}</h2>
+        <p className="text-sm text-muted-foreground">{t('funBetsRulesSub')}</p>
+        <div className="border rounded-lg divide-y text-sm">
+          {[
+            t('ruleFunBet1'),
+            t('ruleFunBet2'),
+            t('ruleFunBet3'),
+            t('ruleFunBet4'),
+            t('ruleFunBet5'),
+            t('ruleFunBet6'),
+          ].map(bet => (
+            <div key={bet} className="flex justify-between px-4 py-3">
+              <span>{bet}</span>
+              <span className="text-muted-foreground text-xs italic">no pts</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('groupStandingsTitle')}</h2>
         <p className="text-sm text-muted-foreground">{t('groupStandingsSubtitle')}</p>
         <div className="border rounded-lg divide-y text-sm">

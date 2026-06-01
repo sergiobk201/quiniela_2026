@@ -24,6 +24,12 @@ export async function saveTrophyAndAwards(data: {
   total_goals_prediction: number | null
   first_eliminated_team_id: number | null
   most_yellows_team_id: number | null
+  first_goal_scorer: string
+  first_red_card_player: string
+  total_red_cards_prediction: number | null
+  final_goes_to_penalties: boolean | null
+  total_own_goals_prediction: number | null
+  most_goals_team_id: number | null
 }): Promise<{ error: string | null }> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()

@@ -217,6 +217,302 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 
 ---
 
+### Phase 8 — User Feedback: Predictions Intelligence
+> Driven by user feedback collected after onboarding. All items must be live before June 11 (WC kickoff). Items 1A and 4-Phase-1 must be live before June 7 (pre-tournament lock).
+
+**Implementation order (strict — dependencies flow downward):**
+1. Item 1A → 2. Item 4 Phase 1 → 3. Item 1B → 4. Item 2A → 5. Item 2B → 6. Item 3 → 7. Item 4 Phase 2
+
+- [ ] **Item 1A — 6 more fun bets** — migration 007; 6 new columns on `pre_tournament_predictions`; extend `saveTrophyAndAwards`; add inputs to pre-tournament form; update rules page + README. No scoring changes.
+- [ ] **Item 1B — Community bet suggestions** — migration 008 (`bet_suggestions` + `bet_suggestion_votes`); new page `/community-bets`; admin page `/admin/suggestions`; daily cron `GET /api/cron/bet-suggestions` emails top-3 voted bets 2 days before each phase starts. Full plan below.
+- [ ] **Item 2A — Live standings table in group stage** — new utility `src/lib/scoring/group-standings.ts` (`computeGroupStandings()`); new component `GroupStandingsTable`; rendered below each group's 6 match rows in `/predictions/group-stage`. No DB change. Full plan below.
+- [ ] **Item 2B — Pre-tournament group standings sync** — pre-tournament page fetches stored match predictions (10th parallel query); "Sync from match picks" button per group + "Sync all 12" global button; warning badge when manual picks diverge from computed standings. Full plan below.
+- [ ] **Item 3 — 3rd-place qualifier FIFA ranking** — extends `group-standings.ts` with `rankThirdPlaceTeams()`; adds pts/GD/GF badges + qualifier status chip (✓ / — / ⚠ Borderline) to qualifier picker; "Auto-select top 8" button. No DB change. Full plan below.
+- [ ] **Item 4 Phase 1 — Trophy pick contradiction alarm** — new utility `src/lib/scoring/validate-trophy.ts`; `saveTrophyAndAwards` returns `warnings[]` on conflict; yellow warning card in form; admin "Prediction Integrity" panel in `/admin/scoring`; daily cron scan + Resend alert email. Full plan below.
+- [ ] **Item 4 Phase 2 — Full bracket prediction page** — migration 009 (`bracket_position` on matches + new `bracket_predictions` table); static `src/lib/bracket/template.ts` (R32 bracket seeding — requires FIFA verification); new page `/predictions/bracket`; two-way sync with trophy picks; Type 2 half-check in validator. Full plan below.
+
+---
+
+## Item 1A — 6 More Fun Bets
+
+### 6 New Columns (additive, existing 3 untouched)
+| Column | Type | Input |
+|---|---|---|
+| `first_goal_scorer` | `TEXT` | text field — first goal scorer of tournament |
+| `first_red_card_player` | `TEXT` | text field — first player shown a red card |
+| `total_red_cards_prediction` | `INT` | number — total red cards in tournament |
+| `final_goes_to_penalties` | `BOOLEAN` | yes/no toggle — will the Final go to extra time + penalties? |
+| `total_own_goals_prediction` | `INT` | number — total own goals scored |
+| `most_goals_team_id` | `INT FK → teams(id)` | team dropdown — team that scores the most goals overall |
+
+### Migration `007_fun_bets_extended.sql`
+```sql
+ALTER TABLE pre_tournament_predictions
+  ADD COLUMN IF NOT EXISTS first_goal_scorer             TEXT,
+  ADD COLUMN IF NOT EXISTS first_red_card_player         TEXT,
+  ADD COLUMN IF NOT EXISTS total_red_cards_prediction    INT,
+  ADD COLUMN IF NOT EXISTS final_goes_to_penalties       BOOLEAN,
+  ADD COLUMN IF NOT EXISTS total_own_goals_prediction    INT,
+  ADD COLUMN IF NOT EXISTS most_goals_team_id            INT REFERENCES teams(id);
+```
+
+### Files to change
+1. `supabase/migrations/007_fun_bets_extended.sql` — migration
+2. `src/app/predictions/pre-tournament/actions.ts` — extend `saveTrophyAndAwards` input type + upsert payload (6 new optional fields)
+3. `src/app/predictions/pre-tournament/pre-tournament-form.tsx` — extend `TrophyState` type; add 6 inputs in Fun Bets card (`final_goes_to_penalties` as Yes/No button toggle; `most_goals_team_id` reuses existing `TeamSelect`)
+4. `src/i18n/messages/en.json` + `es.json` — 6 new label + placeholder keys under `predictions.funBets`
+5. `src/app/(public)/rules/page.tsx` — extend fun bets section with 6 new rows
+6. `README.md` — update feature bullet
+
+### Scoring
+None — fun bets are informational only.
+
+---
+
+## Item 1B — Community Bet Suggestions
+
+### How it works
+1. During each tournament phase, users submit bet suggestions + a difficulty rating
+2. Other users upvote favorites (1 vote per user per suggestion)
+3. Deadline = `MIN(scheduled_at for next stage) - 2 days`, computed at runtime from `matches` table
+4. At deadline: daily cron fetches top 3 by votes → Resend email to admin
+5. Admin manually implements the approved bets in code
+
+### Phase deadlines (computed at runtime)
+| Phase | Suggestion window closes |
+|---|---|
+| `pre_tournament` | `MIN(group scheduled_at) − 2 days` ≈ June 9 |
+| `group` | `MIN(r32 scheduled_at) − 2 days` |
+| `r32` | `MIN(r16 scheduled_at) − 2 days` |
+| `r16` | `MIN(qf scheduled_at) − 2 days` |
+| `qf` | `MIN(sf scheduled_at) − 2 days` |
+| `sf` | `MIN(final scheduled_at) − 2 days` |
+
+### Difficulty → suggested points
+| Level | Pts |
+|---|---|
+| Easy | 1 |
+| Medium | 2 |
+| Hard | 3 |
+| Expert | 5 |
+
+### Migration `008_bet_suggestions.sql`
+```sql
+CREATE TABLE bet_suggestions (
+  id         SERIAL PRIMARY KEY,
+  phase      TEXT NOT NULL CHECK (phase IN ('pre_tournament','group','r32','r16','qf','sf','final')),
+  user_id    UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  suggestion TEXT NOT NULL,
+  difficulty TEXT NOT NULL CHECK (difficulty IN ('easy','medium','hard','expert')),
+  status     TEXT DEFAULT 'open' CHECK (status IN ('open','selected','rejected')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE bet_suggestion_votes (
+  id            SERIAL PRIMARY KEY,
+  suggestion_id INT REFERENCES bet_suggestions(id) ON DELETE CASCADE,
+  user_id       UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (suggestion_id, user_id)
+);
+```
+
+### Files to change
+1. `supabase/migrations/008_bet_suggestions.sql`
+2. `src/app/community-bets/actions.ts` — `submitSuggestion(phase, suggestion, difficulty)` + `toggleVote(suggestionId)`; deadline guard on submit (reject if past deadline)
+3. `src/app/community-bets/page.tsx` — phase tabs; suggestion list with vote counts + upvote button; submit form (disabled post-deadline); current phase auto-detected from `matches` table
+4. `src/app/(admin)/admin/suggestions/page.tsx` — grouped by phase, sorted by votes DESC; mark Selected/Rejected buttons; "Send email now" override button
+5. `src/app/api/cron/bet-suggestions/route.ts` — daily `0 0 * * *`; checks deadline per phase; if crossed and no `audit_log` row for `action='bet_suggestions_email_sent'` + `table_name=phase` → fetch top 3 → send Resend email → insert audit_log
+6. `vercel.json` — add cron entry `{ "path": "/api/cron/bet-suggestions", "schedule": "0 0 * * *" }`
+7. Nav — add "Community Bets" link
+8. `src/i18n/messages/en.json` + `es.json` — `communityBets` namespace
+
+### Email payload to admin
+- Phase name, top 3 suggestions, vote counts per suggestion, difficulty, submitter display name
+- Subject: `⚽ Bet suggestions due — {phase} phase`
+
+---
+
+## Item 2A — Live Standings Table in Group Stage
+
+### New utility `src/lib/scoring/group-standings.ts`
+```typescript
+// Pure function — no DB calls, no side effects
+computeGroupStandings(
+  groupMatches: GroupMatch[],   // { id, home_team: {id,code,name}, away_team: {id,code,name} }
+  scores: Record<number, { home: string; away: string }>
+): StandingsRow[]
+// Returns: [{ teamId, teamCode, teamName, rank, pts, w, d, l, gf, ga, gd }]
+// Sort: pts DESC → gd DESC → gf DESC → teamName ASC
+// Missing score = treated as 0-0 (consistent with lib/scoring/defaults.ts)
+```
+
+Also exports `rankThirdPlaceTeams()` used by Item 3 (see below).
+
+### New component `src/components/predictions/GroupStandingsTable.tsx`
+- Props: `groupMatches`, `scores` state
+- Renders compact table: `Pos | 🏳️ Code | P W D L | GF GA GD | Pts`
+- Row colors: 1st/2nd = green tint (advance), 3rd = amber (potential qualifier), 4th = dimmed
+- `useMemo` — recomputes only when `scores` changes
+
+### Changes to `src/app/predictions/group-stage/group-stage-form.tsx`
+- Import `computeGroupStandings` + `GroupStandingsTable`
+- After each group's match rows → `<hr className="my-3 opacity-20" />` + `<GroupStandingsTable />`
+- Zero new DB queries — all data already in props + state
+
+---
+
+## Item 2B — Pre-Tournament Group Standings Sync
+
+### Changes to `src/app/predictions/pre-tournament/page.tsx`
+- 10th parallel fetch: user's stored `match_predictions` for `stage = 'group'` (service-role client)
+- Pass as `matchPredictions` prop to `PreTournamentForm`
+
+### Changes to `src/app/predictions/pre-tournament/pre-tournament-form.tsx`
+- Accept `matchPredictions` prop
+- Per group: "Sync from match picks" button → runs `computeGroupStandings` client-side → pre-fills `predicted_1st/2nd/3rd/4th` dropdowns; button disabled if fewer than 3 of 6 group matches are filled
+- Global "Sync all 12 groups" button at the top of the Group Standings tab
+- Warning `⚠` badge on each group tab label when stored manual picks diverge from the computed result
+- Existing manual picks preserved until user explicitly clicks Sync
+
+### Trophy picks soft warning (non-bracket)
+- If champion and runner-up picks are the same team as each other or as 3rd → already prevented by dedup; no change needed
+- Informational note: "Both picks are from Group X — they can still both reach the Final via opposite bracket halves."
+
+---
+
+## Item 3 — 3rd-Place Qualifier FIFA Ranking
+
+### Extension to `src/lib/scoring/group-standings.ts`
+```typescript
+rankThirdPlaceTeams(
+  allGroupResults: StandingsRow[][]  // array of 12 groups' computed standings
+): RankedThirdPlace[]
+// Returns 12 entries sorted: pts DESC → gd DESC → gf DESC → teamName ASC
+// Each: { teamId, teamCode, rank, pts, gd, gf, qualifies: boolean, borderline: boolean }
+// qualifies = rank <= 8; borderline = tie at the 8/9 boundary
+```
+
+### Changes to `src/app/predictions/pre-tournament/pre-tournament-form.tsx`
+- Compute `rankedQualifiers` from all 12 groups' standings (using stored `matchPredictions` prop from Item 2B)
+- In the qualifier picker, each team row gains a stat chip `3pts / +2 GD` and a qualifier status badge:
+  - ✓ Top 8 (green)
+  - — Out (gray)
+  - ⚠ Borderline (amber, shown when tied at rank 8/9 boundary)
+- "Auto-select top 8" button → sets `selectedTeams` state to the top 8 ranked team IDs
+- Tie warning: "Teams ranked 7th and 8th are tied — either could qualify"
+
+### No migration needed
+`third_place_qualifier_predictions.team_ids INT[]` already handles any 8 team IDs. Existing saves are untouched until user clicks Auto-select.
+
+---
+
+## Item 4 Phase 1 — Trophy Pick Contradiction Alarm
+
+### What is checked (Phase 1 — no bracket template needed)
+1. **Group advancement**: Is each trophy pick team predicted to advance? (predicted_1st or predicted_2nd in group standings, OR present in the user's saved `third_place_qualifier_predictions.team_ids`)
+2. **Distinct values**: All three picks are different teams (server-side double-check of existing UI dedup)
+
+### New utility `src/lib/scoring/validate-trophy.ts`
+```typescript
+validateTrophyPicks(
+  picks: { champion_team_id, runner_up_team_id, third_place_team_id },
+  groupStandings: GroupStandingPrediction[],
+  thirdPlaceQualifiers: number[]
+): { valid: boolean; conflicts: TrophyConflict[] }
+
+type TrophyConflict = {
+  team_id: number
+  team_name: string
+  type: 'not_advancing' | 'duplicate' | 'same_bracket_half'  // last type added in Phase 2
+  message: string
+}
+```
+
+### Changes to `src/app/predictions/pre-tournament/actions.ts`
+- `saveTrophyAndAwards` runs the validator after saving
+- Returns `{ error: null, warnings: TrophyConflict[] }` — saves regardless
+
+### Changes to `src/app/predictions/pre-tournament/pre-tournament-form.tsx`
+- If `response.warnings.length > 0` → render yellow `⚠ Heads up` card below trophy picks
+- Per-conflict message: "France is predicted to finish 3rd in Group E — they may not advance."
+- Card is dismissible; save is never blocked
+
+### Admin panel `/admin/scoring` — new "Prediction Integrity" section
+- "Scan all users" button → runs validator for every user, renders table: `User | Conflict type | Details`
+- "Send alert email" button → Resend email to `ADMIN_NOTIFICATION_EMAIL` with full conflict list
+- Also triggered automatically once daily via the bet-suggestions cron route
+
+---
+
+## Item 4 Phase 2 — Full Bracket Prediction Page
+
+### Overview
+Users predict the full 32-team knockout bracket. R32 slots are populated from their saved group standing predictions. Picking winners at each round propagates forward. The Final and 3rd-place match results auto-derive Champion/Runner-up/3rd place.
+
+### ⚠ Research required before coding
+Verify the exact 2026 FIFA R32 bracket template (which group positions fill which of the 16 R32 slot pairs). Available from FIFA's official 2026 bracket document. The 8 third-place team slots add complexity (bracket position depends on which groups they came from).
+
+### Migration `009_bracket.sql`
+```sql
+-- Tag each knockout match with its bracket position
+ALTER TABLE matches ADD COLUMN bracket_position INT;
+-- UPDATE the 16 R32 rows with positions 1–16 (sequential by scheduled_at order)
+
+-- User's simulated bracket picks (separate from real match_predictions)
+CREATE TABLE bracket_predictions (
+  id                  SERIAL PRIMARY KEY,
+  user_id             UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  stage               TEXT NOT NULL,
+  bracket_position    INT NOT NULL,
+  predicted_home_id   INT REFERENCES teams(id),
+  predicted_away_id   INT REFERENCES teams(id),
+  predicted_winner_id INT REFERENCES teams(id),
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, stage, bracket_position)
+);
+```
+
+Why a separate table: knockout `match_predictions` rows reference real match IDs (NULL teams) used by the scoring engine. Bracket predictions are simulated matchups based on the user's group stage picks — mixing them would corrupt scoring.
+
+### Static constant `src/lib/bracket/template.ts`
+```typescript
+export type BracketSlot = {
+  pos: number                          // 1–16 for R32
+  half: 'left' | 'right'
+  home: { group: string; rank: 1|2|3 } // rank 3 = 3rd-place qualifier slot
+  away: { group: string; rank: 1|2|3 }
+}
+export const R32_TEMPLATE: BracketSlot[] = [
+  // Filled from FIFA 2026 official bracket after research step
+]
+```
+
+### New page `/predictions/bracket`
+- Two-column bracket: Left half | Right half
+- R32 slots show team derived from user's saved group standings (e.g., Group A predicted_1st = Brazil → "🇧🇷 BRA" in slot)
+- Empty group standings → slot shows "❓ Fill Group A standings →" with direct link
+- Click winning team → propagates to next round; stored via `saveBracketPick(stage, pos, winnerId)` server action
+- Final match → winner auto-syncs to `champion_team_id`, loser to `runner_up_team_id`
+- 3rd place match winner → auto-syncs to `third_place_team_id`
+- Nav: add "Bracket" to predictions sub-nav
+
+### Two-way sync banners (soft, never blocking)
+- Bracket page: "Your Champion pick (France 🇫🇷) differs from your bracket result (Brazil 🇧🇷). [Sync from bracket]"
+- Trophy picks form: "Your bracket predicts Brazil 🇧🇷 as Champion. [Update from bracket]"
+
+### Type 2 validation added to `validate-trophy.ts`
+```typescript
+// Are champion + runner-up on opposite bracket halves?
+const champHalf = getBracketHalf(champion_team_id, groupStandings, R32_TEMPLATE)
+const ruHalf    = getBracketHalf(runner_up_team_id, groupStandings, R32_TEMPLATE)
+if (champHalf !== null && ruHalf !== null && champHalf === ruHalf) {
+  conflicts.push({ type: 'same_bracket_half', message: `${A} and ${B} are on the same side of the bracket — they would meet in a Semi-Final, not the Final.` })
+}
+```
+
+---
+
 ## Auto-Score Pull — Implementation Plan
 
 ### Provider: Football-Data.org (free tier)
