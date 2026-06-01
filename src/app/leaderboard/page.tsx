@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { isPreTournamentLocked } from '@/lib/utils/lock'
 import LeaderboardTable from './leaderboard-table'
 import PicksGrid, { type PlayerPick, type GroupStandingsRow, type MatchRow } from './picks-grid'
+import DailyGrid, { type DailyMatch, type DailyPlayer, type DailyPrediction } from './daily-grid'
 import { getFlag } from '@/lib/teams/meta'
 
 export const dynamic = 'force-dynamic'
@@ -166,6 +167,40 @@ export default async function LeaderboardPage() {
     }
   })
 
+  // Daily prediction grid — today's locked matches only
+  const todayUTC = new Date().toISOString().slice(0, 10)
+  const todayLockedIds = new Set<number>()
+  const dailyMatches: DailyMatch[] = (allMatches ?? [])
+    .filter(m => {
+      const matchDateUTC = new Date(m.scheduled_at).toISOString().slice(0, 10)
+      const lockTime = new Date(m.scheduled_at).getTime() - 59 * 60 * 1000
+      return matchDateUTC === todayUTC && now >= lockTime
+    })
+    .map(m => {
+      todayLockedIds.add(m.id)
+      const home = m.home_team as unknown as { name: string; code: string } | null
+      const away = m.away_team as unknown as { name: string; code: string } | null
+      return {
+        matchId: m.id,
+        homeTeam: home ? `${getFlag(home.code)} ${home.code}` : 'TBD',
+        awayTeam: away ? `${getFlag(away.code)} ${away.code}` : 'TBD',
+        kickoff: new Date(m.scheduled_at).toISOString().slice(11, 16),
+      }
+    })
+
+  const dailyPlayers: DailyPlayer[] = players.map(p => {
+    const code = champMap.get(p.userId)
+    return { userId: p.userId, displayName: p.displayName, championFlag: code ? getFlag(code) : null }
+  })
+
+  const dailyPredictions: DailyPrediction[] = (matchPreds ?? [])
+    .filter(mp => todayLockedIds.has(mp.match_id))
+    .map(mp => ({ userId: mp.user_id, matchId: mp.match_id, home: mp.predicted_home_score, away: mp.predicted_away_score }))
+
+  const dailyDate = dailyMatches.length > 0
+    ? new Date(todayUTC).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+    : ''
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div>
@@ -218,6 +253,18 @@ export default async function LeaderboardPage() {
       )}
 
       <LeaderboardTable initialRows={rows} currentUserId={user.id} />
+
+      {/* Daily prediction grid */}
+      {dailyMatches.length > 0 && (
+        <div className="border-t border-border pt-6">
+          <DailyGrid
+            date={dailyDate}
+            matches={dailyMatches}
+            players={dailyPlayers}
+            predictions={dailyPredictions}
+          />
+        </div>
+      )}
 
       {/* Picks comparison grid */}
       <div className="border-t border-border pt-6">

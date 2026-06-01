@@ -147,6 +147,8 @@
     "linkCopied": "Link copied!",
     "signInCta": "Sign in to see your score breakdown →",
     "noScoresYet": "No scores computed yet. Check back after the tournament starts.",
+    "dailyTitle": "Today's Picks",
+    "dailySubtitle": "Locked match predictions for today's games.",
     "tabs": {
       "trophy": "Trophy & Awards",
       "standings": "Group Standings",
