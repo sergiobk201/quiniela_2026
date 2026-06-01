@@ -1,9 +1,11 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { saveTournamentResults, createRebuyOpportunity } from './actions'
 import RecomputeButton from './recompute-button'
+import IntegrityPanel from './integrity-panel'
 
 export const dynamic = 'force-dynamic'
 
@@ -107,6 +109,16 @@ export default async function ScoringPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Prediction Integrity */}
+      <Suspense fallback={
+        <Card>
+          <CardHeader><CardTitle className="text-base">Prediction Integrity</CardTitle></CardHeader>
+          <CardContent><p className="text-sm text-muted-foreground">Scanning…</p></CardContent>
+        </Card>
+      }>
+        <IntegrityPanel />
+      </Suspense>
 
       {/* Rebuy Management */}
       <Card>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import type { TrophyConflict } from '@/lib/scoring/validate-trophy'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -148,11 +149,17 @@ export default function PreTournamentForm({
   const [pendingTrophy, startTrophyTransition] = useTransition()
   const [pendingStandings, startStandingsTransition] = useTransition()
   const [pendingQualifiers, startQualifiersTransition] = useTransition()
+  const [trophyWarnings, setTrophyWarnings] = useState<TrophyConflict[]>([])
 
   function handleSaveTrophy() {
     startTrophyTransition(async () => {
-      const { error } = await saveTrophyAndAwards(trophy)
-      error ? toast.error(error) : toast.success(t('saveTrophy'))
+      const { error, warnings } = await saveTrophyAndAwards(trophy)
+      if (error) {
+        toast.error(error)
+      } else {
+        setTrophyWarnings(warnings)
+        toast.success(t('saveTrophy'))
+      }
     })
   }
 
@@ -418,6 +425,31 @@ export default function PreTournamentForm({
             </div>
           </CardContent>
         </Card>
+
+        {trophyWarnings.length > 0 && (
+          <div className="rounded-lg border border-amber-400/50 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                ⚠ {t('trophyWarningTitle')}
+              </p>
+              <button
+                type="button"
+                onClick={() => setTrophyWarnings([])}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+            <ul className="space-y-1">
+              {trophyWarnings.map((w, i) => (
+                <li key={i} className="text-xs text-amber-700 dark:text-amber-300">
+                  {w.message}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted-foreground">{t('trophyWarningSub')}</p>
+          </div>
+        )}
 
         {locked ? (
           <p className="text-sm text-destructive text-right">{t('predictionsLocked')}</p>

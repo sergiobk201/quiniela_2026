@@ -3,6 +3,9 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function recomputeScores(type: string = 'all') {
   await assertAdmin()
@@ -64,6 +67,35 @@ export async function createRebuyOpportunity(
   )
   if (error) throw new Error(error.message)
   revalidatePath('/admin/scoring')
+}
+
+export async function sendIntegrityAlert(lines: string[]): Promise<void> {
+  await assertAdmin()
+  if (lines.length === 0) return
+
+  const rows = lines.map(l => `<li style="margin-bottom:6px;">${l}</li>`).join('')
+
+  await resend.emails.send({
+    from: 'Quiniela 2026 <noreply@quiniela2026.space>',
+    to: process.env.ADMIN_NOTIFICATION_EMAIL!,
+    subject: `⚠️ Quiniela — ${lines.length} prediction conflict${lines.length !== 1 ? 's' : ''} found`,
+    html: `
+      <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;">
+        <h2 style="color:#f59e0b;">Prediction Integrity Alert</h2>
+        <p>${lines.length} conflict${lines.length !== 1 ? 's' : ''} detected between users' trophy picks and their group standing predictions.</p>
+        <ul style="padding-left:20px;line-height:1.6;font-size:0.9rem;">${rows}</ul>
+        <p style="margin-top:20px;">
+          <a href="https://www.quiniela2026.space/admin/scoring"
+             style="background:#10b981;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;">
+            View in Admin → Scoring
+          </a>
+        </p>
+        <p style="color:#9ca3af;font-size:0.8rem;margin-top:16px;">
+          Picks are already saved — users need to correct their group standings or trophy picks before June 7.
+        </p>
+      </div>
+    `,
+  })
 }
 
 function toInt(v: FormDataEntryValue | null): number | null {

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { isPreTournamentLocked } from '@/lib/utils/lock'
+import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 
 async function checkLocked(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
   if (isPreTournamentLocked()) return true
@@ -30,20 +31,51 @@ export async function saveTrophyAndAwards(data: {
   final_goes_to_penalties: boolean | null
   total_own_goals_prediction: number | null
   most_goals_team_id: number | null
-}): Promise<{ error: string | null }> {
+}): Promise<{ error: string | null; warnings: TrophyConflict[] }> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) return { error: 'Not authenticated' }
+  if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkLocked(supabase, user.id)) return { error: 'Pre-tournament predictions are locked' }
+  if (await checkLocked(supabase, user.id)) return { error: 'Pre-tournament predictions are locked', warnings: [] }
 
   const { error } = await supabase
     .from('pre_tournament_predictions')
     .upsert({ user_id: user.id, ...data }, { onConflict: 'user_id' })
 
-  if (error) return { error: error.message }
+  if (error) return { error: error.message, warnings: [] }
   revalidatePath('/predictions/pre-tournament')
-  return { error: null }
+
+  // Validate trophy picks against group standings — soft check, save already succeeded
+  const [
+    { data: teams },
+    { data: groups },
+    { data: standings },
+    { data: qualifiers },
+  ] = await Promise.all([
+    supabase.from('teams').select('id, name, code, group_id'),
+    supabase.from('groups').select('id, name'),
+    supabase.from('group_standing_predictions')
+      .select('group_id, predicted_1st, predicted_2nd, predicted_3rd, predicted_4th')
+      .eq('user_id', user.id),
+    supabase.from('third_place_qualifier_predictions')
+      .select('team_ids')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
+
+  const { conflicts } = validateTrophyPicks(
+    {
+      champion_team_id:    data.champion_team_id,
+      runner_up_team_id:   data.runner_up_team_id,
+      third_place_team_id: data.third_place_team_id,
+    },
+    teams ?? [],
+    groups ?? [],
+    standings ?? [],
+    (qualifiers?.team_ids ?? []) as number[]
+  )
+
+  return { error: null, warnings: conflicts }
 }
 
 export async function saveGroupStandings(

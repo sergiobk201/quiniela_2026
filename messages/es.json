@@ -283,6 +283,8 @@
     "locked": "Cerrado",
     "preLockNote": "Los pronósticos pre-torneo están cerrados.",
     "predictionsLocked": "Los pronósticos están cerrados.",
+    "trophyWarningTitle": "Atención — posible inconsistencia",
+    "trophyWarningSub": "Tus picks se guardaron. Corrige tu clasificación de grupos o tus picks para resolver esto.",
     "top3Finishers": "Top 3 del Torneo",
     "individualAwards": "Premios Individuales",
     "funBets": "Apuestas Divertidas",

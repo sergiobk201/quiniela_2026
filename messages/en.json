@@ -283,6 +283,8 @@
     "locked": "Locked",
     "preLockNote": "Pre-tournament predictions are locked.",
     "predictionsLocked": "Predictions are locked.",
+    "trophyWarningTitle": "Heads up — possible inconsistency",
+    "trophyWarningSub": "Your picks were saved. Fix your group standings or trophy picks to resolve this.",
     "top3Finishers": "Top 3 Finishers",
     "individualAwards": "Individual Awards",
     "funBets": "Fun Bets",
