@@ -18,6 +18,12 @@ export type PlayerPick = {
     totalGoals: string
     firstEliminated: string
     mostYellows: string
+    firstGoalScorer: string
+    firstRedCard: string
+    totalRedCards: string
+    finalToPenalties: string
+    totalOwnGoals: string
+    mostGoalsTeam: string
   } | null
   qualifiers: string[]
   rebuy: string | null
@@ -121,12 +127,18 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                     <th className="px-3 py-2 text-center">{t('goals')}</th>
                     <th className="px-3 py-2 text-left">{t('firstOut')}</th>
                     <th className="px-3 py-2 text-left">{t('mostYellows')}</th>
+                    <th className="px-3 py-2 text-left">{t('firstGoalScorer')}</th>
+                    <th className="px-3 py-2 text-left">{t('firstRedCard')}</th>
+                    <th className="px-3 py-2 text-center">{t('totalRedCards')}</th>
+                    <th className="px-3 py-2 text-center">{t('finalToPenalties')}</th>
+                    <th className="px-3 py-2 text-center">{t('totalOwnGoals')}</th>
+                    <th className="px-3 py-2 text-left">{t('mostGoalsTeam')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredPicks.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground text-xs">
+                      <td colSpan={16} className="px-3 py-6 text-center text-muted-foreground text-xs">
                         {isSearchActive ? t('noResults') : t('noPicksYet')}
                       </td>
                     </tr>
@@ -146,9 +158,15 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                           <td className="px-3 py-2 text-center">{p.preTournament.totalGoals}</td>
                           <td className="px-3 py-2">{p.preTournament.firstEliminated}</td>
                           <td className="px-3 py-2">{p.preTournament.mostYellows}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{p.preTournament.firstGoalScorer}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{p.preTournament.firstRedCard}</td>
+                          <td className="px-3 py-2 text-center">{p.preTournament.totalRedCards}</td>
+                          <td className="px-3 py-2 text-center">{p.preTournament.finalToPenalties}</td>
+                          <td className="px-3 py-2 text-center">{p.preTournament.totalOwnGoals}</td>
+                          <td className="px-3 py-2">{p.preTournament.mostGoalsTeam}</td>
                         </>
                       ) : (
-                        <td colSpan={9} className="px-3 py-2 text-muted-foreground italic">{t('noPicksYet')}</td>
+                        <td colSpan={15} className="px-3 py-2 text-muted-foreground italic">{t('noPicksYet')}</td>
                       )}
                     </tr>
                   ))}
