@@ -521,3 +521,35 @@ All Phase 5.5 E2E sections now green:
 6. Read another user's match predictions via direct API call before lock → RLS returns `[]`
 7. Non-admin accessing all 6 `/admin/*` routes directly → all redirect
 8. Unauthenticated accessing `/dashboard`, `/predictions/*`, `/leaderboard` → all redirect to `/login`
+
+---
+
+## [Day 11] — 2026-05-31 (Phase 7: Daily Prediction Grid)
+
+### Shipped
+
+**Phase 7 — Daily Prediction Grid**
+- `src/app/leaderboard/daily-grid.tsx` — async server component embedded in `/leaderboard` below the standings table
+- **Desktop (md+):** player × match table; sticky player column with `group-hover` highlight sync; compact mono column headers (`MEX–RSA / 15:00`); horizontal scroll for 5+ matches
+- **Mobile (<md):** one card per match, all players stacked inside with flagged team header (`🇲🇽 MEX vs 🇿🇦 RSA · 15:00`) and per-player score row
+- **Gate:** UTC date filter + 59-min pre-kickoff lock — same gate as `matchRows`; no extra DB query (reuses `allMatches` + `matchPreds` already fetched by the page)
+- `DailyMatch` type uses `homeCode`/`awayCode` (raw 3-letter codes); `matchLabel()` derives flagged display in component
+- Renders nothing pre-tournament — will auto-appear on June 11 at first kickoff minus 59 min
+- EN/ES i18n: `dailyTitle` + `dailySubtitle` keys added to both locale files
+
+### Commits
+- `962c8ba` feat(leaderboard): add daily prediction grid
+- `423e786` refactor(leaderboard): responsive daily grid layout
+
+### Deployed
+- `vercel --prod` → `https://www.quiniela2026.space`
+- Build: 21 routes, TypeScript clean, 0 errors
+
+### Remaining — Phase 7
+- [ ] Reminder push — Resend email blast June 6 to users with incomplete predictions
+- [ ] Auto-pull match scores — Football-Data.org + Vercel Cron (must be live before June 11)
+- [ ] Audit hardening + transparency
+
+### Remaining — Phase 6
+- [ ] Schedule deadline reminder email (June 3 send)
+- [ ] README screenshots
