@@ -48,6 +48,7 @@ interface Props {
   standings: GroupStandingRow[]
   qualifierTeamIds: number[]
   locked: boolean
+  initialWarnings: TrophyConflict[]
 }
 
 function TeamSelect({
@@ -94,6 +95,7 @@ export default function PreTournamentForm({
   standings,
   qualifierTeamIds,
   locked,
+  initialWarnings,
 }: Props) {
   const t = useTranslations('predictions')
 
@@ -149,7 +151,7 @@ export default function PreTournamentForm({
   const [pendingTrophy, startTrophyTransition] = useTransition()
   const [pendingStandings, startStandingsTransition] = useTransition()
   const [pendingQualifiers, startQualifiersTransition] = useTransition()
-  const [trophyWarnings, setTrophyWarnings] = useState<TrophyConflict[]>([])
+  const [trophyWarnings, setTrophyWarnings] = useState<TrophyConflict[]>(initialWarnings)
 
   function handleSaveTrophy() {
     startTrophyTransition(async () => {
@@ -165,15 +167,25 @@ export default function PreTournamentForm({
 
   function handleSaveStandings() {
     startStandingsTransition(async () => {
-      const { error } = await saveGroupStandings(Object.values(groupStandings))
-      error ? toast.error(error) : toast.success(t('saveAllStandings'))
+      const { error, warnings } = await saveGroupStandings(Object.values(groupStandings))
+      if (error) {
+        toast.error(error)
+      } else {
+        setTrophyWarnings(warnings)
+        toast.success(t('saveAllStandings'))
+      }
     })
   }
 
   function handleSaveQualifiers() {
     startQualifiersTransition(async () => {
-      const { error } = await saveThirdPlaceQualifiers(Array.from(selectedQualifiers))
-      error ? toast.error(error) : toast.success(t('saveQualifiers'))
+      const { error, warnings } = await saveThirdPlaceQualifiers(Array.from(selectedQualifiers))
+      if (error) {
+        toast.error(error)
+      } else {
+        setTrophyWarnings(warnings)
+        toast.success(t('saveQualifiers'))
+      }
     })
   }
 
@@ -226,6 +238,31 @@ export default function PreTournamentForm({
   const posLabels = [t('position1'), t('position2'), t('position3'), t('position4')]
 
   return (
+    <>
+    {trophyWarnings.length > 0 && (
+      <div className="rounded-lg border border-amber-400/50 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            ⚠ {t('trophyWarningTitle')}
+          </p>
+          <button
+            type="button"
+            onClick={() => setTrophyWarnings([])}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            ✕
+          </button>
+        </div>
+        <ul className="space-y-1">
+          {trophyWarnings.map((w, i) => (
+            <li key={i} className="text-xs text-amber-700 dark:text-amber-300">
+              {w.message}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">{t('trophyWarningSub')}</p>
+      </div>
+    )}
     <Tabs defaultValue="trophy">
       <TabsList className="flex-wrap h-auto gap-1">
         <TabsTrigger value="trophy">{t('trophy')}</TabsTrigger>
@@ -426,31 +463,6 @@ export default function PreTournamentForm({
           </CardContent>
         </Card>
 
-        {trophyWarnings.length > 0 && (
-          <div className="rounded-lg border border-amber-400/50 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                ⚠ {t('trophyWarningTitle')}
-              </p>
-              <button
-                type="button"
-                onClick={() => setTrophyWarnings([])}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </button>
-            </div>
-            <ul className="space-y-1">
-              {trophyWarnings.map((w, i) => (
-                <li key={i} className="text-xs text-amber-700 dark:text-amber-300">
-                  {w.message}
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-muted-foreground">{t('trophyWarningSub')}</p>
-          </div>
-        )}
-
         {locked ? (
           <p className="text-sm text-destructive text-right">{t('predictionsLocked')}</p>
         ) : (
@@ -577,5 +589,6 @@ export default function PreTournamentForm({
         )}
       </TabsContent>
     </Tabs>
+    </>
   )
 }

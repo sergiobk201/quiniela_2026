@@ -1,6 +1,7 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { isPreTournamentLocked } from '@/lib/utils/lock'
+import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 import PreTournamentForm from './pre-tournament-form'
 
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,22 @@ export default async function PreTournamentPage() {
       .maybeSingle(),
   ])
 
+  let initialWarnings: TrophyConflict[] = []
+  if (prediction?.champion_team_id || prediction?.runner_up_team_id || prediction?.third_place_team_id) {
+    const { conflicts } = validateTrophyPicks(
+      {
+        champion_team_id:    prediction.champion_team_id ?? null,
+        runner_up_team_id:   prediction.runner_up_team_id ?? null,
+        third_place_team_id: prediction.third_place_team_id ?? null,
+      },
+      (teams ?? []) as { id: number; name: string; code: string; group_id: number | null }[],
+      (groups ?? []) as { id: number; name: string }[],
+      (standings ?? []) as any[],
+      ((qualifiers as any)?.team_ids ?? []) as number[]
+    )
+    initialWarnings = conflicts
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div>
@@ -44,6 +61,7 @@ export default async function PreTournamentPage() {
         standings={(standings ?? []) as any[]}
         qualifierTeamIds={(qualifiers as any)?.team_ids ?? []}
         locked={isPreTournamentLocked()}
+        initialWarnings={initialWarnings}
       />
     </div>
   )
