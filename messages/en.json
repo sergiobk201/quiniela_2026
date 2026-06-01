@@ -18,6 +18,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "predictions": "Predictions",
+    "communityBets": "Bets",
     "leaderboard": "Leaderboard",
     "rules": "Rules",
     "admin": "Admin"
@@ -366,7 +367,8 @@
       "matches": "Matches",
       "locks": "Locks",
       "audit": "Audit",
-      "scoring": "Scoring"
+      "scoring": "Scoring",
+      "suggestions": "Suggestions"
     },
     "users": {
       "title": "User Management",
@@ -421,6 +423,17 @@
       "sf": "Semi-Finals",
       "thirdPlace": "3rd Place",
       "final": "Final"
+    },
+    "suggestions": {
+      "title": "Bet Suggestions",
+      "subtitle": "Community-voted bet proposals. Top 3 per phase emailed 2 days before each phase starts.",
+      "sendEmail": "Send top-3 email",
+      "select": "Select",
+      "reject": "Reject",
+      "reset": "Reset",
+      "noSuggestions": "No suggestions for this phase.",
+      "selected": "✓ Selected",
+      "rejected": "Rejected"
     },
     "scoring": {
       "title": "Scoring",

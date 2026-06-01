@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Users, Trophy, Lock, FileText, Calculator } from 'lucide-react'
+import { Users, Trophy, Lock, FileText, Calculator, Lightbulb } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function AdminNav() {
@@ -11,11 +11,12 @@ export function AdminNav() {
   const pathname = usePathname()
 
   const links = [
-    { href: '/admin/users',   label: t('users'),   icon: Users },
-    { href: '/admin/matches', label: t('matches'),  icon: Trophy },
-    { href: '/admin/locks',   label: t('locks'),    icon: Lock },
-    { href: '/admin/audit',   label: t('audit'),    icon: FileText },
-    { href: '/admin/scoring', label: t('scoring'),  icon: Calculator },
+    { href: '/admin/users',       label: t('users'),       icon: Users },
+    { href: '/admin/matches',     label: t('matches'),     icon: Trophy },
+    { href: '/admin/locks',       label: t('locks'),       icon: Lock },
+    { href: '/admin/audit',       label: t('audit'),       icon: FileText },
+    { href: '/admin/scoring',     label: t('scoring'),     icon: Calculator },
+    { href: '/admin/suggestions', label: t('suggestions'), icon: Lightbulb },
   ]
 
   return (

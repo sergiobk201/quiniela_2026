@@ -18,6 +18,7 @@
   "nav": {
     "dashboard": "Inicio",
     "predictions": "Pronósticos",
+    "communityBets": "Apuestas",
     "leaderboard": "Clasificación",
     "rules": "Reglas",
     "admin": "Admin"
@@ -366,7 +367,8 @@
       "matches": "Partidos",
       "locks": "Cierres",
       "audit": "Auditoría",
-      "scoring": "Puntaje"
+      "scoring": "Puntaje",
+      "suggestions": "Sugerencias"
     },
     "users": {
       "title": "Gestión de Usuarios",
@@ -421,6 +423,17 @@
       "sf": "Semifinales",
       "thirdPlace": "3er Lugar",
       "final": "Final"
+    },
+    "suggestions": {
+      "title": "Sugerencias de Apuestas",
+      "subtitle": "Propuestas de apuestas votadas por la comunidad. Las 3 más votadas por fase se envían al admin 2 días antes.",
+      "sendEmail": "Enviar email top-3",
+      "select": "Seleccionar",
+      "reject": "Rechazar",
+      "reset": "Restablecer",
+      "noSuggestions": "No hay sugerencias para esta fase.",
+      "selected": "✓ Seleccionada",
+      "rejected": "Rechazada"
     },
     "scoring": {
       "title": "Puntaje",

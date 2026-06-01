@@ -9,10 +9,11 @@ export function NavLinks({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname()
 
   const links = [
-    { href: '/dashboard',                  label: t('dashboard'),   match: (p: string) => p === '/dashboard' },
-    { href: '/predictions/pre-tournament', label: t('predictions'), match: (p: string) => p.startsWith('/predictions') },
-    { href: '/leaderboard',                label: t('leaderboard'), match: (p: string) => p === '/leaderboard' },
-    { href: '/rules',                      label: t('rules'),       match: (p: string) => p === '/rules' },
+    { href: '/dashboard',                  label: t('dashboard'),      match: (p: string) => p === '/dashboard' },
+    { href: '/predictions/pre-tournament', label: t('predictions'),    match: (p: string) => p.startsWith('/predictions') },
+    { href: '/community-bets',             label: t('communityBets'),  match: (p: string) => p.startsWith('/community-bets') },
+    { href: '/leaderboard',                label: t('leaderboard'),    match: (p: string) => p === '/leaderboard' },
+    { href: '/rules',                      label: t('rules'),          match: (p: string) => p === '/rules' },
   ]
 
   const allLinks = isAdmin
