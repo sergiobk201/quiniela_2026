@@ -182,8 +182,8 @@ export default async function LeaderboardPage() {
       const away = m.away_team as unknown as { name: string; code: string } | null
       return {
         matchId: m.id,
-        homeTeam: home ? `${getFlag(home.code)} ${home.code}` : 'TBD',
-        awayTeam: away ? `${getFlag(away.code)} ${away.code}` : 'TBD',
+        homeCode: home?.code ?? null,
+        awayCode: away?.code ?? null,
         kickoff: new Date(m.scheduled_at).toISOString().slice(11, 16),
       }
     })
