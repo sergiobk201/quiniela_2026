@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import type { TrophyConflict } from '@/lib/scoring/validate-trophy'
+import type { StandingsRow } from '@/lib/scoring/group-standings'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,7 @@ interface Props {
   qualifierTeamIds: number[]
   locked: boolean
   initialWarnings: TrophyConflict[]
+  computedByGroup: Record<number, StandingsRow[]>
 }
 
 function TeamSelect({
@@ -96,6 +98,7 @@ export default function PreTournamentForm({
   qualifierTeamIds,
   locked,
   initialWarnings,
+  computedByGroup,
 }: Props) {
   const t = useTranslations('predictions')
 
@@ -236,6 +239,51 @@ export default function PreTournamentForm({
   }
 
   const posLabels = [t('position1'), t('position2'), t('position3'), t('position4')]
+
+  function hasMismatch(groupId: number): boolean {
+    const computed = computedByGroup[groupId]
+    if (!computed || computed.length < 4) return false
+    const manual = groupStandings[groupId]
+    if (!manual) return false
+    // Only flag if user has at least one match prediction for this group
+    if (computed.every(r => r.p === 0)) return false
+    return (
+      computed[0]?.teamId !== manual.predicted_1st ||
+      computed[1]?.teamId !== manual.predicted_2nd ||
+      computed[2]?.teamId !== manual.predicted_3rd ||
+      computed[3]?.teamId !== manual.predicted_4th
+    )
+  }
+
+  function buildSyncedStandings(groupId: number): GroupStandingRow {
+    const computed = computedByGroup[groupId]
+    return {
+      group_id: groupId,
+      predicted_1st: computed?.[0]?.teamId ?? null,
+      predicted_2nd: computed?.[1]?.teamId ?? null,
+      predicted_3rd: computed?.[2]?.teamId ?? null,
+      predicted_4th: computed?.[3]?.teamId ?? null,
+    }
+  }
+
+  function syncGroup(groupId: number) {
+    setGroupStandings(prev => ({ ...prev, [groupId]: buildSyncedStandings(groupId) }))
+  }
+
+  function syncAll() {
+    const newStandings: Record<number, GroupStandingRow> = { ...groupStandings }
+    for (const g of groups) {
+      newStandings[g.id] = buildSyncedStandings(g.id)
+    }
+    setGroupStandings(newStandings)
+    startStandingsTransition(async () => {
+      const { error, warnings } = await saveGroupStandings(Object.values(newStandings))
+      if (error) { toast.error(error) }
+      else { setTrophyWarnings(warnings); toast.success(t('syncedSaved')) }
+    })
+  }
+
+  const mismatchCount = groups.filter(g => hasMismatch(g.id)).length
 
   return (
     <>
@@ -476,13 +524,36 @@ export default function PreTournamentForm({
 
       {/* ── Tab 2: Group Standings ── */}
       <TabsContent value="standings" className="mt-4">
+        {mismatchCount > 0 && !locked && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-400/50 bg-amber-50/50 dark:bg-amber-950/20 px-4 py-3">
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              ⚠ {t('standingsMismatchBanner', { count: mismatchCount })}
+            </p>
+            <Button size="sm" variant="outline" onClick={syncAll} disabled={pendingStandings}>
+              {pendingStandings ? '…' : t('syncAll')}
+            </Button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {groups.map(group => {
             const standing = groupStandings[group.id]
+            const mismatch = hasMismatch(group.id)
             return (
-              <Card key={group.id}>
-                <CardHeader>
-                  <CardTitle>{t('groupLabel', { name: group.name })}</CardTitle>
+              <Card key={group.id} className={mismatch ? 'border-amber-400/60' : ''}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{t('groupLabel', { name: group.name })}</CardTitle>
+                    {mismatch && !locked && (
+                      <button
+                        type="button"
+                        onClick={() => syncGroup(group.id)}
+                        className="text-xs text-amber-600 dark:text-amber-400 hover:underline shrink-0"
+                      >
+                        ⚠ {t('syncFromMatches')}
+                      </button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {STANDING_POSITION_KEYS.map(({ key }, idx) => (
