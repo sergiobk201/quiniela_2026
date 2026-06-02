@@ -343,11 +343,15 @@ export default function PreTournamentForm({
           </button>
         </div>
         <ul className="space-y-1">
-          {trophyWarnings.map((w, i) => (
-            <li key={i} className="text-xs text-amber-700 dark:text-amber-300">
-              {w.message}
-            </li>
-          ))}
+          {trophyWarnings.map((w, i) => {
+            const LABEL_KEYS = { champion: 'champion', runner_up: 'runnerUp', third_place: 'thirdPlacePick' } as const
+            const label = t(LABEL_KEYS[w.field])
+            return (
+              <li key={i} className="text-xs text-amber-700 dark:text-amber-300">
+                {t(w.messageKey as Parameters<typeof t>[0], { ...w.messageParams, label })}
+              </li>
+            )
+          })}
         </ul>
         <p className="text-xs text-muted-foreground">{t('trophyWarningSub')}</p>
       </div>

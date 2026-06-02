@@ -7,7 +7,9 @@ export type TrophyConflict = {
   teamName: string
   teamFlag: string
   type: TrophyConflictType
-  message: string
+  message: string // English fallback (used by admin panel)
+  messageKey: string // i18n key under preTournament namespace
+  messageParams: Record<string, string> // interpolation params (label resolved by component)
 }
 
 export type TrophyValidationResult = {
@@ -104,6 +106,8 @@ export function validateTrophyPicks(
         teamFlag: flag,
         type: 'not_in_qualifiers',
         message: `${label}: ${flag} ${team.name} is predicted 3rd in Group ${groupLetter} but isn't in your 3rd-place qualifier picks — they may not advance.`,
+        messageKey: 'conflictNotInQualifiers',
+        messageParams: { flag, name: team.name, group: groupLetter },
       })
       continue
     }
@@ -115,6 +119,8 @@ export function validateTrophyPicks(
         teamFlag: flag,
         type: 'eliminated_in_group',
         message: `${label}: ${flag} ${team.name} is predicted 4th in Group ${groupLetter} — they will be eliminated in the group stage.`,
+        messageKey: 'conflictEliminatedInGroup',
+        messageParams: { flag, name: team.name, group: groupLetter },
       })
     }
   }
@@ -142,6 +148,8 @@ export function validateTrophyPicks(
             teamFlag: ruFlag,
             type:     'same_bracket_half',
             message:  `${champFlag} ${champTeam.name} and ${ruFlag} ${ruTeam.name} are on the same side of the 2026 bracket — they can meet at most in the semi-final, so they can't both be Champion and Runner-up.`,
+            messageKey: 'conflictSameBracketHalf',
+            messageParams: { champFlag, champName: champTeam.name, ruFlag, ruName: ruTeam.name },
           })
         }
       }
