@@ -114,8 +114,9 @@ export default function KnockoutForm({ matches, predictions }: Props) {
 
             return (
               <tr key={match.id} className="border-b last:border-0 hover:bg-muted/30">
-                <td className="px-3 py-2 text-muted-foreground whitespace-nowrap text-xs">
-                  {kickoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                <td className="px-3 py-2 text-muted-foreground whitespace-nowrap text-xs" suppressHydrationWarning>
+                  <div>{kickoff.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                  <div className="opacity-60">{kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</div>
                 </td>
                 <td className="px-3 py-2 text-right font-medium"><span className="mr-1">{homeFlag}</span>{homeName}</td>
                 <td className="px-3 py-2">
