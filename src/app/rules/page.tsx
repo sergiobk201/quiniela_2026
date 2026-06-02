@@ -141,6 +141,30 @@ export default async function RulesPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('thirdPlaceQualifiers')}</h2>
         <p className="text-sm text-muted-foreground">{t('thirdPlaceSubtitle')}</p>
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+          💡 {t('thirdPlaceSmartNote')}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">{t('communityBetsTitle')}</h2>
+        <p className="text-sm text-muted-foreground">{t('communityBetsSub')}</p>
+        <div className="border rounded-lg divide-y text-sm">
+          {[t('communityBetsHow1'), t('communityBetsHow2'), t('communityBetsHow3')].map(step => (
+            <div key={step} className="px-4 py-3">{step}</div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground italic">{t('communityBetsNote')}</p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">{t('predictionTools')}</h2>
+        <p className="text-sm text-muted-foreground">{t('predictionToolsSub')}</p>
+        <div className="border rounded-lg divide-y text-sm">
+          {[t('toolSync'), t('toolWarnings'), t('toolQualifiers')].map(tool => (
+            <div key={tool} className="px-4 py-3">{tool}</div>
+          ))}
+        </div>
       </section>
 
       <section className="space-y-3">
@@ -156,6 +180,8 @@ export default async function RulesPage() {
             { q: t('faq2q'), a: t('faq2a') },
             { q: t('faq3q'), a: t('faq3a') },
             { q: t('faq4q'), a: t('faq4a') },
+            { q: t('faq5q'), a: t('faq5a') },
+            { q: t('faq6q'), a: t('faq6a') },
           ].map(({ q, a }) => (
             <div key={q} className="space-y-1">
               <p className="font-medium">{q}</p>
