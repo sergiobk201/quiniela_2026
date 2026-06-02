@@ -3,7 +3,7 @@ import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { updateSuggestionStatus, sendSuggestionEmail } from './actions'
+import { updateSuggestionStatus } from './actions'
 import { PHASES, DIFFICULTY_PTS, PHASE_NEXT_STAGE, type Phase, type Difficulty } from '@/app/community-bets/types'
 
 export const dynamic = 'force-dynamic'
@@ -88,16 +88,9 @@ export default async function SuggestionsPage() {
 
           return (
             <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <p className={`text-xs font-medium ${dlPassed ? 'text-muted-foreground' : 'text-green-600 dark:text-green-400'}`}>
-                  {dl ? (dlPassed ? `Closed ${dl.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : `Closes ${dl.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`) : 'No deadline'}
-                </p>
-                <form action={async () => { 'use server'; await sendSuggestionEmail(p.key) }}>
-                  <Button type="submit" variant="outline" size="sm">
-                    Send top-3 email
-                  </Button>
-                </form>
-              </div>
+              <p className={`text-xs font-medium ${dlPassed ? 'text-muted-foreground' : 'text-green-600 dark:text-green-400'}`}>
+                {dl ? (dlPassed ? `Closed ${dl.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : `Closes ${dl.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`) : 'No deadline'}
+              </p>
 
               {phaseSugs.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">No suggestions for this phase.</p>

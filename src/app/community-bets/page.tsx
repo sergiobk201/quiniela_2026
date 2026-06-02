@@ -1,4 +1,5 @@
 import { getUser, createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import CommunityBetsClient from './community-bets-client'
 import { PHASES, PHASE_NEXT_STAGE, type Phase, type EnrichedSuggestion } from './types'
@@ -21,7 +22,7 @@ export default async function CommunityBetsPage() {
       .select('id, phase, user_id, suggestion, difficulty, status, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('bet_suggestion_votes').select('suggestion_id, user_id'),
-    supabase.from('profiles').select('id, display_name'),
+    createAdminClient().from('profiles').select('id, display_name'),
     supabase.from('matches')
       .select('stage, scheduled_at')
       .in('stage', ['group', 'r32', 'r16', 'qf', 'sf', 'final'])
