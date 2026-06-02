@@ -147,9 +147,22 @@ export default function PreTournamentForm({
     return init
   })
 
-  const [selectedQualifiers, setSelectedQualifiers] = useState<Set<number>>(
-    new Set(qualifierTeamIds)
-  )
+  const [selectedQualifiers, setSelectedQualifiers] = useState<Set<number>>(() => {
+    const valid = new Set<number>()
+    for (const id of qualifierTeamIds) {
+      const team = teams.find(t => t.id === id)
+      if (!team?.group_id) { valid.add(id); continue }
+      const rows = computedByGroup[team.group_id]
+      if (rows && rows.some(r => r.p > 0)) {
+        // Computed data exists — only keep if this team is computed 3rd
+        if (rows.find(r => r.teamId === id)?.rank === 3) valid.add(id)
+        // else: stale selection from old standings — silently drop
+      } else {
+        valid.add(id) // no computed data, trust saved selection
+      }
+    }
+    return valid
+  })
 
   const [pendingTrophy, startTrophyTransition] = useTransition()
   const [pendingStandings, startStandingsTransition] = useTransition()
@@ -222,6 +235,15 @@ export default function PreTournamentForm({
     if (s.predicted_3rd === teamId) return 3
     if (s.predicted_4th === teamId) return 4
     return null
+  }
+
+  // Source of truth: computed match standings when available, fallback to manual
+  function getEffectivePosInGroup(teamId: number, groupId: number): 1 | 2 | 3 | 4 | null {
+    const rows = computedByGroup[groupId]
+    if (rows && rows.some(r => r.p > 0)) {
+      return (rows.find(r => r.teamId === teamId)?.rank ?? null) as 1 | 2 | 3 | 4 | null
+    }
+    return getPosInGroup(teamId, groupId)
   }
 
   function toggleQualifier(teamId: number, groupId: number) {
@@ -638,7 +660,7 @@ export default function PreTournamentForm({
                 <CardContent className="space-y-1">
                   {groupTeams.map(team => {
                     const isSelected = selectedQualifiers.has(team.id)
-                    const pos = getPosInGroup(team.id, group.id)
+                    const pos = getEffectivePosInGroup(team.id, group.id)
                     const isIneligible = pos === 1 || pos === 2 || pos === 4
                     const isMaxed = !isSelected && !groupHasSelection && selectedQualifiers.size >= 8
                     const isDisabled = locked || isIneligible || (isMaxed && !isSelected)
