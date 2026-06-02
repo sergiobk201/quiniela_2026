@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import type { TrophyConflict } from '@/lib/scoring/validate-trophy'
-import type { StandingsRow } from '@/lib/scoring/group-standings'
+import { rankThirdPlaceTeams, type StandingsRow, type RankedThirdPlace } from '@/lib/scoring/group-standings'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -284,6 +284,25 @@ export default function PreTournamentForm({
   }
 
   const mismatchCount = groups.filter(g => hasMismatch(g.id)).length
+
+  // Ranked 3rd-place teams derived from match predictions
+  const rankedThirds: RankedThirdPlace[] = rankThirdPlaceTeams(
+    groups.map(g => g.id),
+    computedByGroup
+  )
+  const rankedThirdsMap = new Map(rankedThirds.map(r => [r.teamId, r]))
+  // Only enable auto-select if user has at least some match predictions filled
+  const hasAnyMatchData = rankedThirds.some(r => r.pts > 0 || r.gd !== 0 || r.gf > 0)
+  const hasBorderlineTie = rankedThirds.some(r => r.borderline)
+
+  function autoSelectTop8() {
+    const top8 = rankedThirds.filter(r => r.qualifies).map(r => r.teamId)
+    const next = new Set(selectedQualifiers)
+    // Clear existing third-place selections and apply new top-8
+    for (const r of rankedThirds) next.delete(r.teamId)
+    for (const id of top8) next.add(id)
+    setSelectedQualifiers(next)
+  }
 
   return (
     <>
@@ -587,12 +606,25 @@ export default function PreTournamentForm({
 
       {/* ── Tab 3: 3rd-Place Qualifiers ── */}
       <TabsContent value="qualifiers" className="mt-4 space-y-4">
-        <p className="text-sm text-muted-foreground">
-          {t('qualifiersSub')}{' '}
-          <span className={selectedQualifiers.size === 8 ? 'text-green-500 font-medium' : 'text-yellow-500 font-medium'}>
-            {t('qualifiersSelected', { count: selectedQualifiers.size })}
-          </span>
-        </p>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <p className="text-sm text-muted-foreground">
+            {t('qualifiersSub')}{' '}
+            <span className={selectedQualifiers.size === 8 ? 'text-green-500 font-medium' : 'text-yellow-500 font-medium'}>
+              {t('qualifiersSelected', { count: selectedQualifiers.size })}
+            </span>
+          </p>
+          {hasAnyMatchData && !locked && (
+            <Button size="sm" variant="outline" onClick={autoSelectTop8}>
+              {t('autoSelectTop8')}
+            </Button>
+          )}
+        </div>
+
+        {hasBorderlineTie && (
+          <div className="rounded-lg border border-amber-400/50 bg-amber-50/50 dark:bg-amber-950/20 px-4 py-2">
+            <p className="text-xs text-amber-700 dark:text-amber-400">⚠ {t('borderlineTieWarning')}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {groups.map(group => {
@@ -610,6 +642,7 @@ export default function PreTournamentForm({
                     const isIneligible = pos === 1 || pos === 2 || pos === 4
                     const isMaxed = !isSelected && !groupHasSelection && selectedQualifiers.size >= 8
                     const isDisabled = locked || isIneligible || (isMaxed && !isSelected)
+                    const ranked = rankedThirdsMap.get(team.id)
 
                     return (
                       <label
@@ -630,13 +663,27 @@ export default function PreTournamentForm({
                         <span className={isIneligible ? 'text-muted-foreground' : ''}>
                           {getFlag(team.code)} {team.name}
                         </span>
-                        {pos !== null && (
-                          <span className={`ml-auto text-xs font-medium shrink-0 ${
-                            pos === 3 ? 'text-amber-500' : 'text-muted-foreground/50'
-                          }`}>
-                            {pos === 1 ? t('position1') : pos === 2 ? t('position2') : pos === 3 ? `${t('position3')} ✓` : t('position4')}
-                          </span>
-                        )}
+                        <span className="ml-auto flex items-center gap-1.5 shrink-0">
+                          {ranked && hasAnyMatchData && (
+                            <span className="text-xs text-muted-foreground">
+                              {ranked.pts}pt{ranked.pts !== 1 ? 's' : ''} · {ranked.gd >= 0 ? '+' : ''}{ranked.gd}
+                            </span>
+                          )}
+                          {ranked && hasAnyMatchData && (
+                            ranked.borderline
+                              ? <span className="text-xs text-amber-500 font-medium">⚠ #{ranked.rank}</span>
+                              : ranked.qualifies
+                                ? <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ #{ranked.rank}</span>
+                                : <span className="text-xs text-muted-foreground/60">— #{ranked.rank}</span>
+                          )}
+                          {pos !== null && !ranked && (
+                            <span className={`text-xs font-medium ${
+                              pos === 3 ? 'text-amber-500' : 'text-muted-foreground/50'
+                            }`}>
+                              {pos === 1 ? t('position1') : pos === 2 ? t('position2') : pos === 3 ? `${t('position3')} ✓` : t('position4')}
+                            </span>
+                          )}
+                        </span>
                       </label>
                     )
                   })}

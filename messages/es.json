@@ -277,6 +277,8 @@
     "saveAwards": "Guardar premios y apuestas",
     "saveStandings": "Guardar clasificación de grupos",
     "saveAllStandings": "Guardar toda la clasificación",
+    "autoSelectTop8": "Seleccionar automáticamente los 8 mejores",
+    "borderlineTieWarning": "Los equipos en puesto 8 y 9 están empatados — cualquiera podría clasificar",
     "syncAll": "Sincronizar todo y guardar",
     "syncFromMatches": "Sincronizar desde partidos",
     "syncedSaved": "Clasificación sincronizada y guardada",

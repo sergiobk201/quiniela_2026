@@ -19,6 +19,62 @@ export type StandingsRow = {
   gd:       number
 }
 
+export type RankedThirdPlace = {
+  teamId:     number
+  teamCode:   string
+  teamName:   string
+  groupId:    number
+  rank:       number  // 1–12 among all 3rd-place teams
+  pts:        number
+  gd:         number
+  gf:         number
+  qualifies:  boolean  // rank <= 8
+  borderline: boolean  // tied at the 8/9 cutoff
+}
+
+export function rankThirdPlaceTeams(
+  groupIds: number[],
+  computedByGroup: Record<number, StandingsRow[]>
+): RankedThirdPlace[] {
+  const thirds: (StandingsRow & { groupId: number })[] = []
+  for (const gid of groupIds) {
+    const rows = computedByGroup[gid]
+    const third = rows?.find(r => r.rank === 3)
+    if (third) thirds.push({ ...third, groupId: gid })
+  }
+
+  const sorted = thirds.sort((a, b) =>
+    b.pts - a.pts ||
+    b.gd  - a.gd  ||
+    b.gf  - a.gf  ||
+    a.teamName.localeCompare(b.teamName)
+  )
+
+  // Detect tie at the 8/9 boundary
+  const at8 = sorted[7]
+  const at9 = sorted[8]
+  const tiedAtCutoff = at8 && at9 &&
+    at8.pts === at9.pts &&
+    at8.gd  === at9.gd  &&
+    at8.gf  === at9.gf
+
+  return sorted.map((row, i) => {
+    const rank = i + 1
+    return {
+      teamId:     row.teamId,
+      teamCode:   row.teamCode,
+      teamName:   row.teamName,
+      groupId:    row.groupId,
+      rank,
+      pts:        row.pts,
+      gd:         row.gd,
+      gf:         row.gf,
+      qualifies:  rank <= 8,
+      borderline: !!tiedAtCutoff && (rank === 8 || rank === 9),
+    }
+  })
+}
+
 export function computeGroupStandings(
   groupMatches: GroupMatch[],
   scores: Record<number, { home: string; away: string }>

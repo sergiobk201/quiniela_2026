@@ -277,6 +277,8 @@
     "saveAwards": "Save awards & bets",
     "saveStandings": "Save group standings",
     "saveAllStandings": "Save All Standings",
+    "autoSelectTop8": "Auto-select top 8",
+    "borderlineTieWarning": "Teams at rank 8 and 9 are tied — either could qualify",
     "syncAll": "Sync all & save",
     "syncFromMatches": "Sync from match picks",
     "syncedSaved": "Standings synced & saved",
