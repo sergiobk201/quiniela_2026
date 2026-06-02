@@ -464,6 +464,34 @@
       "page": "Page {page}"
     }
   },
+  "communityBets": {
+    "title": "Community Bet Suggestions",
+    "subtitle": "Propose bets for each phase. Top 3 voted get sent to admin 2 days before the phase starts.",
+    "noSuggestions": "No suggestions yet. Be the first!",
+    "submitTitle": "Submit a Suggestion",
+    "suggestionPlaceholder": "Describe the bet (max 200 chars)",
+    "submit": "Submit",
+    "submitting": "Submitting…",
+    "submitted": "Suggestion submitted!",
+    "closesOn": "Closes {date}",
+    "closedOn": "Closed {date}",
+    "noDeadline": "No deadline",
+    "selectedBadge": "✓ Selected",
+    "voteHint": "Top 3 voted suggestions get emailed to admin 2 days before {phase} starts.",
+    "by": "by",
+    "charCount": "{count}/200",
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
+    "difficultyExpert": "Expert",
+    "phasePreTournament": "Pre-Tournament",
+    "phaseGroup": "Group Stage",
+    "phaseR32": "Round of 32",
+    "phaseR16": "Round of 16",
+    "phaseQF": "Quarter-Finals",
+    "phaseSF": "Semi-Finals",
+    "phaseFinal": "Final"
+  },
   "error": {
     "title": "Something went wrong",
     "retry": "Try again"

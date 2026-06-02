@@ -464,6 +464,34 @@
       "page": "Página {page}"
     }
   },
+  "communityBets": {
+    "title": "Sugerencias de Apuestas",
+    "subtitle": "Propón apuestas para cada fase. Las 3 más votadas se envían al admin 2 días antes de que empiece la fase.",
+    "noSuggestions": "Sin sugerencias aún. ¡Sé el primero!",
+    "submitTitle": "Enviar una Sugerencia",
+    "suggestionPlaceholder": "Describe la apuesta (máx. 200 caracteres)",
+    "submit": "Enviar",
+    "submitting": "Enviando…",
+    "submitted": "¡Sugerencia enviada!",
+    "closesOn": "Cierra el {date}",
+    "closedOn": "Cerrado el {date}",
+    "noDeadline": "Sin fecha límite",
+    "selectedBadge": "✓ Seleccionada",
+    "voteHint": "Las 3 sugerencias más votadas se envían al admin 2 días antes de que empiece {phase}.",
+    "by": "por",
+    "charCount": "{count}/200",
+    "difficultyEasy": "Fácil",
+    "difficultyMedium": "Medio",
+    "difficultyHard": "Difícil",
+    "difficultyExpert": "Experto",
+    "phasePreTournament": "Pre-Torneo",
+    "phaseGroup": "Fase de Grupos",
+    "phaseR32": "Ronda de 32",
+    "phaseR16": "Ronda de 16",
+    "phaseQF": "Cuartos de Final",
+    "phaseSF": "Semifinales",
+    "phaseFinal": "Final"
+  },
   "error": {
     "title": "Algo salió mal",
     "retry": "Intentar de nuevo"

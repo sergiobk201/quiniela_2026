@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,13 +15,6 @@ interface Props {
   deadlines: Record<string, string | null>
 }
 
-const DIFFICULTY_OPTIONS: { value: Difficulty; label: string; color: string }[] = [
-  { value: 'easy',   label: 'Easy · 1pt',    color: 'text-green-600 dark:text-green-400' },
-  { value: 'medium', label: 'Medium · 2pts',  color: 'text-blue-600 dark:text-blue-400' },
-  { value: 'hard',   label: 'Hard · 3pts',    color: 'text-orange-600 dark:text-orange-400' },
-  { value: 'expert', label: 'Expert · 5pts',  color: 'text-red-600 dark:text-red-400' },
-]
-
 const DIFF_BADGE: Record<string, string> = {
   easy:   'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   medium: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
@@ -28,7 +22,25 @@ const DIFF_BADGE: Record<string, string> = {
   expert: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 }
 
+const PHASE_LABEL_KEY: Record<Phase, string> = {
+  pre_tournament: 'phasePreTournament',
+  group:          'phaseGroup',
+  r32:            'phaseR32',
+  r16:            'phaseR16',
+  qf:             'phaseQF',
+  sf:             'phaseSF',
+  final:          'phaseFinal',
+}
+
+const DIFF_LABEL_KEY: Record<Difficulty, string> = {
+  easy:   'difficultyEasy',
+  medium: 'difficultyMedium',
+  hard:   'difficultyHard',
+  expert: 'difficultyExpert',
+}
+
 export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
+  const t = useTranslations('communityBets')
   const now = new Date()
 
   const [voteCounts, setVoteCounts] = useState<Record<number, number>>(
@@ -54,10 +66,10 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
 
   function deadlineLabel(phase: Phase): string {
     const dl = deadlines[phase]
-    if (!dl) return 'No deadline'
+    if (!dl) return t('noDeadline')
     const d = new Date(dl)
     const fmt = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    return d > now ? `Closes ${fmt}` : `Closed ${fmt}`
+    return d > now ? t('closesOn', { date: fmt }) : t('closedOn', { date: fmt })
   }
 
   function handleVote(id: number) {
@@ -77,7 +89,7 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
   function handleSubmit(phase: Phase) {
     startSubmit(async () => {
       const { error } = await submitSuggestion(phase, newText, difficulty)
-      if (error) { toast.error(error) } else { setNewText(''); toast.success('Suggestion submitted!') }
+      if (error) { toast.error(error) } else { setNewText(''); toast.success(t('submitted')) }
     })
   }
 
@@ -86,7 +98,7 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
       <TabsList className="flex-wrap h-auto gap-1">
         {PHASES.map(p => (
           <TabsTrigger key={p.key} value={p.key} className="text-xs sm:text-sm">
-            {p.label}
+            {t(PHASE_LABEL_KEY[p.key] as any)}
             {!isOpen(p.key) && <span className="ml-1 opacity-40 text-xs">✓</span>}
           </TabsTrigger>
         ))}
@@ -96,6 +108,7 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
         const phaseSugs = [...suggestions.filter(s => s.phase === p.key)]
           .sort((a, b) => (voteCounts[b.id] ?? 0) - (voteCounts[a.id] ?? 0))
         const open = isOpen(p.key)
+        const phaseLabel = t(PHASE_LABEL_KEY[p.key] as any)
 
         return (
           <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
@@ -104,7 +117,7 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
             </p>
 
             {phaseSugs.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No suggestions yet. Be the first!</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('noSuggestions')}</p>
             ) : (
               <div className="space-y-2">
                 {phaseSugs.map((s, i) => (
@@ -134,11 +147,11 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
                       <p className="text-sm leading-snug">{s.suggestion}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
                         <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE[s.difficulty]}`}>
-                          {s.difficulty} · {DIFFICULTY_PTS[s.difficulty as Difficulty]}pts
+                          {t(DIFF_LABEL_KEY[s.difficulty as Difficulty] as any)} · {DIFFICULTY_PTS[s.difficulty as Difficulty]}pts
                         </span>
-                        <span className="text-xs text-muted-foreground">by {s.authorName}</span>
+                        <span className="text-xs text-muted-foreground">{t('by')} {s.authorName}</span>
                         {s.status === 'selected' && (
-                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ Selected</span>
+                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">{t('selectedBadge')}</span>
                         )}
                       </div>
                     </div>
@@ -150,13 +163,13 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
             {open && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Submit a Suggestion</CardTitle>
+                  <CardTitle className="text-sm">{t('submitTitle')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Input
                     value={newText}
                     onChange={e => setNewText(e.target.value)}
-                    placeholder="Describe the bet (max 200 chars)"
+                    placeholder={t('suggestionPlaceholder')}
                     maxLength={200}
                     className="text-sm"
                   />
@@ -166,8 +179,10 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
                       onChange={e => setDifficulty(e.target.value as Difficulty)}
                       className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      {DIFFICULTY_OPTIONS.map(d => (
-                        <option key={d.value} value={d.value}>{d.label}</option>
+                      {(['easy', 'medium', 'hard', 'expert'] as Difficulty[]).map(d => (
+                        <option key={d} value={d}>
+                          {t(DIFF_LABEL_KEY[d] as any)} · {DIFFICULTY_PTS[d]}pts
+                        </option>
                       ))}
                     </select>
                     <Button
@@ -175,12 +190,12 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
                       disabled={pendingSubmit || !newText.trim()}
                       size="sm"
                     >
-                      {pendingSubmit ? 'Submitting…' : 'Submit'}
+                      {pendingSubmit ? t('submitting') : t('submit')}
                     </Button>
-                    <span className="text-xs text-muted-foreground">{newText.length}/200</span>
+                    <span className="text-xs text-muted-foreground">{t('charCount', { count: newText.length })}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Top 3 voted suggestions get emailed to admin 2 days before {p.label} starts.
+                    {t('voteHint', { phase: phaseLabel })}
                   </p>
                 </CardContent>
               </Card>

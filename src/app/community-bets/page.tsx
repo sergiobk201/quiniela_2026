@@ -1,6 +1,7 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import CommunityBetsClient from './community-bets-client'
 import { PHASES, PHASE_NEXT_STAGE, type Phase, type EnrichedSuggestion } from './types'
 
@@ -10,6 +11,7 @@ export default async function CommunityBetsPage() {
   const user = await getUser()
   if (!user) redirect('/login')
 
+  const t = await getTranslations('communityBets')
   const supabase = await createClient()
 
   const [
@@ -73,10 +75,8 @@ export default async function CommunityBetsPage() {
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Community Bet Suggestions</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Propose bets for each phase. Top 3 voted get sent to admin 2 days before the phase starts.
-        </p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t('subtitle')}</p>
       </div>
       <CommunityBetsClient suggestions={enriched} deadlines={deadlines} />
     </div>
