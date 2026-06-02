@@ -197,7 +197,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 ### Phase 6 — Onboarding (Day 18)
 - [x] Send magic link invites to 25 users via Resend
 - [x] `/rules` page: scoring rules, deadlines, FAQ — shipped in Phase 5 hardening pass
-- [ ] Schedule deadline reminder email (June 3 — 1 day before lock)
+- [x] Schedule deadline reminder email (June 6 — 1 day before lock) — pending Resend blast build
 - [ ] README
 
 ### Phase 7 — Automations & UX Polish (Nice to Haves)
@@ -223,12 +223,12 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 **Implementation order (strict — dependencies flow downward):**
 1. Item 1A → 2. Item 4 Phase 1 → 3. Item 1B → 4. Item 2A → 5. Item 2B → 6. Item 3 → 7. Item 4 Phase 2
 
-- [ ] **Item 1A — 6 more fun bets** — migration 007; 6 new columns on `pre_tournament_predictions`; extend `saveTrophyAndAwards`; add inputs to pre-tournament form; update rules page + README. No scoring changes.
-- [ ] **Item 1B — Community bet suggestions** — migration 008 (`bet_suggestions` + `bet_suggestion_votes`); new page `/community-bets`; admin page `/admin/suggestions`; daily cron `GET /api/cron/bet-suggestions` emails top-3 voted bets 2 days before each phase starts. Full plan below.
-- [ ] **Item 2A — Live standings table in group stage** — new utility `src/lib/scoring/group-standings.ts` (`computeGroupStandings()`); new component `GroupStandingsTable`; rendered below each group's 6 match rows in `/predictions/group-stage`. No DB change. Full plan below.
-- [ ] **Item 2B — Pre-tournament group standings sync** — pre-tournament page fetches stored match predictions (10th parallel query); "Sync from match picks" button per group + "Sync all 12" global button; warning badge when manual picks diverge from computed standings. Full plan below.
-- [ ] **Item 3 — 3rd-place qualifier FIFA ranking** — extends `group-standings.ts` with `rankThirdPlaceTeams()`; adds pts/GD/GF badges + qualifier status chip (✓ / — / ⚠ Borderline) to qualifier picker; "Auto-select top 8" button. No DB change. Full plan below.
-- [ ] **Item 4 Phase 1 — Trophy pick contradiction alarm** — new utility `src/lib/scoring/validate-trophy.ts`; `saveTrophyAndAwards` returns `warnings[]` on conflict; yellow warning card in form; admin "Prediction Integrity" panel in `/admin/scoring`; daily cron scan + Resend alert email. Full plan below.
+- [x] **Item 1A — 6 more fun bets** — migration 007; 6 new columns on `pre_tournament_predictions`; extend `saveTrophyAndAwards`; add inputs to pre-tournament form; update rules page + README. No scoring changes.
+- [x] **Item 1B — Community bet suggestions** — migration 008 (`bet_suggestions` + `bet_suggestion_votes`); new page `/community-bets`; admin page `/admin/suggestions`; daily cron `GET /api/cron/bet-suggestions` emails top-3 voted bets 2 days before each phase starts. Full plan below.
+- [x] **Item 2A — Live standings table in group stage** — new utility `src/lib/scoring/group-standings.ts` (`computeGroupStandings()`); new component `GroupStandingsTable`; rendered below each group's 6 match rows in `/predictions/group-stage`. No DB change. Full plan below.
+- [x] **Item 2B — Pre-tournament group standings sync** — pre-tournament page fetches stored match predictions (10th parallel query); "Sync from match picks" button per group + "Sync all 12" global button; warning badge when manual picks diverge from computed standings. Full plan below.
+- [x] **Item 3 — 3rd-place qualifier FIFA ranking** — extends `group-standings.ts` with `rankThirdPlaceTeams()`; adds pts/GD/GF badges + qualifier status chip (✓ / — / ⚠ Borderline) to qualifier picker; "Auto-select top 8" button. No DB change. Full plan below.
+- [x] **Item 4 Phase 1 — Trophy pick contradiction alarm** — new utility `src/lib/scoring/validate-trophy.ts`; `saveTrophyAndAwards` returns `warnings[]` on conflict; yellow warning card in form; bracket-half impossibility check added (2026-06-01). Full plan below.
 - [ ] **Item 4 Phase 2 — Full bracket prediction page** — migration 009 (`bracket_position` on matches + new `bracket_predictions` table); static `src/lib/bracket/template.ts` (R32 bracket seeding — requires FIFA verification); new page `/predictions/bracket`; two-way sync with trophy picks; Type 2 half-check in validator. Full plan below.
 
 ---

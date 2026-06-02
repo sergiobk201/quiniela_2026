@@ -2,6 +2,41 @@
 
 ---
 
+## [Day 12] — 2026-06-01 (Phase 8: Bracket-Half Validation)
+
+### Shipped
+
+**Item 4 Phase 1 — Bracket-half trophy pick validation**
+- `src/lib/scoring/validate-trophy.ts` — added `same_bracket_half` conflict type
+- Added `BRACKET_HALF` map hardcoded from official 2026 FIFA World Cup knockout bracket (source: Wikipedia — 2026 FIFA World Cup knockout stage, R32 match schedule M73–M88)
+- Key finding: 10 of 12 groups have both 1st and 2nd place in the **same** bracket half; only Groups B and L are split across halves
+- Alert fires when champion + runner-up are both predicted 1st/2nd in groups that land on the same SF path → they can meet at most in the semi-final, not the Final
+- 3rd-place qualifiers intentionally excluded from bracket-half check — their slots are conditional on which 8 groups advance, cannot be mapped statically
+- `getGroupHalf()` uses `.slice(-1).toUpperCase()` to safely handle both "A" and "Group A" name formats
+- No UI changes needed — existing amber warning card renders `w.message` generically
+
+### Lessons Learned
+- **FIFA 2026 bracket is NOT symmetrical by group**: unlike prior 32-team World Cups where group rivals were always split to opposite halves, the new 48-team / 12-group format puts 10 of 12 groups' 1st + 2nd on the same bracket side. Only Groups B (1B Half 2, 2B Half 1) and L (1L Half 1, 2L Half 2) are split.
+- **Same-group champion + runner-up is bracket-impossible for 10 groups** — this is a strong validation constraint that users would not intuitively know.
+- **3rd place does NOT create bracket impossibility** — the 3rd place finisher just needs to lose their SF (which can happen to any team), so no cross-check needed between 3rd and champion/runner-up.
+- **Bracket half check fires during pre-tournament phase** — the validator runs against the user's group standing predictions (not actual results), so the warning is live today, before the June 7 lock.
+
+### Commits
+- `973fa79` feat(validation): add bracket-half conflict check for trophy picks
+
+### Deployed
+- `vercel --prod` → `https://www.quiniela2026.space`
+- Build: 23 routes, TypeScript clean, 0 errors
+
+### Plan.md Sync
+- Checked off Items 1A, 1B, 2A, 2B, 3, 4P1 in Phase 8 roadmap (all were done in prior sessions, plan not updated)
+
+### Remaining Before June 7 Lock
+- [ ] Reminder email blast — Resend query for users with < 104 match predictions, send June 6
+- [ ] Item 4 Phase 2 — Full bracket prediction page (post-lock, nice to have)
+
+---
+
 ## [Day 1] — 2026-05-24 (Phase 1: Foundation)
 
 ### Added
