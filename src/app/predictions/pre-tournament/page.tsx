@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { isPreTournamentLocked } from '@/lib/utils/lock'
 import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 import { computeGroupStandings, type StandingsRow } from '@/lib/scoring/group-standings'
+import { LocalDateTime } from '@/components/ui/local-time'
 import PreTournamentForm from './pre-tournament-form'
 
 export const dynamic = 'force-dynamic'
@@ -78,7 +79,7 @@ export default async function PreTournamentPage() {
       <div>
         <h1 className="text-2xl font-bold">Pre-Tournament Predictions</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Locked June 7, 2026 · 00:00 UTC
+          Locks <LocalDateTime iso="2026-06-07T00:00:00Z" />
         </p>
       </div>
       <PreTournamentForm

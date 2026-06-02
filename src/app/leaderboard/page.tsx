@@ -190,7 +190,7 @@ export default async function LeaderboardPage() {
         matchId: m.id,
         homeCode: home?.code ?? null,
         awayCode: away?.code ?? null,
-        kickoff: new Date(m.scheduled_at).toISOString().slice(11, 16),
+        kickoff: m.scheduled_at,
       }
     })
 

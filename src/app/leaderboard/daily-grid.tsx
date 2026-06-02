@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server'
 import { getFlag } from '@/lib/teams/meta'
+import { LocalTime } from '@/components/ui/local-time'
 
 export type DailyMatch = {
   matchId: number
   homeCode: string | null
   awayCode: string | null
-  kickoff: string  // "15:00"
+  kickoff: string  // ISO datetime string
 }
 
 export type DailyPlayer = {
@@ -63,7 +64,7 @@ export default async function DailyGrid({ date, matches, players, predictions }:
                   <div className="text-xs font-mono whitespace-nowrap">
                     {m.homeCode ?? 'TBD'}–{m.awayCode ?? 'TBD'}
                   </div>
-                  <div className="text-[10px] text-muted-foreground font-normal">{m.kickoff}</div>
+                  <div className="text-[10px] text-muted-foreground font-normal"><LocalTime iso={m.kickoff} /></div>
                 </th>
               ))}
             </tr>
@@ -103,7 +104,7 @@ export default async function DailyGrid({ date, matches, players, predictions }:
               <span>{matchLabel(m.homeCode)}</span>
               <span className="text-muted-foreground font-normal">vs</span>
               <span>{matchLabel(m.awayCode)}</span>
-              <span className="text-muted-foreground font-normal ml-auto">{m.kickoff}</span>
+              <span className="text-muted-foreground font-normal ml-auto"><LocalTime iso={m.kickoff} /></span>
             </div>
             <div className="divide-y divide-border/40">
               {players.map(p => {

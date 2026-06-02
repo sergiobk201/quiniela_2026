@@ -72,10 +72,12 @@ export function MatchRow({
   return (
     <tr className="border-b last:border-0 hover:bg-muted/30 transition-colors">
       {/* Date */}
-      <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
-        {kickoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap" suppressHydrationWarning>
+        {kickoff.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         <br />
-        <span className="text-[11px]">{kickoff.toUTCString().slice(17, 22)} UTC</span>
+        <span className="text-[11px]">{kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
+        <br />
+        <span className="text-[10px] opacity-50">{kickoff.toUTCString().slice(17, 22)} UTC</span>
       </td>
 
       {/* Home team */}

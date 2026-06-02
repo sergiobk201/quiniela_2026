@@ -68,7 +68,7 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
     const dl = deadlines[phase]
     if (!dl) return t('noDeadline')
     const d = new Date(dl)
-    const fmt = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    const fmt = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     return d > now ? t('closesOn', { date: fmt }) : t('closedOn', { date: fmt })
   }
 
