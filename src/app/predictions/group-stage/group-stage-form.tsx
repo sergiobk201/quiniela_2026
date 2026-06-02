@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 import { saveMatchPrediction } from './actions'
 import { isMatchLocked } from '@/lib/utils/lock'
 import { getFlag } from '@/lib/teams/meta'
+import { computeGroupStandings } from '@/lib/scoring/group-standings'
+import GroupStandingsTable from '@/components/predictions/GroupStandingsTable'
 
 type TeamRef = { id: number; name: string; code: string }
 
@@ -177,6 +179,9 @@ export default function GroupStageForm({ matches, groups, predictions }: Props) 
                 </tbody>
               </table>
             </div>
+            <GroupStandingsTable
+              standings={computeGroupStandings(groupMatches, scores)}
+            />
           </TabsContent>
         )
       })}
