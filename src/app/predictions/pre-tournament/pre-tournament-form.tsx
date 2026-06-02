@@ -292,7 +292,7 @@ export default function PreTournamentForm({
   )
   const rankedThirdsMap = new Map(rankedThirds.map(r => [r.teamId, r]))
   // Only enable auto-select if user has at least some match predictions filled
-  const hasAnyMatchData = rankedThirds.some(r => r.pts > 0 || r.gd !== 0 || r.gf > 0)
+  const hasAnyMatchData = rankedThirds.some(r => r.p > 0)
   const hasBorderlineTie = rankedThirds.some(r => r.borderline)
 
   function autoSelectTop8() {

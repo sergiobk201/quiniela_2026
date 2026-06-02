@@ -25,6 +25,7 @@ export type RankedThirdPlace = {
   teamName:   string
   groupId:    number
   rank:       number  // 1–12 among all 3rd-place teams
+  p:          number  // matches played (filled predictions only)
   pts:        number
   gd:         number
   gf:         number
@@ -66,6 +67,7 @@ export function rankThirdPlaceTeams(
       teamName:   row.teamName,
       groupId:    row.groupId,
       rank,
+      p:          row.p,
       pts:        row.pts,
       gd:         row.gd,
       gf:         row.gf,
@@ -92,8 +94,13 @@ export function computeGroupStandings(
     ensure(m.away_team)
 
     const s = scores[m.id]
-    const hg = s?.home !== '' && s?.home !== undefined ? Number(s.home) : 0
-    const ag = s?.away !== '' && s?.away !== undefined ? Number(s.away) : 0
+    const homeHasScore = s?.home !== '' && s?.home !== undefined
+    const awayHasScore = s?.away !== '' && s?.away !== undefined
+    // Skip match entirely if either score is missing — don't fabricate 0:0 draws
+    if (!homeHasScore || !awayHasScore) continue
+
+    const hg = Number(s.home)
+    const ag = Number(s.away)
 
     const ht = stats[m.home_team.id]
     const at = stats[m.away_team.id]
