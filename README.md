@@ -43,6 +43,12 @@ The system enforces hard prediction deadlines via dual-layer lock enforcement: R
 - 🏆 **Live champion theming** — Selected champion pick propagates a trophy glow + gradient across dashboard, leaderboard, and nav logo in real time via a custom DOM event bus (`champion-changed` CustomEvent). Luminance-clamped hex colors adapt to light/dark mode.
 - 📱 **PWA-ready** — Custom favicon and Apple touch icon for iOS home screen installation.
 - 🧩 **Champion rebuy** — One rebuy opportunity per user, admin-unlocked when their original champion is eliminated. Permanent on submission. Points calculated from the unlocked stage's multiplier.
+- 📅 **Daily prediction grid** — Embedded in `/leaderboard` below the standings table. Desktop: sticky player column with group-hover sync, compact `MEX–RSA / 15:00` headers, horizontal scroll. Mobile: one card per match with all players stacked inside. Gated 59 min before kickoff via the same server-side UTC gate as match predictions.
+- ⚠️ **Trophy pick contradiction alarm** — `validate-trophy.ts` checks for group-advancement conflicts and bracket-half impossibility. Champion + runner-up from the same bracket half get an amber warning card (they can meet at most in a semi-final, not the Final). Saves regardless — warnings are advisory only.
+- 🗳 **Community bet suggestions** — `/community-bets` lets users submit and upvote bet ideas per tournament phase. A daily cron emails the admin the top-3 voted suggestions when each phase deadline passes. Admin manages suggestions at `/admin/suggestions`.
+- 📊 **Live group standings** — Computed inline in the group-stage prediction form from the user's entered scores (pure client-side, no extra DB query). Color-coded: green for top 2 (advance), amber for 3rd (potential qualifier), dimmed for 4th.
+- 🔄 **Pre-tournament standings sync** — "Sync from match picks" and "Sync all 12 groups" buttons on the pre-tournament form run `computeGroupStandings()` client-side and pre-fill group standing dropdowns. Warning badge when manual picks diverge from computed standings.
+- 🏅 **3rd-place qualifier ranking** — Qualifier picker shows computed ranking (pts/GD/GF badges) and a qualification status chip (✓ Top 8 / — Out / ⚠ Borderline). "Auto-select top 8" button sets selections to the predicted top 8 across all groups.
 
 ---
 
@@ -79,17 +85,20 @@ Next.js 16 App Router (Vercel — Fluid Compute)
 │   ├── /matches        → score entry, status cycle, upset flag
 │   ├── /locks          → per-stage lock/unlock with confirmation
 │   ├── /scoring        → manual recompute, tournament results, rebuy unlock
-│   └── /audit          → insert-only append log viewer
+│   ├── /audit          → insert-only append log viewer
+│   └── /suggestions    → community bet suggestions grouped by phase, mark selected/rejected
 ├── /dashboard          → score breakdown, champion pick, mini-widget, rebuy status
 ├── /leaderboard        → Realtime ranked table + top-3 podium + picks comparison grid
 ├── /leaderboard/public → unauthenticated shareable standings
 ├── /predictions/*
-│   ├── /pre-tournament → champion/awards/standings/qualifiers (3 tabs)
-│   ├── /group-stage    → 72 match score inputs paginated by group (12 tabs)
+│   ├── /pre-tournament → champion/awards/standings/qualifiers (3 tabs) + standings-sync
+│   ├── /group-stage    → 72 match score inputs paginated by group + live standings table
 │   ├── /[stage]        → knockout predictions (r32/r16/qf/sf/3rd/final)
 │   ├── /rebuy          → champion rebuy (admin-unlocked)
 │   └── /receipt        → print-to-PDF snapshot of all predictions
-└── /rules              → scoring rules, stage multipliers, FAQ
+├── /community-bets     → suggestion list, phase tabs, upvoting, submit form
+├── /rules              → scoring rules, stage multipliers, FAQ
+└── /api/cron/*         → bet-suggestions (daily 00:00 UTC)
          │
          ▼
 Supabase (Postgres + RLS + Auth + Realtime + Edge Functions)
@@ -176,6 +185,8 @@ supabase/migrations/003_tournament_results.sql
 supabase/migrations/004_rls_write_locks.sql
 supabase/migrations/005_picks_grid_rls.sql
 supabase/migrations/006_picks_cross_user.sql
+supabase/migrations/007_fun_bets_extended.sql
+supabase/migrations/008_bet_suggestions.sql
 ```
 
 Seed reference data (48 teams, 12 groups, 104 matches):
@@ -221,8 +232,16 @@ UPDATE profiles SET is_admin = TRUE WHERE id = '<your-auth-user-id>';
 - [x] EN/ES i18n — `next-intl` v4 cookie-based locale, 480+ strings, 🇺🇸/🇪🇸 flag toggle, full site coverage
 - [x] PWA icons — custom favicon + Apple touch icon for iOS home screen
 - [x] Live champion theming — CSS vars, luminance clamping, real-time update via CustomEvent
+- [x] Daily prediction grid — leaderboard embedded grid; desktop sticky + mobile card layout; 59-min UTC gate
+- [x] Extended fun bets — 6 new pre-tournament prediction columns (first goal scorer, red cards, own goals, final-to-penalties, most goals team)
+- [x] Community bet suggestions — `/community-bets` + `/admin/suggestions`; daily cron emails top-3 voted bets to admin at each phase deadline
+- [x] Live group standings — computed inline in group-stage prediction form from user's entered scores; no extra DB query
+- [x] Pre-tournament standings sync — "Sync from match picks" / "Sync all 12 groups" buttons; warning badge on divergence
+- [x] 3rd-place qualifier ranking — pts/GD/GF badges + qualification status chip; "Auto-select top 8" button
+- [x] Trophy pick contradiction alarm — bracket-half impossibility check; amber warning when champion + runner-up are on the same semi-final path
 - [ ] Auto-pull match scores — scheduled Edge Function polling Football-Data.org free tier
 - [ ] Onboard 25 users — magic link invites via admin panel (deadline: June 7, 2026)
+- [ ] Reminder email blast — Resend query for users with incomplete predictions; send June 6
 
 See [plan.md](plan.md) for the full session-by-session breakdown and implementation plans.
 
@@ -230,6 +249,10 @@ See [plan.md](plan.md) for the full session-by-session breakdown and implementat
 
 ## 📝 Changelog
 
+- **Day 12** — Bracket-half validation added to trophy pick alarm: 10 of 12 groups have both 1st + 2nd on the same semi-final path in the new 48-team bracket. Amber warning fires when champion + runner-up are predicted from a same-half group.
+- **Day 11** — Daily prediction grid embedded in leaderboard (desktop sticky columns, mobile per-match cards, 59-min UTC gate). Deployed.
+- **Day 10** — Full admin + security E2E complete (all sections green). Group I seed fix (Iraq/Norway swap). Admin user-management hardening: `togglePaid`, `deleteUser`, `toggleAdmin` all fixed.
+- **Day 9** — Full Phase 5.5 E2E complete (knockout, rebuy, receipt, leaderboard, dashboard). Dashboard welcome greeting and profile query fixes.
 - **Day 8** — Full EN/ES i18n (next-intl v4, 480+ strings, flag emoji toggle). Group-stage hardening: leading-zero guard, live x/72 counter, all 12 group tabs visible. Mobile login hero overflow fixed. Multiple i18n bug fixes (missing keys, hardcoded dates). Deployed.
 - **Day 7** — Picks comparison grid (5 tabs, search, score overlays, server-side match gate). Leaderboard hardening: decoupled from scores table, profiles as truth, admin client queries.
 - **Day 6** — Smarter 3rd-place qualifier UX (position eligibility, per-group enforcement). Toaster mount fix. Join request payment screen. Admin pre-tournament lock/unlock fix.
