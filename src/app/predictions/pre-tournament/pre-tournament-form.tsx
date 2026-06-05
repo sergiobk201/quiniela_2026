@@ -417,15 +417,18 @@ export default function PreTournamentForm({
           </CardContent>
         </Card>
 
+        {/* ── Scored Special Picks ── */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('funBets')}</CardTitle>
-            <p className="text-xs text-muted-foreground">{t('funBetsSub')}</p>
+            <CardTitle>{t('scoredPicks')}</CardTitle>
+            <p className="text-xs text-muted-foreground">{t('scoredPicksSub')}</p>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* ── Row 1: existing bets ── */}
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">{t('totalGoals')}</label>
+              <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                <span>{t('totalGoals')}</span>
+                <span className="text-green-600 dark:text-green-400 font-semibold">5–10 pts</span>
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -441,7 +444,10 @@ export default function PreTournamentForm({
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">{t('firstEliminated')}</label>
+              <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                <span>{t('firstEliminated')}</span>
+                <span className="text-green-600 dark:text-green-400 font-semibold">5 pts</span>
+              </label>
               <TeamSelect
                 value={trophy.first_eliminated_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, first_eliminated_team_id: id }))}
@@ -451,7 +457,10 @@ export default function PreTournamentForm({
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">{t('mostYellows')}</label>
+              <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                <span>{t('mostYellows')}</span>
+                <span className="text-green-600 dark:text-green-400 font-semibold">5 pts</span>
+              </label>
               <TeamSelect
                 value={trophy.most_yellows_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, most_yellows_team_id: id }))}
@@ -460,8 +469,16 @@ export default function PreTournamentForm({
                 placeholder={t('selectTeam')}
               />
             </div>
+          </CardContent>
+        </Card>
 
-            {/* ── Row 2: new bets ── */}
+        {/* ── Fun Bets (no points) ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('funBets')}</CardTitle>
+            <p className="text-xs text-muted-foreground">{t('funBetsSub')}</p>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">{t('firstGoalScorer')}</label>
               <Input
@@ -497,7 +514,6 @@ export default function PreTournamentForm({
               />
             </div>
 
-            {/* ── Row 3: new bets ── */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">{t('finalToPenalties')}</label>
               <div className="flex gap-2 mt-1">
