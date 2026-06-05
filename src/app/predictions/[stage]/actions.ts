@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { isMatchLocked } from '@/lib/utils/lock'
+import { logAudit } from '@/lib/supabase/audit'
 
 export async function saveMatchPrediction(
   matchId: number,
@@ -19,10 +20,20 @@ export async function saveMatchPrediction(
     .single()
 
   if (matchError || !match) return { error: 'Match not found' }
-  if (isMatchLocked(match.locked_at)) return { error: 'This match is locked' }
+  if (isMatchLocked(match.locked_at)) {
+    await logAudit({ userId: user.id, action: 'match_prediction_save_blocked_locked', table_name: 'match_predictions', record_id: matchId, new_value: { home: homeScore, away: awayScore } })
+    return { error: 'This match is locked' }
+  }
   if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0 || homeScore > 20 || awayScore > 20) {
     return { error: 'Invalid score' }
   }
+
+  const { data: existing } = await supabase
+    .from('match_predictions')
+    .select('predicted_home_score, predicted_away_score')
+    .eq('user_id', user.id)
+    .eq('match_id', matchId)
+    .maybeSingle()
 
   const { error } = await supabase
     .from('match_predictions')
@@ -37,5 +48,6 @@ export async function saveMatchPrediction(
     )
 
   if (error) return { error: error.message }
+  await logAudit({ userId: user.id, action: 'match_prediction_saved', table_name: 'match_predictions', record_id: matchId, old_value: existing as Record<string, unknown> | null, new_value: { home: homeScore, away: awayScore } })
   return { error: null }
 }

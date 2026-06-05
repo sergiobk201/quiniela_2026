@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { isPreTournamentLocked, getGroupStageLockTime, isGroupStageLocked } from '@/lib/utils/lock'
 import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
+import { logAudit } from '@/lib/supabase/audit'
 
 async function checkLocked(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
   if (isPreTournamentLocked()) return true
@@ -40,13 +41,23 @@ export async function saveTrophyAndAwards(data: {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkLocked(supabase, user.id)) return { error: 'Pre-tournament predictions are locked', warnings: [] }
+  if (await checkLocked(supabase, user.id)) {
+    await logAudit({ userId: user.id, action: 'trophy_save_blocked_locked', table_name: 'pre_tournament_predictions', new_value: data as Record<string, unknown> })
+    return { error: 'Pre-tournament predictions are locked', warnings: [] }
+  }
+
+  const { data: existing } = await supabase
+    .from('pre_tournament_predictions')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle()
 
   const { error } = await supabase
     .from('pre_tournament_predictions')
     .upsert({ user_id: user.id, ...data }, { onConflict: 'user_id' })
 
   if (error) return { error: error.message, warnings: [] }
+  await logAudit({ userId: user.id, action: 'trophy_saved', table_name: 'pre_tournament_predictions', old_value: existing as Record<string, unknown> | null, new_value: data as Record<string, unknown> })
   revalidatePath('/predictions/pre-tournament')
 
   // Validate trophy picks against group standings — soft check, save already succeeded
@@ -95,7 +106,15 @@ export async function saveGroupStandings(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkGroupStageLocked(supabase)) return { error: 'Group stage predictions are locked', warnings: [] }
+  if (await checkGroupStageLocked(supabase)) {
+    await logAudit({ userId: user.id, action: 'group_standings_save_blocked_locked', table_name: 'group_standing_predictions', new_value: { standings } })
+    return { error: 'Group stage predictions are locked', warnings: [] }
+  }
+
+  const { data: existingStandings } = await supabase
+    .from('group_standing_predictions')
+    .select('*')
+    .eq('user_id', user.id)
 
   const rows = standings.map(s => ({ user_id: user.id, ...s }))
   const { error } = await supabase
@@ -103,6 +122,7 @@ export async function saveGroupStandings(
     .upsert(rows, { onConflict: 'user_id,group_id' })
 
   if (error) return { error: error.message, warnings: [] }
+  await logAudit({ userId: user.id, action: 'group_standings_saved', table_name: 'group_standing_predictions', old_value: { standings: existingStandings }, new_value: { standings } })
   revalidatePath('/predictions/pre-tournament')
 
   // Re-validate trophy picks against the newly saved standings
@@ -147,13 +167,23 @@ export async function saveThirdPlaceQualifiers(teamIds: number[]): Promise<{ err
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkGroupStageLocked(supabase)) return { error: 'Group stage predictions are locked', warnings: [] }
+  if (await checkGroupStageLocked(supabase)) {
+    await logAudit({ userId: user.id, action: 'qualifiers_save_blocked_locked', table_name: 'third_place_qualifier_predictions', new_value: { team_ids: teamIds } })
+    return { error: 'Group stage predictions are locked', warnings: [] }
+  }
+
+  const { data: existingQualifiers } = await supabase
+    .from('third_place_qualifier_predictions')
+    .select('team_ids')
+    .eq('user_id', user.id)
+    .maybeSingle()
 
   const { error } = await supabase
     .from('third_place_qualifier_predictions')
     .upsert({ user_id: user.id, team_ids: teamIds }, { onConflict: 'user_id' })
 
   if (error) return { error: error.message, warnings: [] }
+  await logAudit({ userId: user.id, action: 'qualifiers_saved', table_name: 'third_place_qualifier_predictions', old_value: existingQualifiers as Record<string, unknown> | null, new_value: { team_ids: teamIds } })
   revalidatePath('/predictions/pre-tournament')
 
   // Re-validate trophy picks against the newly saved qualifier list

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logAudit } from '@/lib/supabase/audit'
 
 export async function submitRebuy(teamId: number) {
   const supabase = await createClient()
@@ -20,5 +21,6 @@ export async function submitRebuy(teamId: number) {
     .is('submitted_at', null)
 
   if (error) throw new Error(error.message)
+  await logAudit({ userId: user.id, action: 'rebuy_submitted', table_name: 'champion_rebuys', new_value: { team_id: teamId } })
   revalidatePath('/predictions/rebuy')
 }
