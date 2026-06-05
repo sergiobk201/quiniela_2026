@@ -77,7 +77,7 @@ function TeamSelect({
       <option value="">{placeholder}</option>
       {teams.map(t => (
         <option key={t.id} value={t.id}>
-          {getFlag(t.code)} {t.name}
+          {t.name} {getFlag(t.code)}
         </option>
       ))}
     </select>
@@ -705,7 +705,7 @@ export default function PreTournamentForm({
                           className="accent-primary"
                         />
                         <span className={isIneligible ? 'text-muted-foreground' : ''}>
-                          {getFlag(team.code)} {team.name}
+                          {team.name} {getFlag(team.code)}
                         </span>
                         <span className="ml-auto flex items-center gap-1.5 shrink-0">
                           {ranked && hasAnyMatchData && (

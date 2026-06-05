@@ -130,7 +130,7 @@ export default function RebuyForm({ rebuy, originalChampion, originalChampionCod
           <option value="">{t('selectTeam')}</option>
           {teams.map((tm) => (
             <option key={tm.id} value={tm.id}>
-              {getFlag(tm.code)} {tm.name}
+              {tm.name} {getFlag(tm.code)}
             </option>
           ))}
         </select>
