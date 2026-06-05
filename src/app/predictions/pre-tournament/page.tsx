@@ -1,6 +1,6 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { isPreTournamentLocked } from '@/lib/utils/lock'
+import { isPreTournamentLocked, getGroupStageLockTime, isGroupStageLocked } from '@/lib/utils/lock'
 import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 import { computeGroupStandings, type StandingsRow } from '@/lib/scoring/group-standings'
 import { LocalDateTime } from '@/components/ui/local-time'
@@ -22,6 +22,7 @@ export default async function PreTournamentPage() {
     { data: qualifiers },
     { data: matchPredictions },
     { data: groupMatches },
+    groupStageLockTime,
   ] = await Promise.all([
     supabase.from('teams').select('id, name, code, group_id').order('name'),
     supabase.from('groups').select('id, name').order('name'),
@@ -40,6 +41,7 @@ export default async function PreTournamentPage() {
       .from('matches')
       .select('id, group_id, home_team:teams!home_team_id(id, name, code), away_team:teams!away_team_id(id, name, code)')
       .eq('stage', 'group'),
+    getGroupStageLockTime(supabase),
   ])
 
   // Build computed standings from match predictions
@@ -79,7 +81,8 @@ export default async function PreTournamentPage() {
       <div>
         <h1 className="text-2xl font-bold">Pre-Tournament Predictions</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Locks <LocalDateTime iso="2026-06-07T00:00:00Z" />
+          Trophy picks lock <LocalDateTime iso="2026-06-07T00:00:00Z" /> ·{' '}
+          Standings &amp; qualifiers lock after the last group stage match
         </p>
       </div>
       <PreTournamentForm
@@ -88,7 +91,8 @@ export default async function PreTournamentPage() {
         prediction={prediction as any}
         standings={(standings ?? []) as any[]}
         qualifierTeamIds={(qualifiers as any)?.team_ids ?? []}
-        locked={isPreTournamentLocked()}
+        trophyLocked={isPreTournamentLocked()}
+        groupStageLocked={isGroupStageLocked(groupStageLockTime)}
         initialWarnings={initialWarnings}
         computedByGroup={computedByGroup}
       />

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { isPreTournamentLocked } from '@/lib/utils/lock'
+import { isPreTournamentLocked, getGroupStageLockTime, isGroupStageLocked } from '@/lib/utils/lock'
 import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 
 async function checkLocked(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
@@ -13,6 +13,10 @@ async function checkLocked(supabase: Awaited<ReturnType<typeof createClient>>, u
     .eq('user_id', userId)
     .maybeSingle()
   return data?.locked === true
+}
+
+async function checkGroupStageLocked(supabase: Awaited<ReturnType<typeof createClient>>): Promise<boolean> {
+  return isGroupStageLocked(await getGroupStageLockTime(supabase))
 }
 
 export async function saveTrophyAndAwards(data: {
@@ -91,7 +95,7 @@ export async function saveGroupStandings(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkLocked(supabase, user.id)) return { error: 'Pre-tournament predictions are locked', warnings: [] }
+  if (await checkGroupStageLocked(supabase)) return { error: 'Group stage predictions are locked', warnings: [] }
 
   const rows = standings.map(s => ({ user_id: user.id, ...s }))
   const { error } = await supabase
@@ -143,7 +147,7 @@ export async function saveThirdPlaceQualifiers(teamIds: number[]): Promise<{ err
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkLocked(supabase, user.id)) return { error: 'Pre-tournament predictions are locked', warnings: [] }
+  if (await checkGroupStageLocked(supabase)) return { error: 'Group stage predictions are locked', warnings: [] }
 
   const { error } = await supabase
     .from('third_place_qualifier_predictions')

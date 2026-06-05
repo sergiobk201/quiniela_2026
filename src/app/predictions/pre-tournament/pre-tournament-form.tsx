@@ -48,7 +48,8 @@ interface Props {
   } | null
   standings: GroupStandingRow[]
   qualifierTeamIds: number[]
-  locked: boolean
+  trophyLocked: boolean
+  groupStageLocked: boolean
   initialWarnings: TrophyConflict[]
   computedByGroup: Record<number, StandingsRow[]>
 }
@@ -96,7 +97,8 @@ export default function PreTournamentForm({
   prediction,
   standings,
   qualifierTeamIds,
-  locked,
+  trophyLocked,
+  groupStageLocked,
   initialWarnings,
   computedByGroup,
 }: Props) {
@@ -389,7 +391,7 @@ export default function PreTournamentForm({
                       }
                     }}
                     teams={available}
-                    disabled={locked}
+                    disabled={trophyLocked}
                     placeholder={t('selectTeam')}
                   />
                 </div>
@@ -409,7 +411,7 @@ export default function PreTournamentForm({
                 <Input
                   value={trophy[key] as string}
                   onChange={e => setTrophy(prev => ({ ...prev, [key]: e.target.value }))}
-                  disabled={locked}
+                  disabled={trophyLocked}
                   placeholder={t('playerNamePlaceholder')}
                 />
               </div>
@@ -439,7 +441,7 @@ export default function PreTournamentForm({
                     total_goals_prediction: e.target.value ? Number(e.target.value) : null,
                   }))
                 }
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('goalsPlaceholder')}
               />
             </div>
@@ -452,7 +454,7 @@ export default function PreTournamentForm({
                 value={trophy.first_eliminated_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, first_eliminated_team_id: id }))}
                 teams={teams}
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('selectTeam')}
               />
             </div>
@@ -465,7 +467,7 @@ export default function PreTournamentForm({
                 value={trophy.most_yellows_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, most_yellows_team_id: id }))}
                 teams={teams}
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('selectTeam')}
               />
             </div>
@@ -484,7 +486,7 @@ export default function PreTournamentForm({
               <Input
                 value={trophy.first_goal_scorer}
                 onChange={e => setTrophy(prev => ({ ...prev, first_goal_scorer: e.target.value }))}
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('playerNamePlaceholder')}
               />
             </div>
@@ -493,7 +495,7 @@ export default function PreTournamentForm({
               <Input
                 value={trophy.first_red_card_player}
                 onChange={e => setTrophy(prev => ({ ...prev, first_red_card_player: e.target.value }))}
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('playerNamePlaceholder')}
               />
             </div>
@@ -509,7 +511,7 @@ export default function PreTournamentForm({
                     total_red_cards_prediction: e.target.value ? Number(e.target.value) : null,
                   }))
                 }
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('numberPlaceholder')}
               />
             </div>
@@ -519,8 +521,8 @@ export default function PreTournamentForm({
               <div className="flex gap-2 mt-1">
                 <button
                   type="button"
-                  onClick={() => !locked && setTrophy(prev => ({ ...prev, final_goes_to_penalties: true }))}
-                  disabled={locked}
+                  onClick={() => !trophyLocked && setTrophy(prev => ({ ...prev, final_goes_to_penalties: true }))}
+                  disabled={trophyLocked}
                   className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     trophy.final_goes_to_penalties === true
                       ? 'bg-primary text-primary-foreground border-primary'
@@ -531,8 +533,8 @@ export default function PreTournamentForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => !locked && setTrophy(prev => ({ ...prev, final_goes_to_penalties: false }))}
-                  disabled={locked}
+                  onClick={() => !trophyLocked && setTrophy(prev => ({ ...prev, final_goes_to_penalties: false }))}
+                  disabled={trophyLocked}
                   className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     trophy.final_goes_to_penalties === false
                       ? 'bg-primary text-primary-foreground border-primary'
@@ -555,7 +557,7 @@ export default function PreTournamentForm({
                     total_own_goals_prediction: e.target.value ? Number(e.target.value) : null,
                   }))
                 }
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('numberPlaceholder')}
               />
             </div>
@@ -565,14 +567,14 @@ export default function PreTournamentForm({
                 value={trophy.most_goals_team_id}
                 onChange={id => setTrophy(prev => ({ ...prev, most_goals_team_id: id }))}
                 teams={teams}
-                disabled={locked}
+                disabled={trophyLocked}
                 placeholder={t('selectTeam')}
               />
             </div>
           </CardContent>
         </Card>
 
-        {locked ? (
+        {trophyLocked ? (
           <p className="text-sm text-destructive text-right">{t('predictionsLocked')}</p>
         ) : (
           <div className="flex justify-end">
@@ -585,7 +587,7 @@ export default function PreTournamentForm({
 
       {/* ── Tab 2: Group Standings ── */}
       <TabsContent value="standings" className="mt-4">
-        {mismatchCount > 0 && !locked && (
+        {mismatchCount > 0 && !groupStageLocked && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-400/50 bg-amber-50/50 dark:bg-amber-950/20 px-4 py-3">
             <p className="text-sm text-amber-700 dark:text-amber-400">
               ⚠ {t('standingsMismatchBanner', { count: mismatchCount })}
@@ -605,7 +607,7 @@ export default function PreTournamentForm({
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle>{t('groupLabel', { name: group.name })}</CardTitle>
-                    {mismatch && !locked && (
+                    {mismatch && !groupStageLocked && (
                       <button
                         type="button"
                         onClick={() => syncGroup(group.id)}
@@ -624,7 +626,7 @@ export default function PreTournamentForm({
                         value={standing[key]}
                         onChange={id => updateStanding(group.id, key, id)}
                         teams={getAvailableForPos(group.id, key)}
-                        disabled={locked}
+                        disabled={groupStageLocked}
                         placeholder="—"
                       />
                     </div>
@@ -635,8 +637,8 @@ export default function PreTournamentForm({
           })}
         </div>
 
-        {locked ? (
-          <p className="text-sm text-destructive text-right mt-4">{t('predictionsLocked')}</p>
+        {groupStageLocked ? (
+          <p className="text-sm text-destructive text-right mt-4">{t('standingsLocked')}</p>
         ) : (
           <div className="flex justify-end mt-4">
             <Button onClick={handleSaveStandings} disabled={pendingStandings}>
@@ -655,7 +657,7 @@ export default function PreTournamentForm({
               {t('qualifiersSelected', { count: selectedQualifiers.size })}
             </span>
           </p>
-          {hasAnyMatchData && !locked && (
+          {hasAnyMatchData && !groupStageLocked && (
             <Button size="sm" variant="outline" onClick={autoSelectTop8}>
               {t('autoSelectTop8')}
             </Button>
@@ -683,7 +685,7 @@ export default function PreTournamentForm({
                     const pos = getEffectivePosInGroup(team.id, group.id)
                     const isIneligible = pos === 1 || pos === 2 || pos === 4
                     const isMaxed = !isSelected && !groupHasSelection && selectedQualifiers.size >= 8
-                    const isDisabled = locked || isIneligible || (isMaxed && !isSelected)
+                    const isDisabled = groupStageLocked || isIneligible || (isMaxed && !isSelected)
                     const ranked = rankedThirdsMap.get(team.id)
 
                     return (
@@ -698,7 +700,7 @@ export default function PreTournamentForm({
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => !locked && !isIneligible && toggleQualifier(team.id, group.id)}
+                          onChange={() => !groupStageLocked && !isIneligible && toggleQualifier(team.id, group.id)}
                           disabled={isDisabled}
                           className="accent-primary"
                         />
@@ -735,8 +737,8 @@ export default function PreTournamentForm({
           })}
         </div>
 
-        {locked ? (
-          <p className="text-sm text-destructive text-right">{t('predictionsLocked')}</p>
+        {groupStageLocked ? (
+          <p className="text-sm text-destructive text-right">{t('standingsLocked')}</p>
         ) : (
           <div className="flex justify-end">
             <Button
