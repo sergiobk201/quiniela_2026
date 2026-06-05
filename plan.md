@@ -213,7 +213,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] **EN/ES i18n** — cookie-based locale via `next-intl`; 480+ strings; flag emoji toggle on every page including login; no URL restructure. Shipped 2026-05-28.
 - [ ] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [x] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
-- [ ] **Audit hardening + transparency** — full plan below; admin honesty guarantee for all players
+- [x] **Audit hardening + transparency** — `logAudit()` helper + all prediction saves + lock-blocked attempts + admin lock events logged to `audit_log`. `audit_log_readable` view for investigations. Migration 010. Shipped 2026-06-05.
 
 ---
 

@@ -2,6 +2,60 @@
 
 ---
 
+## [Day 13] — 2026-06-05 (Lock Split + Font Fix + Full Audit Logging)
+
+### Shipped
+
+**Fix: Scored vs Fun Bets clarity**
+- Pre-tournament form Tab 1 split into two distinct cards:
+  - "Scored Special Picks" — Total Goals, First Eliminated, Most Yellows (green pt badges on labels)
+  - "Fun Bets" — 6 honor-only bets with corrected subtitle ("No points — just for fun")
+- Rules page was already correct; only the form needed the split
+- `messages/en.json` + `es.json` updated: `scoredPicks`, `scoredPicksSub`, corrected `funBetsSub`
+
+**Feat: Split pre-tournament lock (trophy vs group stage)**
+- Trophy picks now lock on June 7 (date-based `isPreTournamentLocked()`) — unchanged
+- Group standings + 3rd-place qualifiers now lock dynamically after the last group stage match (`MAX(locked_at) WHERE stage = 'group'` ≈ June 28 01:00 UTC)
+- `src/lib/utils/lock.ts` — added `getGroupStageLockTime(supabase)` + `isGroupStageLocked(lockTime)`
+- `src/app/predictions/pre-tournament/actions.ts` — `saveGroupStandings` + `saveThirdPlaceQualifiers` use `checkGroupStageLocked()`; `saveTrophyAndAwards` unchanged
+- `src/app/predictions/pre-tournament/page.tsx` — fetches group stage lock time as 8th parallel query; passes `trophyLocked` + `groupStageLocked` as separate props
+- `src/app/predictions/pre-tournament/pre-tournament-form.tsx` — replaced single `locked` prop with `trophyLocked` + `groupStageLocked`; Tab 1 gates on `trophyLocked`, Tabs 2–3 gate on `groupStageLocked`
+- `supabase/migrations/009_group_stage_standings_lock.sql` — drops hardcoded June 7 RLS policies on `group_standing_predictions` + `third_place_qualifier_predictions`; replaces with dynamic `NOW() < (SELECT MAX(locked_at) FROM matches WHERE stage = 'group')`. Applied manually via Supabase SQL Editor (CLI push skipped — migrations 001–008 not tracked by CLI)
+- Syncing from match picks continues to work throughout the group stage unaffected
+
+**Fix: Times New Roman font (CSS variable circular reference)**
+- `src/app/globals.css` line 10 had `--font-sans: var(--font-sans)` — a self-referencing circular variable causing browser to fall back to system serif (Times New Roman)
+- Fixed to `--font-sans: var(--font-geist-sans)` — Geist was already loaded via `next/font/google` in `layout.tsx`, just not wired into the CSS variable
+
+**Feat: Full audit logging for all user actions**
+- New helper `src/lib/supabase/audit.ts` — `logAudit()` writes to `audit_log` with `ip_address` + `user_agent` from request headers; fails silently to never block the main save
+- Wired into all user-facing server actions:
+  - `saveTrophyAndAwards` — logs `trophy_saved` (with before/after) or `trophy_save_blocked_locked`
+  - `saveGroupStandings` — logs `group_standings_saved` or `group_standings_save_blocked_locked`
+  - `saveThirdPlaceQualifiers` — logs `qualifiers_saved` or `qualifiers_save_blocked_locked`
+  - `saveMatchPrediction` (both `[stage]` + `group-stage`) — logs `match_prediction_saved` or `match_prediction_save_blocked_locked`
+  - `submitRebuy` — logs `rebuy_submitted`
+- Wired into admin lock actions: `stage_locked`, `stage_unlocked`, `pre_tournament_locked`, `pre_tournament_unlocked`
+- `supabase/migrations/010_audit_log_view.sql` — `audit_log_readable` view joins `auth.users` (email) + `profiles` (display_name) for human-readable investigations
+- Applied migration 010 manually via Supabase SQL Editor
+
+### Commits
+- `9235f12` fix(predictions): split scored bets from fun bets
+- `8e95b6d` feat(predictions): split trophy and standings locks
+- `740d213` fix(ui): wire Geist font CSS variable correctly
+- `b5681f0` feat(audit): log all user prediction saves and lock-blocked attempts
+
+### Not Deployed
+- All 4 commits are committed locally and ahead of origin. Awaiting `git push` + `vercel --prod`.
+
+### Lessons Learned
+- CSS custom properties are NOT recursive-safe — `--font-sans: var(--font-sans)` silently resolves to `initial` (empty), causing the browser to fall back to the system serif stack. Always reference a different variable or a literal value.
+- Vercel free tier retains logs for only 1 hour — useless for mid-tournament disputes. Supabase `audit_log` (persistent Postgres) is the correct audit layer.
+- `auth.users` holds the email; `profiles` holds `display_name` — both needed for readable audit investigations. The `audit_log_readable` view joins both so investigation queries stay simple.
+- Supabase CLI `db push --linked` fails when prior migrations were applied via dashboard (not tracked in `supabase/migrations` history). For this project: always apply new migrations manually via SQL Editor.
+
+---
+
 ## [Day 12] — 2026-06-01 (Phase 8: Bracket-Half Validation)
 
 ### Shipped
