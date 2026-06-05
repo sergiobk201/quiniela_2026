@@ -12,8 +12,8 @@ export async function Nav({ locale }: { locale: string }) {
 
   return (
     <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50" style={{ borderBottomColor: 'color-mix(in oklch, var(--champion-primary) 35%, transparent)' }}>
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
+      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-8">
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
           <span className="text-xl leading-none">⚽</span>
           <span
             className="font-black text-base tracking-tight"
@@ -32,13 +32,9 @@ export async function Nav({ locale }: { locale: string }) {
           </span>
         </Link>
 
-        <div className="flex items-center gap-3">
-          {user && (
-            <>
-              <div className="hidden sm:block w-px h-5 bg-border" />
-              <NavLinks isAdmin={isAdmin} />
-            </>
-          )}
+        {user && <NavLinks isAdmin={isAdmin} />}
+
+        <div className="ml-auto flex items-center gap-3">
           <LocaleToggle locale={locale} />
           {user && <ThemeToggle />}
           {user && (
