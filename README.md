@@ -65,11 +65,19 @@ The system enforces hard prediction deadlines via dual-layer lock enforcement: R
   </tr>
   <tr>
     <td><img src="docs/predictions_group.png" alt="Group Stage Predictions" width="400"></td>
-    <td><img src="docs/admin_matches.png" alt="Admin Matches" width="400"></td>
+    <td><img src="docs/rules_page.png" alt="Rules" width="400"></td>
   </tr>
   <tr>
     <td align="center"><em>Group stage score predictions</em></td>
+    <td align="center"><em>Scoring rules & FAQ</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/admin_matches.png" alt="Admin Matches" width="400"></td>
+    <td></td>
+  </tr>
+  <tr>
     <td align="center"><em>Admin — match score entry panel</em></td>
+    <td></td>
   </tr>
 </table>
 
