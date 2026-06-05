@@ -33,7 +33,12 @@ export async function Nav({ locale }: { locale: string }) {
         </Link>
 
         <div className="flex items-center gap-3">
-          {user && <NavLinks isAdmin={isAdmin} />}
+          {user && (
+            <>
+              <div className="hidden sm:block w-px h-5 bg-border" />
+              <NavLinks isAdmin={isAdmin} />
+            </>
+          )}
           <LocaleToggle locale={locale} />
           {user && <ThemeToggle />}
           {user && (

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { NextIntlClientProvider } from 'next-intl'
@@ -9,9 +9,10 @@ import { ChampionTheme } from '@/components/champion-theme'
 import { getUser, createClient } from '@/lib/supabase/server'
 import './globals.css'
 
-const geistSans = Geist({
+const jakartaSans = Plus_Jakarta_Sans({
   variable: '--font-geist-sans',
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
 })
 
 const geistMono = Geist_Mono({
@@ -51,7 +52,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jakartaSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
