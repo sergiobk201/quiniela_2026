@@ -2,6 +2,40 @@
 
 ---
 
+## [Day 14] — 2026-06-06 (Go-Live + Mobile Nav + Scope Cleanup)
+
+### 🚀 Project is live — quiniela2026.space
+
+All phases complete. 25 users onboarded. Pre-tournament lock fires June 7. WC kickoff June 11. Entering maintenance mode — fix bugs as they appear, enter scores manually via `/admin/matches` after each match.
+
+### Shipped
+
+**Feat: Mobile bottom tab bar**
+- `src/components/bottom-nav.tsx` — new client component, `sm:hidden`, fixed to bottom of viewport
+- Icons via lucide-react: Home, ClipboardList, Dices, Trophy, BookOpen, Settings (admin only)
+- Active tab highlighted with `var(--champion-primary)` — matches top nav and header border
+- `src/components/nav.tsx` — imports and renders `<BottomNav isAdmin={isAdmin} />` below the header, inside a Fragment; only rendered when user is authenticated
+- `src/app/layout.tsx` — `pb-16 sm:pb-0` on body prevents content from hiding behind the fixed bar on mobile; desktop unaffected
+
+### Dropped
+
+**Auto-score pull (Football-Data.org)**
+- Investigated API — WC 2026 data live, 104 matches, TLA codes match seed, API works
+- Decision: manual score entry sufficient for 25 users; automation adds complexity with no UX gain at this scale
+- API key kept in `.env.local` + Vercel env vars in case revisited mid-tournament
+
+**Item 4 Phase 2 — Bracket prediction page**
+- Pre-tournament lock (June 7) made timeline infeasible
+- Users already filling picks directly; no scoring impact from dropping it
+
+### Remaining
+- [ ] README screenshots — portfolio polish only
+
+### Commits
+- `aa8e532` feat(nav): add mobile bottom tab bar
+
+---
+
 ## [Day 13] — 2026-06-05 (Lock Split + Font Fix + Full Audit Logging)
 
 ### Shipped
@@ -636,7 +670,6 @@ All Phase 5.5 E2E sections now green:
 
 ### Remaining — Phase 7
 - [ ] Reminder push — Resend email blast June 6 to users with incomplete predictions
-- [ ] Auto-pull match scores — Football-Data.org + Vercel Cron (must be live before June 11)
 - [ ] Audit hardening + transparency
 
 ### Remaining — Phase 6

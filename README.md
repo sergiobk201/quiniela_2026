@@ -247,9 +247,9 @@ UPDATE profiles SET is_admin = TRUE WHERE id = '<your-auth-user-id>';
 - [x] Pre-tournament standings sync — "Sync from match picks" / "Sync all 12 groups" buttons; warning badge on divergence
 - [x] 3rd-place qualifier ranking — pts/GD/GF badges + qualification status chip; "Auto-select top 8" button
 - [x] Trophy pick contradiction alarm — bracket-half impossibility check; amber warning when champion + runner-up are on the same semi-final path
-- [ ] Auto-pull match scores — scheduled Edge Function polling Football-Data.org free tier
-- [ ] Onboard 25 users — magic link invites via admin panel (deadline: June 7, 2026)
-- [ ] Reminder email blast — Resend query for users with incomplete predictions; send June 6
+- [x] Onboard 25 users — magic link invites via admin panel
+- [x] Reminder email blast — Resend query for users with incomplete predictions; sent June 6
+- [x] Mobile bottom tab bar — `sm:hidden` fixed nav for Android/iOS home screen installs
 
 See [plan.md](plan.md) for the full session-by-session breakdown and implementation plans.
 
