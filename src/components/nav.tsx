@@ -4,6 +4,7 @@ import { getIsAdmin } from '@/lib/supabase/admin'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SignOutButton } from '@/components/sign-out-button'
 import { NavLinks } from '@/components/nav-links'
+import { BottomNav } from '@/components/bottom-nav'
 import { LocaleToggle } from '@/components/locale-toggle'
 
 export async function Nav({ locale }: { locale: string }) {
@@ -11,6 +12,7 @@ export async function Nav({ locale }: { locale: string }) {
   const isAdmin = user ? await getIsAdmin(user.id) : false
 
   return (
+    <>
     <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50" style={{ borderBottomColor: 'color-mix(in oklch, var(--champion-primary) 35%, transparent)' }}>
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-8">
         <Link href="/" className="flex items-center gap-2 group shrink-0">
@@ -48,5 +50,7 @@ export async function Nav({ locale }: { locale: string }) {
         </div>
       </div>
     </header>
+    {user && <BottomNav isAdmin={isAdmin} />}
+    </>
   )
 }

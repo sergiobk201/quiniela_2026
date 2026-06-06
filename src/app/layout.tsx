@@ -55,7 +55,7 @@ export default async function RootLayout({
       className={`${jakartaSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground pb-16 sm:pb-0">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             <ChampionTheme code={championCode} />
