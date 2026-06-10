@@ -39,6 +39,7 @@
     "sentLinkBody": "We sent a magic link to {email}. Click it to enter the tournament.",
     "linkExpires": "⏱ Link expires in 60 minutes",
     "checkSpam": "📁 Check your spam folder if you don't see it",
+    "openInBrowser": "📱 Tap the link from your email app — make sure it opens in your main browser (not Gmail's in-app viewer)",
     "requestSentTitle": "Request sent!",
     "requestSentBody": "{email} isn't on the guest list yet. The admin is reviewing your request.",
     "payNow": "Pay your $10 entrance fee now",

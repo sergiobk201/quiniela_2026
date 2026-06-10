@@ -2,10 +2,16 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+// Guard against open-redirect via userinfo trick: "origin@evil.com"
+function safeNext(raw: string | null): string {
+  if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw
+  return '/dashboard'
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = safeNext(searchParams.get('next'))
 
   if (code) {
     const cookieStore = await cookies()
@@ -28,6 +34,8 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }
+
+    console.error('[auth/callback] exchangeCodeForSession failed:', error.message)
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth`)

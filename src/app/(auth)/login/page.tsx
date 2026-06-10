@@ -82,6 +82,7 @@ function LoginContent() {
         <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground space-y-1 text-left">
           <p>{t('linkExpires')}</p>
           <p>{t('checkSpam')}</p>
+          <p>{t('openInBrowser')}</p>
         </div>
         <button
           onClick={() => { setResult(null); setEmail('') }}
