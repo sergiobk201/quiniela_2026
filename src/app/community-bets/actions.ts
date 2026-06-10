@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { PHASE_NEXT_STAGE, type Phase, type Difficulty } from './types'
 import { getFirstGroupMatchLockTime, isCommunityBetsLocked } from '@/lib/utils/lock'
@@ -58,7 +59,9 @@ export async function saveCommunityBets(data: {
     return { error: 'Community bets are locked' }
   }
 
-  const { error } = await supabase
+  // Use service-role to bypass the June 7 trophy lock RLS policy.
+  // The application-layer lock check above enforces the June 11 deadline.
+  const { error } = await createAdminClient()
     .from('pre_tournament_predictions')
     .upsert({
       user_id: user.id,
