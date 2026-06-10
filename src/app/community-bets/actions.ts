@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { PHASE_NEXT_STAGE, type Phase, type Difficulty } from './types'
+import { getFirstGroupMatchLockTime, isCommunityBetsLocked } from '@/lib/utils/lock'
 
 export async function submitSuggestion(
   phase: Phase,
@@ -39,6 +40,33 @@ export async function submitSuggestion(
     suggestion: suggestion.trim(),
     difficulty,
   })
+  if (error) return { error: error.message }
+  revalidatePath('/community-bets')
+  return { error: null }
+}
+
+export async function saveCommunityBets(data: {
+  community_balon_de_oro: string
+  community_revelacion_team_id: number | null
+  community_decepcion_team_id: number | null
+}): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return { error: 'Not authenticated' }
+
+  if (isCommunityBetsLocked(await getFirstGroupMatchLockTime(supabase))) {
+    return { error: 'Community bets are locked' }
+  }
+
+  const { error } = await supabase
+    .from('pre_tournament_predictions')
+    .upsert({
+      user_id: user.id,
+      community_balon_de_oro:       data.community_balon_de_oro.trim() || null,
+      community_revelacion_team_id: data.community_revelacion_team_id,
+      community_decepcion_team_id:  data.community_decepcion_team_id,
+    }, { onConflict: 'user_id' })
+
   if (error) return { error: error.message }
   revalidatePath('/community-bets')
   return { error: null }

@@ -7,12 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { submitSuggestion, toggleVote } from './actions'
+import { submitSuggestion, toggleVote, saveCommunityBets } from './actions'
 import { PHASES, DIFFICULTY_PTS, type Phase, type Difficulty, type EnrichedSuggestion } from './types'
+import { getFlag } from '@/lib/teams/meta'
 
 interface Props {
   suggestions: EnrichedSuggestion[]
   deadlines: Record<string, string | null>
+  teams: { id: number; name: string; code: string }[]
+  communityBetsPick: {
+    balon_de_oro: string | null
+    revelacion_team_id: number | null
+    decepcion_team_id: number | null
+  }
+  communityBetsLocked: boolean
 }
 
 const DIFF_BADGE: Record<string, string> = {
@@ -39,7 +47,7 @@ const DIFF_LABEL_KEY: Record<Difficulty, string> = {
   expert: 'difficultyExpert',
 }
 
-export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
+export default function CommunityBetsClient({ suggestions, deadlines, teams, communityBetsPick, communityBetsLocked }: Props) {
   const t = useTranslations('communityBets')
   const now = new Date()
 
@@ -53,6 +61,25 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
   const [difficulty, setDifficulty] = useState<Difficulty>('medium')
   const [, startVote] = useTransition()
   const [pendingSubmit, startSubmit] = useTransition()
+
+  const [picks, setPicks] = useState({
+    balon_de_oro:       communityBetsPick.balon_de_oro ?? '',
+    revelacion_team_id: communityBetsPick.revelacion_team_id,
+    decepcion_team_id:  communityBetsPick.decepcion_team_id,
+  })
+  const [pendingPicks, startPicksTransition] = useTransition()
+
+  function handleSavePicks() {
+    startPicksTransition(async () => {
+      const { error } = await saveCommunityBets({
+        community_balon_de_oro:       picks.balon_de_oro.trim(),
+        community_revelacion_team_id: picks.revelacion_team_id,
+        community_decepcion_team_id:  picks.decepcion_team_id,
+      })
+      if (error) toast.error(error)
+      else toast.success(t('picksSaved'))
+    })
+  }
 
   const activePhase = PHASES.find(p => {
     const dl = deadlines[p.key]
@@ -115,6 +142,88 @@ export default function CommunityBetsClient({ suggestions, deadlines }: Props) {
             <p className={`text-xs font-medium ${open ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
               {deadlineLabel(p.key)}
             </p>
+
+            {/* Community bet picks — only shown on pre_tournament tab */}
+            {p.key === 'pre_tournament' && (
+              <Card className="border-[var(--champion-primary)]/30">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">{t('picksTitle')}</CardTitle>
+                  <p className="text-xs text-muted-foreground">{t('picksSub')}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Balón de Oro — Expert 5pts */}
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                        <span>{t('balonDeOro')}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.expert}`}>
+                          {t('difficultyExpert')} · 5pts
+                        </span>
+                      </label>
+                      <Input
+                        value={picks.balon_de_oro}
+                        onChange={e => setPicks(prev => ({ ...prev, balon_de_oro: e.target.value }))}
+                        disabled={communityBetsLocked}
+                        placeholder={t('playerNamePlaceholder')}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    {/* Selección Revelación — Medium 2pts */}
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                        <span>{t('revelacion')}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.medium}`}>
+                          {t('difficultyMedium')} · 2pts
+                        </span>
+                      </label>
+                      <select
+                        value={picks.revelacion_team_id ?? ''}
+                        onChange={e => setPicks(prev => ({ ...prev, revelacion_team_id: e.target.value ? Number(e.target.value) : null }))}
+                        disabled={communityBetsLocked}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">{t('selectTeam')}</option>
+                        {teams.map(tm => (
+                          <option key={tm.id} value={tm.id}>{tm.name} {getFlag(tm.code)}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Selección Decepción — Hard 3pts */}
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                        <span>{t('decepcion')}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.hard}`}>
+                          {t('difficultyHard')} · 3pts
+                        </span>
+                      </label>
+                      <select
+                        value={picks.decepcion_team_id ?? ''}
+                        onChange={e => setPicks(prev => ({ ...prev, decepcion_team_id: e.target.value ? Number(e.target.value) : null }))}
+                        disabled={communityBetsLocked}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">{t('selectTeam')}</option>
+                        {teams.map(tm => (
+                          <option key={tm.id} value={tm.id}>{tm.name} {getFlag(tm.code)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {communityBetsLocked ? (
+                    <p className="text-sm text-destructive">{t('picksLocked')}</p>
+                  ) : (
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={handleSavePicks} disabled={pendingPicks}>
+                        {pendingPicks ? '…' : t('savePicks')}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {phaseSugs.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">{t('noSuggestions')}</p>

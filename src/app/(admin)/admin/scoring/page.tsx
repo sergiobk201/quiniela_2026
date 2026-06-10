@@ -105,6 +105,42 @@ export default async function ScoringPage() {
               ))}
             </div>
 
+            {/* Community Bet Answers */}
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground mb-3 font-medium">Community Bet Answers</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Balón de Oro <span className="text-red-400">Expert·5pts</span></label>
+                  <Input
+                    name="community_balon_de_oro"
+                    type="text"
+                    defaultValue={results?.['community_balon_de_oro' as keyof typeof results] ?? ''}
+                    placeholder="Player name"
+                  />
+                </div>
+                {[
+                  { name: 'community_revelacion_team_id', label: 'Selección Revelación', badge: 'Medium·2pts' },
+                  { name: 'community_decepcion_team_id',  label: 'Selección Decepción',  badge: 'Hard·3pts' },
+                ].map(({ name, label, badge }) => (
+                  <div key={name}>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      {label} <span className="text-blue-400">{badge}</span>
+                    </label>
+                    <select
+                      name={name}
+                      defaultValue={results?.[name as keyof typeof results] ?? ''}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">—</option>
+                      {(teams ?? []).map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <Button type="submit">Save Tournament Results</Button>
           </form>
         </CardContent>

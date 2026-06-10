@@ -34,16 +34,19 @@ export async function saveTournamentResults(formData: FormData) {
   const admin = createAdminClient()
 
   const row = {
-    champion_team_id:           toInt(formData.get('champion_team_id')),
-    runner_up_team_id:          toInt(formData.get('runner_up_team_id')),
-    third_place_team_id:        toInt(formData.get('third_place_team_id')),
-    golden_boot_player:         str(formData.get('golden_boot_player')),
-    golden_glove_player:        str(formData.get('golden_glove_player')),
-    kopa_player:                str(formData.get('kopa_player')),
-    total_goals:                toInt(formData.get('total_goals')),
-    first_eliminated_team_id:   toInt(formData.get('first_eliminated_team_id')),
-    most_yellows_team_id:       toInt(formData.get('most_yellows_team_id')),
-    updated_at:                 new Date().toISOString(),
+    champion_team_id:              toInt(formData.get('champion_team_id')),
+    runner_up_team_id:             toInt(formData.get('runner_up_team_id')),
+    third_place_team_id:           toInt(formData.get('third_place_team_id')),
+    golden_boot_player:            str(formData.get('golden_boot_player')),
+    golden_glove_player:           str(formData.get('golden_glove_player')),
+    kopa_player:                   str(formData.get('kopa_player')),
+    total_goals:                   toInt(formData.get('total_goals')),
+    first_eliminated_team_id:      toInt(formData.get('first_eliminated_team_id')),
+    most_yellows_team_id:          toInt(formData.get('most_yellows_team_id')),
+    community_balon_de_oro:        str(formData.get('community_balon_de_oro')),
+    community_revelacion_team_id:  toInt(formData.get('community_revelacion_team_id')),
+    community_decepcion_team_id:   toInt(formData.get('community_decepcion_team_id')),
+    updated_at:                    new Date().toISOString(),
   }
 
   // Single row — delete existing and insert fresh

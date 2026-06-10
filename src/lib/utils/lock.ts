@@ -29,3 +29,23 @@ export function isGroupStageLocked(lockTime: Date | null): boolean {
   if (!lockTime) return false
   return new Date() >= lockTime
 }
+
+// Returns the locked_at time of the FIRST group-stage match (1h before WC kickoff).
+// Community bets lock at this moment.
+export async function getFirstGroupMatchLockTime(
+  supabase: SupabaseClient
+): Promise<Date | null> {
+  const { data } = await supabase
+    .from('matches')
+    .select('locked_at')
+    .eq('stage', 'group')
+    .order('locked_at', { ascending: true })
+    .limit(1)
+    .single()
+  return data?.locked_at ? new Date(data.locked_at) : null
+}
+
+export function isCommunityBetsLocked(lockTime: Date | null): boolean {
+  if (!lockTime) return false
+  return new Date() >= lockTime
+}

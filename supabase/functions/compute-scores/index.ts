@@ -22,6 +22,9 @@ const PRE_TOURNAMENT_PTS = {
   totalGoalsClose: 5,   // within ±5
   firstEliminated: 5,
   mostYellows: 5,
+  communityBalonDeOro: 5,  // Expert
+  communityRevelacion: 2,  // Medium
+  communityDecepcion: 3,   // Hard
 }
 
 Deno.serve(async (req) => {
@@ -143,6 +146,9 @@ Deno.serve(async (req) => {
           if (diff === 0)     pts += PRE_TOURNAMENT_PTS.totalGoalsExact
           else if (diff <= 5) pts += PRE_TOURNAMENT_PTS.totalGoalsClose
         }
+        if (tr.community_balon_de_oro && pred.community_balon_de_oro?.toLowerCase() === tr.community_balon_de_oro?.toLowerCase()) pts += PRE_TOURNAMENT_PTS.communityBalonDeOro
+        if (tr.community_revelacion_team_id && pred.community_revelacion_team_id === tr.community_revelacion_team_id) pts += PRE_TOURNAMENT_PTS.communityRevelacion
+        if (tr.community_decepcion_team_id  && pred.community_decepcion_team_id  === tr.community_decepcion_team_id)  pts += PRE_TOURNAMENT_PTS.communityDecepcion
         preTournamentPts.set(pred.user_id, (preTournamentPts.get(pred.user_id) ?? 0) + pts)
       }
     }

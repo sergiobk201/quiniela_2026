@@ -154,6 +154,22 @@ export default async function RulesPage() {
             <div key={step} className="px-4 py-3">{step}</div>
           ))}
         </div>
+
+        <h3 className="text-sm font-semibold mt-4">{t('communityBetsActiveTitle')}</h3>
+        <p className="text-sm text-muted-foreground">{t('communityBetsActiveSub')}</p>
+        <div className="border rounded-lg divide-y text-sm">
+          {[
+            { bet: t('communityBetsActiveBet1'), pts: t('communityBetsActiveBet1Pts') },
+            { bet: t('communityBetsActiveBet2'), pts: t('communityBetsActiveBet2Pts') },
+            { bet: t('communityBetsActiveBet3'), pts: t('communityBetsActiveBet3Pts') },
+          ].map(({ bet, pts }) => (
+            <div key={bet} className="flex justify-between px-4 py-3">
+              <span>{bet}</span>
+              <span className="font-medium text-green-600 dark:text-green-400 shrink-0 ml-4">{pts}</span>
+            </div>
+          ))}
+        </div>
+
         <p className="text-xs text-muted-foreground italic">{t('communityBetsNote')}</p>
       </section>
 

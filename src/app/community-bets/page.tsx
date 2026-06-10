@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import CommunityBetsClient from './community-bets-client'
 import { PHASES, PHASE_NEXT_STAGE, type Phase, type EnrichedSuggestion } from './types'
+import { getFirstGroupMatchLockTime, isCommunityBetsLocked } from '@/lib/utils/lock'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,9 @@ export default async function CommunityBetsPage() {
     { data: votes },
     { data: profiles },
     { data: stageMatches },
+    { data: teams },
+    { data: existingPick },
+    communityBetsLockTime,
   ] = await Promise.all([
     supabase.from('bet_suggestions')
       .select('id, phase, user_id, suggestion, difficulty, status, created_at')
@@ -29,6 +33,12 @@ export default async function CommunityBetsPage() {
       .select('stage, scheduled_at')
       .in('stage', ['group', 'r32', 'r16', 'qf', 'sf', 'final'])
       .order('scheduled_at', { ascending: true }),
+    supabase.from('teams').select('id, name, code').order('name'),
+    supabase.from('pre_tournament_predictions')
+      .select('community_balon_de_oro, community_revelacion_team_id, community_decepcion_team_id')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    getFirstGroupMatchLockTime(supabase),
   ])
 
   // Compute per-phase deadlines (= MIN(next-stage scheduled_at) - 2 days)
@@ -78,7 +88,17 @@ export default async function CommunityBetsPage() {
         <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="text-muted-foreground text-sm mt-1">{t('subtitle')}</p>
       </div>
-      <CommunityBetsClient suggestions={enriched} deadlines={deadlines} />
+      <CommunityBetsClient
+        suggestions={enriched}
+        deadlines={deadlines}
+        teams={(teams ?? []) as { id: number; name: string; code: string }[]}
+        communityBetsPick={{
+          balon_de_oro:        existingPick?.community_balon_de_oro ?? null,
+          revelacion_team_id:  existingPick?.community_revelacion_team_id ?? null,
+          decepcion_team_id:   existingPick?.community_decepcion_team_id ?? null,
+        }}
+        communityBetsLocked={isCommunityBetsLocked(communityBetsLockTime)}
+      />
     </div>
   )
 }
