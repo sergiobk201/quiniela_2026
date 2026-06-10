@@ -2,6 +2,54 @@
 
 ---
 
+## [Day 15] — 2026-06-09 (Community Bets + Security Hardening)
+
+### Shipped
+
+**Feat: Community bet picks — scored prediction inputs**
+- New "Your Picks" card at the top of the Pre-Tournament tab on `/community-bets`
+- 3 voted bets live: Balón de Oro (5pts · Expert), Selección Revelación (2pts · Medium), Selección Decepción (3pts · Hard)
+- Picks stored in `pre_tournament_predictions` (3 new columns via migration 012)
+- Lock: 1 hour before the first WC match on June 11 (`MIN(locked_at WHERE stage='group')`)
+- Save action uses service-role to bypass June 7 trophy RLS lock; application-layer lock enforces June 11 deadline
+- Full EN/ES i18n for picks card
+- `src/app/community-bets/page.tsx` — fetches teams, existing picks, lock time
+- `src/app/community-bets/community-bets-client.tsx` — picks card rendered above vote list
+- `src/app/community-bets/actions.ts` — `saveCommunityBets` with admin client + lock check
+- `src/lib/utils/lock.ts` — `getFirstGroupMatchLockTime` + `isCommunityBetsLocked`
+
+**Feat: Community bet scoring**
+- Edge function `compute-scores` scores community bets against admin-entered answers
+- `PRE_TOURNAMENT_PTS`: `communityBalonDeOro: 5`, `communityRevelacion: 2`, `communityDecepcion: 3`
+- Fires only when admin has entered answers in `tournament_results`
+- `supabase/functions/compute-scores/index.ts` updated
+
+**Feat: Admin scoring — Community Bet Answers section**
+- New "Community Bet Answers" block on `/admin/scoring` Tournament Results form
+- 3 inputs: Balón de Oro (text), Selección Revelación (team select), Selección Decepción (team select)
+- `saveTournamentResults` action extended with 3 new fields
+
+**Feat: Rules page updated**
+- New "Pre-Tournament Phase — Active Bets" sub-table with all 3 bets and green point values
+- FAQ #6 corrected — now says community bets DO score automatically after admin recompute
+- Both EN and ES updated
+
+**Fix: Supabase security lints — `audit_log_readable`**
+- Migration 011: `WITH (security_invoker = true)` + `REVOKE SELECT FROM anon, authenticated`
+- Resolves `auth_users_exposed` and `security_definer_view` lints
+- Admin audit page unaffected (service-role client bypasses both)
+
+### Commits
+- `da1b828` feat(community-bets): add voted picks + scoring
+- `3ff0b98` fix(community-bets): bypass RLS for community bet saves
+
+### Lessons Learned
+- RLS date-lock policies block ALL writes past the lock date — including new columns added after the lock fired. Use service-role + application-layer lock check for any prediction type with a different deadline than the original table lock.
+- PostgREST upsert with `onConflict` only updates the columns in the payload — omitted columns are never nulled out. Safe to partial-upsert new columns without touching existing picks.
+- Supabase security linter flags views that join `auth.users` as `security_definer` even without the explicit keyword — the view owner's permissions are used by default. Fix: `WITH (security_invoker = true)` + revoke from anon.
+
+---
+
 ## [Day 14] — 2026-06-06 (Go-Live + Mobile Nav + Scope Cleanup)
 
 ### 🚀 Project is live — quiniela2026.space
