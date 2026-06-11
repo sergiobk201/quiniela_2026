@@ -161,9 +161,13 @@
       "trophy": "Trophy & Awards",
       "standings": "Group Standings",
       "qualifiers": "3rd-Place Qualifiers",
+      "community": "Community Bets",
       "matches": "Match Predictions",
       "rebuys": "Rebuys"
-    }
+    },
+    "communityBetHidden": "Community bet picks are hidden until the lock date",
+    "communityBetHiddenDate": "June 11, 2026 · 1 hour before kickoff",
+    "noCommunityBetsYet": "No community bet picks submitted yet."
   },
   "rules": {
     "title": "Rules & Scoring",

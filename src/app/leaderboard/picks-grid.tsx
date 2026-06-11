@@ -27,6 +27,11 @@ export type PlayerPick = {
   } | null
   qualifiers: string[]
   rebuy: string | null
+  communityBets: {
+    balonDeOro: string
+    revelacion: string
+    decepcion: string
+  } | null
 }
 
 export type GroupStandingsRow = {
@@ -50,13 +55,15 @@ interface Props {
   groupStandings: GroupStandingsRow[]
   matches: MatchRow[]
   picksVisible: boolean
+  communityBetsLocked: boolean
 }
 
 const STAGE_ORDER = ['group', 'r32', 'r16', 'qf', 'sf', '3rd', 'final'] as const
 
-export default function PicksGrid({ players, playerPicks, groupStandings, matches, picksVisible }: Props) {
+export default function PicksGrid({ players, playerPicks, groupStandings, matches, picksVisible, communityBetsLocked }: Props) {
   const t = useTranslations('leaderboard')
   const tPred = useTranslations('predictions')
+  const tCb = useTranslations('communityBets')
 
   const STAGE_LABELS: Record<string, string> = {
     group: t('stageGroup'),
@@ -107,6 +114,7 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
             <TabsTrigger value="trophy">{t('tabs.trophy')}</TabsTrigger>
             <TabsTrigger value="standings">{t('tabs.standings')}</TabsTrigger>
             <TabsTrigger value="qualifiers">{t('tabs.qualifiers')}</TabsTrigger>
+            <TabsTrigger value="community">{t('tabs.community')}</TabsTrigger>
             <TabsTrigger value="matches">{t('tabs.matches')}</TabsTrigger>
             <TabsTrigger value="rebuys">{t('tabs.rebuys')}</TabsTrigger>
           </TabsList>
@@ -252,6 +260,46 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ── Community Bets ── */}
+          <TabsContent value="community" className="mt-4">
+            {!communityBetsLocked ? (
+              <div className="rounded-lg border border-border bg-muted/30 py-10 text-center space-y-1">
+                <p className="text-sm font-medium">{t('communityBetHidden')}</p>
+                <p className="text-xs text-muted-foreground">{t('communityBetHiddenDate')}</p>
+              </div>
+            ) : filteredPicks.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {isSearchActive ? t('noResults') : t('noCommunityBetsYet')}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {filteredPicks.map(p => (
+                  <div key={p.userId} className="rounded-md border border-border p-3 space-y-2">
+                    <p className="text-sm font-semibold">{p.displayName}</p>
+                    {p.communityBets ? (
+                      <dl className="space-y-1.5">
+                        <div className="flex justify-between gap-2 text-xs">
+                          <dt className="text-muted-foreground shrink-0">{tCb('balonDeOro')}</dt>
+                          <dd className="text-right font-medium truncate max-w-[60%]">{p.communityBets.balonDeOro || '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 text-xs">
+                          <dt className="text-muted-foreground shrink-0">{tCb('revelacion')}</dt>
+                          <dd className="text-right font-medium">{p.communityBets.revelacion}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 text-xs">
+                          <dt className="text-muted-foreground shrink-0">{tCb('decepcion')}</dt>
+                          <dd className="text-right font-medium">{p.communityBets.decepcion}</dd>
+                        </div>
+                      </dl>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">{t('noCommunityBetsYet')}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </TabsContent>

@@ -161,9 +161,13 @@
       "trophy": "Trofeo y Premios",
       "standings": "Clasificación de Grupos",
       "qualifiers": "Clasificados 3ros",
+      "community": "Apuestas Comunitarias",
       "matches": "Pronósticos de Partidos",
       "rebuys": "Recompras"
-    }
+    },
+    "communityBetHidden": "Los picks de apuestas comunitarias están ocultos hasta el cierre",
+    "communityBetHiddenDate": "11 jun 2026 · 1 hora antes del arranque",
+    "noCommunityBetsYet": "Aún no hay picks de apuestas comunitarias."
   },
   "rules": {
     "title": "Reglas y Puntaje",

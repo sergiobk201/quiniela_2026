@@ -1,7 +1,7 @@
 import { getUser } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
-import { isPreTournamentLocked } from '@/lib/utils/lock'
+import { isPreTournamentLocked, getFirstGroupMatchLockTime, isCommunityBetsLocked } from '@/lib/utils/lock'
 import LeaderboardTable from './leaderboard-table'
 import PicksGrid, { type PlayerPick, type GroupStandingsRow, type MatchRow } from './picks-grid'
 import DailyGrid, { type DailyMatch, type DailyPlayer, type DailyPrediction } from './daily-grid'
@@ -73,6 +73,7 @@ export default async function LeaderboardPage() {
     { data: matchPreds },
     { data: rebuys },
     { data: allProfiles },
+    communityBetsLockTime,
   ] = await Promise.all([
     admin.from('teams').select('id, name, code'),
     admin.from('groups').select('id, name').order('name'),
@@ -83,6 +84,7 @@ export default async function LeaderboardPage() {
     admin.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score'),
     admin.from('champion_rebuys').select('user_id, team_id'),
     admin.from('profiles').select('id, display_name').order('display_name'),
+    getFirstGroupMatchLockTime(admin),
   ])
 
   // Build lookup maps
@@ -132,6 +134,11 @@ export default async function LeaderboardPage() {
       } : null,
       qualifiers: ((qual?.team_ids ?? []) as number[]).map(id => flaggedTeam(id)),
       rebuy: rebuy ? flaggedTeam(rebuy.team_id) : null,
+      communityBets: pre ? {
+        balonDeOro: pre.community_balon_de_oro ?? '',
+        revelacion: flaggedTeam(pre.community_revelacion_team_id),
+        decepcion: flaggedTeam(pre.community_decepcion_team_id),
+      } : null,
     }
   })
 
@@ -280,6 +287,7 @@ export default async function LeaderboardPage() {
           groupStandings={groupStandings}
           matches={matchRows}
           picksVisible={picksVisible}
+          communityBetsLocked={isCommunityBetsLocked(communityBetsLockTime)}
         />
       </div>
     </div>
