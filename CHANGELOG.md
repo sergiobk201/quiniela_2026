@@ -2,6 +2,33 @@
 
 ---
 
+## [Day 16] — 2026-06-10 (Community Bets Leaderboard Reveal)
+
+### Shipped
+
+**Feat: Community Bets tab on leaderboard picks grid**
+- New "Community Bets" tab added to the `/leaderboard` picks comparison grid, between Qualifiers and Matches
+- Reveals all 25 players' picks for Balón de Oro, Selección Revelación, and Selección Decepción once the June 11 lock fires
+- Lock-gated independently from the June 7 pre-tournament lock — uses existing `isCommunityBetsLocked` / `getFirstGroupMatchLockTime` utils; hidden banner shown before lock
+- Mobile-first card layout: 1-col on mobile, 2-col grid on `sm+` — no horizontal scroll
+- Reuses `communityBets` i18n namespace for field labels; EN + ES strings added to `leaderboard` namespace for lock banner and empty state
+- Data already fetched via `select('*')` on `pre_tournament_predictions`; zero extra DB queries
+
+### Files Changed
+- `src/app/leaderboard/page.tsx` — import lock utils; add `communityBetsLockTime` to `Promise.all`; populate `communityBets` in `playerPicks` mapper; pass `communityBetsLocked` to `PicksGrid`
+- `src/app/leaderboard/picks-grid.tsx` — extend `PlayerPick` type; add `communityBetsLocked` prop; new tab trigger + card-grid tab content
+- `messages/en.json` — `tabs.community`, `communityBetHidden`, `communityBetHiddenDate`, `noCommunityBetsYet`
+- `messages/es.json` — same keys in Spanish
+
+### Commits
+- `e69f2c4` feat(leaderboard): add Community Bets tab to picks grid
+
+### Lessons Learned
+- Community bets columns were already readable via RLS (`locked = TRUE` since June 7) and already fetched via `select('*')` — the reveal was purely a UI gap, not a data gap. Zero schema or query changes needed.
+- Lock gating must be done per-deadline when different prediction types have different lock times. Community bets (June 11) need a separate flag from pre-tournament picks (June 7) — reusing `picksVisible` would have revealed picks a week too early.
+
+---
+
 ## [Day 15] — 2026-06-09 (Community Bets + Security Hardening)
 
 ### Shipped
