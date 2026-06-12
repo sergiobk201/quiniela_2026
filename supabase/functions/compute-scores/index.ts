@@ -99,10 +99,17 @@ Deno.serve(async (req) => {
       const groupMatches = (finishedMatches ?? []).filter((m) => m.stage === 'group')
       const actualStandings = computeActualGroupStandings(groupMatches)
 
+      // Only score a group once all 6 matches are finished
+      const finishedCountByGroup = new Map<number, number>()
+      for (const m of groupMatches) {
+        if (m.group_id) finishedCountByGroup.set(m.group_id, (finishedCountByGroup.get(m.group_id) ?? 0) + 1)
+      }
+
       // Group standing predictions
       for (const pred of groupPreds ?? []) {
         const actual = actualStandings.get(pred.group_id)
         if (!actual || actual.length < 4) continue
+        if ((finishedCountByGroup.get(pred.group_id) ?? 0) < 6) continue
         const pts = scoreGroupStanding(
           [pred.predicted_1st, pred.predicted_2nd, pred.predicted_3rd, pred.predicted_4th],
           actual

@@ -520,3 +520,9 @@ Give every player proof that the admin (Sergio) played fair — predictions subm
 | 2026-06-07 | **PRE-TOURNAMENT SHEET LOCK (HARD)**      |
 | 2026-06-11 | FIFA World Cup 2026 kickoff               |
 | 2026-07-19 | World Cup Final                           |
+
+---
+
+### Phase 9 — Scoring Gaps (Post-Kickoff)
+
+- [ ] **`third_place_qualifier_ids` admin input** — `tournament_results` table already has the `INT[]` column and the edge function already reads it, but `/admin/scoring` has no UI for it and `saveTournamentResults` never writes it. The engine currently falls back to the 3rd-place team of each finished group in Map iteration order (first 8), which does NOT match the FIFA-adjudicated ranking. Fix: add an 8-team multi-select to the Tournament Results form; extend `saveTournamentResults` row payload to include `third_place_qualifier_ids`. No migration needed.
