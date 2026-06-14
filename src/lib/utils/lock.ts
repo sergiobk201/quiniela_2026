@@ -11,7 +11,7 @@ export function isMatchLocked(lockedAt: string): boolean {
 }
 
 // Returns the locked_at time of the last group-stage match.
-// Standings and qualifiers lock at this moment (1hr before last group kickoff).
+// Standings and qualifiers lock at this moment (15 min before last group kickoff).
 export async function getGroupStageLockTime(
   supabase: SupabaseClient
 ): Promise<Date | null> {
@@ -30,7 +30,7 @@ export function isGroupStageLocked(lockTime: Date | null): boolean {
   return new Date() >= lockTime
 }
 
-// Returns the locked_at time of the FIRST group-stage match (1h before WC kickoff).
+// Returns the locked_at time of the FIRST group-stage match (15 min before WC kickoff).
 // Community bets lock at this moment.
 export async function getFirstGroupMatchLockTime(
   supabase: SupabaseClient

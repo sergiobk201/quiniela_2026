@@ -169,7 +169,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 
 #### Admin — Locks
 - [x] Lock a stage → `locked_at` set to now, predictions for that stage disabled in UX
-- [x] Unlock a stage → `locked_at` reset to original `scheduled_at - 1h`
+- [x] Unlock a stage → `locked_at` reset to original `scheduled_at - 15min`
 - [x] Lock pre-tournament → pre-tournament form shows locked state
 - [x] Lock confirmation dialog prevents accidental clicks
 
@@ -213,7 +213,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] **Reminder push** — Resend email blast June 6 to all users who have incomplete predictions (< 104 match predictions submitted)
 - [x] **Public read-only leaderboard** — shareable `/leaderboard/public` URL, no auth required, names only (no score breakdown)
 - [x] **Audit hardening + transparency** — `logAudit()` helper + all prediction saves + lock-blocked attempts + admin lock events logged to `audit_log`. `audit_log_readable` view for investigations. Migration 010. Shipped 2026-06-05.
-- [x] **Community bet scored picks** — top 3 voted bets implemented as scored prediction inputs on `/community-bets` Pre-Tournament tab. Balón de Oro (5pts Expert), Selección Revelación (2pts Medium), Selección Decepción (3pts Hard). Lock 1hr before first WC match. Scoring wired into edge function. Admin enters answers in `/admin/scoring`. Security: `audit_log_readable` hardened (migration 011, `security_invoker` + revoke from anon). Migrations 011–012. Shipped 2026-06-09.
+- [x] **Community bet scored picks** — top 3 voted bets implemented as scored prediction inputs on `/community-bets` Pre-Tournament tab. Balón de Oro (5pts Expert), Selección Revelación (2pts Medium), Selección Decepción (3pts Hard). Lock 15min before first WC match. Scoring wired into edge function. Admin enters answers in `/admin/scoring`. Security: `audit_log_readable` hardened (migration 011, `security_invoker` + revoke from anon). Migrations 011–012. Shipped 2026-06-09.
 
 ---
 

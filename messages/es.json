@@ -166,7 +166,7 @@
       "rebuys": "Recompras"
     },
     "communityBetHidden": "Los picks de apuestas comunitarias están ocultos hasta el cierre",
-    "communityBetHiddenDate": "11 jun 2026 · 1 hora antes del arranque",
+    "communityBetHiddenDate": "11 jun 2026 · 15 minutos antes del arranque",
     "noCommunityBetsYet": "Aún no hay picks de apuestas comunitarias."
   },
   "rules": {
@@ -228,7 +228,7 @@
     "communityBetsHow2": "Vota por tus favoritas — el top 3 por votos se envía al admin antes del cierre de la fase",
     "communityBetsHow3": "El admin revisa y marca las apuestas seleccionadas; los resultados se resuelven al final de cada fase",
     "communityBetsActiveTitle": "Fase Pre-Torneo — Apuestas Activas",
-    "communityBetsActiveSub": "Estas 3 apuestas fueron elegidas por votación del grupo. Cierre 1 hora antes del primer partido el 11 de junio. Ingresa tus picks en Apuestas Comunitarias.",
+    "communityBetsActiveSub": "Estas 3 apuestas fueron elegidas por votación del grupo. Cierre 15 minutos antes del primer partido el 11 de junio. Ingresa tus picks en Apuestas Comunitarias.",
     "communityBetsActiveBet1": "Balón de Oro (mejor jugador del torneo)",
     "communityBetsActiveBet1Pts": "5 pts · Experto",
     "communityBetsActiveBet2": "Selección Revelación",
@@ -247,7 +247,7 @@
     "faq1q": "¿Qué pasa si no ingreso un pronóstico?",
     "faq1a": "Se toma como 0–0. Obtienes 2 pts × multiplicador si el partido termina 0–0; 0 pts en caso contrario.",
     "faq2q": "¿Puedo cambiar mis pronósticos después de guardar?",
-    "faq2a": "Sí, hasta la hora de cierre de ese partido. La fase de grupos cierra 1 hora antes del inicio.",
+    "faq2a": "Sí, hasta la hora de cierre de ese partido. La fase de grupos cierra 15 minutos antes del inicio.",
     "faq3q": "¿Cuándo se actualizan los puntajes?",
     "faq3a": "Después de cada partido, el admin ingresa el resultado y actualiza el marcador. La clasificación se actualiza en tiempo real.",
     "faq4q": "¿Cómo se otorga el bono por sorpresa?",
@@ -262,7 +262,7 @@
   },
   "predictions": {
     "groupStageTitle": "Pronósticos Fase de Grupos",
-    "groupStageSub": "{filled} / {total} partidos completados · Cada partido cierra 1 hora antes del inicio",
+    "groupStageSub": "{filled} / {total} partidos completados · Cada partido cierra 15 minutos antes del inicio",
     "preTournament": "Pre-Torneo",
     "groups": "Grupos",
     "r32": "R32",

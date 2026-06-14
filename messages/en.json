@@ -166,7 +166,7 @@
       "rebuys": "Rebuys"
     },
     "communityBetHidden": "Community bet picks are hidden until the lock date",
-    "communityBetHiddenDate": "June 11, 2026 · 1 hour before kickoff",
+    "communityBetHiddenDate": "June 11, 2026 · 15 minutes before kickoff",
     "noCommunityBetsYet": "No community bet picks submitted yet."
   },
   "rules": {
@@ -228,7 +228,7 @@
     "communityBetsHow2": "Upvote your favorites — top 3 by votes are emailed to the admin before the phase deadline",
     "communityBetsHow3": "Admin reviews and marks selected bets; results settled at the end of each phase",
     "communityBetsActiveTitle": "Pre-Tournament Phase — Active Bets",
-    "communityBetsActiveSub": "These 3 bets were voted in by the group. Lock 1 hour before the first match on June 11. Submit your picks at Community Bets.",
+    "communityBetsActiveSub": "These 3 bets were voted in by the group. Lock 15 minutes before the first match on June 11. Submit your picks at Community Bets.",
     "communityBetsActiveBet1": "Balón de Oro (best player of the tournament)",
     "communityBetsActiveBet1Pts": "5 pts · Expert",
     "communityBetsActiveBet2": "Breakout Team (Selección Revelación)",
@@ -247,7 +247,7 @@
     "faq1q": "What if I miss a match prediction?",
     "faq1a": "It defaults to 0–0. You get 2 pts × multiplier if the match actually ends 0–0; 0 pts otherwise.",
     "faq2q": "Can I change my predictions after saving?",
-    "faq2a": "Yes, until the lock time for that match. Group stage locks 1 hour before kickoff.",
+    "faq2a": "Yes, until the lock time for that match. Group stage locks 15 minutes before kickoff.",
     "faq3q": "When do scores update?",
     "faq3a": "After each match, the admin enters the result and triggers a recompute. The leaderboard updates live.",
     "faq4q": "How is the upset bonus awarded?",
@@ -262,7 +262,7 @@
   },
   "predictions": {
     "groupStageTitle": "Group Stage Predictions",
-    "groupStageSub": "{filled} / {total} matches filled · Each match locks 1 hour before kickoff",
+    "groupStageSub": "{filled} / {total} matches filled · Each match locks 15 minutes before kickoff",
     "preTournament": "Pre-Tournament",
     "groups": "Groups",
     "r32": "R32",
