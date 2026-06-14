@@ -35,7 +35,7 @@ export async function unlockStage(stage: string) {
 
   await Promise.all(
     matches.map((m) => {
-      const resetTime = new Date(new Date(m.scheduled_at).getTime() - 60 * 60 * 1000)
+      const resetTime = new Date(new Date(m.scheduled_at).getTime() - 15 * 60 * 1000)
       return admin
         .from('matches')
         .update({ locked_at: resetTime.toISOString() })

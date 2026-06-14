@@ -165,7 +165,7 @@ export default async function LeaderboardPage() {
     const home = m.home_team as unknown as { name: string; code: string } | null
     const away = m.away_team as unknown as { name: string; code: string } | null
     const date = new Date(m.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
-    const matchLocked = now >= new Date(m.scheduled_at).getTime() - 59 * 60 * 1000
+    const matchLocked = now >= new Date(m.scheduled_at).getTime() - 14 * 60 * 1000
     return {
       matchId: m.id,
       stage: m.stage as string,
@@ -186,7 +186,7 @@ export default async function LeaderboardPage() {
   const dailyMatches: DailyMatch[] = (allMatches ?? [])
     .filter(m => {
       const matchDateUTC = new Date(m.scheduled_at).toISOString().slice(0, 10)
-      const lockTime = new Date(m.scheduled_at).getTime() - 59 * 60 * 1000
+      const lockTime = new Date(m.scheduled_at).getTime() - 14 * 60 * 1000
       return matchDateUTC === todayUTC && now >= lockTime
     })
     .map(m => {
