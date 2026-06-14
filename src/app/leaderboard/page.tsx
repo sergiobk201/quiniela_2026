@@ -91,6 +91,14 @@ export default async function LeaderboardPage() {
   const teamName = new Map((allTeams ?? []).map(t => [t.id, t.name]))
   const teamCode = new Map((allTeams ?? []).map(t => [t.id, t.code]))
 
+  // Fill champion flag for rebuy-only users (no pre-tournament prediction)
+  for (const r of rebuys ?? []) {
+    if (!champMap.has(r.user_id)) {
+      const code = teamCode.get(r.team_id)
+      if (code) champMap.set(r.user_id, code)
+    }
+  }
+
   function flaggedTeam(id: number | null | undefined): string {
     if (!id) return '—'
     const name = teamName.get(id)
