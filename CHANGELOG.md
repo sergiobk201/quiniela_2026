@@ -2,6 +2,74 @@
 
 ---
 
+## [Day 17] — 2026-06-14 (Scoring Fixes + Lock Time Change + Data Corrections)
+
+### Shipped
+
+**Fix: Group standings premature scoring**
+- Added `finishedCountByGroup` Map in `compute-scores` edge function
+- Guard: group standings are only scored once all 6 matches in a group are finished
+- Previously fired after 2 matches, causing scores to inflate and then drop — confusing for players
+- `supabase/functions/compute-scores/index.ts`
+
+**Feat: Match lock window reduced from 1 hour to 15 minutes (user vote)**
+- All future match `locked_at` values updated in DB: `scheduled_at - INTERVAL '15 minutes'`
+- Code thresholds updated: `leaderboard/page.tsx` (picks grid + daily grid visibility gate), `admin/locks/actions.ts` (unlock stage reset)
+- This single value drives both prediction input lock and cross-player prediction visibility
+- All user-facing strings updated in EN + ES: rules FAQ, group stage sub-header, community bets lock date, rules page copy
+- Code comments in `src/lib/utils/lock.ts` updated
+- `plan.md` checklist updated
+
+**Fix: Australia vs Turkey wrong scheduled date**
+- Seed had `2026-06-13 04:00:00+00` — was locking 24hrs early
+- Corrected via SQL UPDATE to `2026-06-14 04:00:00+00` in prod DB
+- Existing predictions unaffected (match was locked before fix; re-locked at correct time after)
+
+**Fix: Mattoski QAT-SUI swapped prediction**
+- DB had `predicted_home_score=2, predicted_away_score=0` but user submitted 0-2
+- Fixed via SQL UPDATE; audit log confirmed the correct submission was 0-2 at 14:02 UTC
+
+**Data: Silvana's AUS-TUR prediction inserted**
+- Inserted via SQL: Australia 0, Turkey 2
+
+### Identified / Pending
+
+**Bug: Missing prediction defaults to 0-0**
+- `compute-scores/index.ts:87` — `?? { home: 0, away: 0 }` awards free points on 0-0 draws to users who never submitted a prediction
+- Fix: change to `if (!pred) continue` — NOT yet applied
+
+**Phase 9: `third_place_qualifier_ids` admin input gap**
+- `saveTournamentResults` does not include `third_place_qualifier_ids` in the payload
+- No multi-select UI on `/admin/scoring` for this field
+- Added to plan.md Phase 9
+
+### Files Changed
+- `supabase/functions/compute-scores/index.ts` — group standings 6-match guard
+- `src/app/leaderboard/page.tsx` — lock threshold 59min → 14min (15min gate)
+- `src/app/(admin)/admin/locks/actions.ts` — unlock reset 60min → 15min
+- `src/lib/utils/lock.ts` — updated comments
+- `messages/en.json` — 4 lock-time strings updated
+- `messages/es.json` — 4 lock-time strings updated
+- `plan.md` — Phase 9 added; lock checklist items updated
+
+### Commits
+- `8e56d58` fix(scoring): gate group standings on all 6 matches done
+- `80687d8` feat(locks): reduce match lock window to 15 minutes
+- `1974271` docs(locks): update lock time references from 1hr to 15min
+
+### Deployed
+- `vercel --prod` → `https://www.quiniela2026.space`
+- Build: 25 routes, TypeScript clean, 0 errors
+- DB migration applied: `UPDATE matches SET locked_at = scheduled_at - INTERVAL '15 minutes' WHERE scheduled_at > NOW()`
+
+### Lessons Learned
+- Group standings scoring must gate on `finishedCountByGroup = 6` — partial group results produce standings that change as more matches finish, causing confusing score fluctuations mid-group.
+- A single `locked_at` DB value drives both the input lock AND the cross-player prediction visibility. Changing the lock window affects both simultaneously — document this coupling clearly.
+- `audit_log` row IDs are not match IDs — always join on `table_name + new_value->>'match_id'` when tracing a specific prediction, not on `id`.
+- `?? { home: 0, away: 0 }` as a missing-prediction fallback silently awards correct-result points on 0-0 draws. Always skip scoring when no prediction exists.
+
+---
+
 ## [Day 16] — 2026-06-10 (Community Bets Leaderboard Reveal)
 
 ### Shipped

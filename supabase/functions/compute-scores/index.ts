@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
       { data: rebuys },
       { data: tournamentResults },
     ] = await Promise.all([
-      supabase.from('profiles').select('id'),
+      supabase.from('profiles').select('id, created_at'),
       supabase
         .from('matches')
-        .select('id, stage, group_id, home_team_id, away_team_id, stage_multiplier, home_score, away_score, upset')
+        .select('id, stage, group_id, home_team_id, away_team_id, stage_multiplier, home_score, away_score, upset, scheduled_at')
         .eq('status', 'finished')
         .not('home_score', 'is', null),
       supabase.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score'),
@@ -67,6 +67,8 @@ Deno.serve(async (req) => {
     ])
 
     const userIds = (profiles ?? []).map((p) => p.id)
+    const userJoinedAt = new Map<string, Date>()
+    for (const p of profiles ?? []) userJoinedAt.set(p.id, new Date(p.created_at))
 
     // Index match predictions by userId → matchId → result
     const matchPredMap = new Map<string, Map<number, { home: number; away: number }>>()
@@ -84,8 +86,14 @@ Deno.serve(async (req) => {
         const actual = { home: match.home_score!, away: match.away_score! }
         const isGroup = match.stage === 'group'
         for (const uid of userIds) {
-          const pred = matchPredMap.get(uid)?.get(match.id) ?? { home: 0, away: 0 }
-          const pts  = scoreMatch(pred, actual, match.stage_multiplier, match.upset ?? false)
+          const pred = matchPredMap.get(uid)?.get(match.id)
+          if (!pred) {
+            // Late joiner: skip matches scheduled before they joined (no free 0-0 default)
+            const joinedAt = userJoinedAt.get(uid)
+            if (joinedAt && joinedAt > new Date(match.scheduled_at)) continue
+          }
+          const effectivePred = pred ?? { home: 0, away: 0 }
+          const pts  = scoreMatch(effectivePred, actual, match.stage_multiplier, match.upset ?? false)
           if (isGroup) groupMatchPts.set(uid, (groupMatchPts.get(uid) ?? 0) + pts)
           else         knockoutPts.set(uid,   (knockoutPts.get(uid)   ?? 0) + pts)
         }
