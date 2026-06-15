@@ -66,3 +66,10 @@ RESEND_API_KEY=
 **ALWAYS** start a session by reading `plan.md` and `CHANGELOG.md` first.
 Do NOT run `find`, `ls`, or directory scans to understand project state — those files already contain the full inventory of what exists, what's done, and what's pending.
 Scanning the file tree wastes tokens and hits usage limits; the two docs are the canonical source of truth for session context.
+
+### Constraint: PostgREST 1000-row cap (data integrity)
+Supabase enforces a hard server-side row cap (`db-max-rows`, default 1000) that `.limit(n)` CANNOT exceed — the server silently truncates and the JS client gives no error. A bare `.select()` on a table that can exceed 1000 rows drops the newest rows (highest id), corrupting leaderboards, grids, and score tallies.
+
+**Rule:** any *multi-row* read (NOT scoped by `.eq('user_id', …)`, `.maybeSingle()`, or `head:true` count) on a table that scales with users×matches or is insert-only MUST page via `fetchAll()` in `src/lib/supabase/admin.ts` (or the inline pager in the edge function), ordered by `id` for deterministic paging. Never trust a bare `.select()` or `.limit()` for these.
+
+At-risk tables: `match_predictions` (≈25×104), `bet_suggestion_votes` (25×suggestions), `audit_log` (insert-only). Bounded/safe: `teams`, `groups`, `matches`, `scores`, `profiles`, and all `*_predictions` keyed one-per-user. If user count ever exceeds ~1000, re-audit every unbounded `profiles` read.

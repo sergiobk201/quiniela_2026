@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     const [
       { data: profiles },
       { data: finishedMatches },
-      { data: matchPreds },
+      matchPreds,
       { data: groupPreds },
       { data: qualifierPreds },
       { data: prePreds },
@@ -58,10 +58,26 @@ Deno.serve(async (req) => {
         .select('id, stage, group_id, home_team_id, away_team_id, stage_multiplier, home_score, away_score, upset, scheduled_at')
         .eq('status', 'finished')
         .not('home_score', 'is', null),
-      // Explicit high limit: PostgREST caps unbounded queries at 1000 rows by default.
-      // With ~25 users × up to 104 matches this table exceeds 1000, silently dropping
-      // late-inserted predictions from scoring (high id = submitted later).
-      supabase.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score').limit(100000),
+      // Paged fetch: match_predictions exceeds PostgREST's hard 1000-row cap
+      // (~25 users × up to 104 matches). `.limit()` can't beat the cap — late
+      // predictions (high id) get silently dropped, undercounting scores. Page
+      // in 1000-row chunks ordered by id until a short page returns.
+      (async () => {
+        const PAGE = 1000
+        const rows: { user_id: string; match_id: number; predicted_home_score: number; predicted_away_score: number }[] = []
+        for (let from = 0; ; from += PAGE) {
+          const { data, error } = await supabase
+            .from('match_predictions')
+            .select('user_id, match_id, predicted_home_score, predicted_away_score')
+            .order('id', { ascending: true })
+            .range(from, from + PAGE - 1)
+          if (error) throw error
+          if (!data?.length) break
+          rows.push(...data)
+          if (data.length < PAGE) break
+        }
+        return rows
+      })(),
       supabase.from('group_standing_predictions').select('user_id, group_id, predicted_1st, predicted_2nd, predicted_3rd, predicted_4th'),
       supabase.from('third_place_qualifier_predictions').select('user_id, team_ids'),
       supabase.from('pre_tournament_predictions').select('*'),

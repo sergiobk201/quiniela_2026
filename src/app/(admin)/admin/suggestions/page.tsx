@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, fetchAll } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,14 +21,16 @@ export default async function SuggestionsPage() {
 
   const [
     { data: suggestions },
-    { data: votes },
+    votes,
     { data: profiles },
     { data: stageMatches },
   ] = await Promise.all([
     admin.from('bet_suggestions')
       .select('id, phase, user_id, suggestion, difficulty, status, created_at')
       .order('created_at', { ascending: false }),
-    admin.from('bet_suggestion_votes').select('suggestion_id'),
+    // Paged: vote tally can exceed PostgREST's 1000-row cap — unbounded undercounts. See fetchAll().
+    fetchAll<{ suggestion_id: number }>((from, to) =>
+      admin.from('bet_suggestion_votes').select('suggestion_id').order('id', { ascending: true }).range(from, to)),
     admin.from('profiles').select('id, display_name'),
     admin.from('matches')
       .select('stage, scheduled_at')

@@ -1,5 +1,5 @@
 import { getUser, createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, fetchAll } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import CommunityBetsClient from './community-bets-client'
@@ -17,7 +17,7 @@ export default async function CommunityBetsPage() {
 
   const [
     { data: suggestions },
-    { data: votes },
+    votes,
     { data: profiles },
     { data: stageMatches },
     { data: teams },
@@ -27,7 +27,10 @@ export default async function CommunityBetsPage() {
     supabase.from('bet_suggestions')
       .select('id, phase, user_id, suggestion, difficulty, status, created_at')
       .order('created_at', { ascending: false }),
-    supabase.from('bet_suggestion_votes').select('suggestion_id, user_id'),
+    // Paged: vote count can exceed PostgREST's 1000-row cap (25 users × N suggestions);
+    // an unbounded select would silently undercount tallies. See fetchAll().
+    fetchAll<{ suggestion_id: number; user_id: string }>((from, to) =>
+      supabase.from('bet_suggestion_votes').select('suggestion_id, user_id').order('id', { ascending: true }).range(from, to)),
     createAdminClient().from('profiles').select('id, display_name'),
     supabase.from('matches')
       .select('stage, scheduled_at')

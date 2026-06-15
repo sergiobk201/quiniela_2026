@@ -1,5 +1,5 @@
 import { getUser } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, fetchAll } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { isPreTournamentLocked, getFirstGroupMatchLockTime, isCommunityBetsLocked } from '@/lib/utils/lock'
 import LeaderboardTable from './leaderboard-table'
@@ -63,6 +63,10 @@ export default async function LeaderboardPage() {
   const userNotInTop3 = userRow && userRow.rank > 3
 
   // Picks grid data — always fetched (gate is UI-only)
+  // match_predictions is paged separately: it exceeds PostgREST's hard 1000-row cap
+  // (~25 users × up to 104 matches), and `.limit()` cannot beat that cap — late
+  // predictions (high id) get silently dropped. fetchAll() pages past it. Ordered by
+  // id so pagination is deterministic (no overlap/skip between pages).
   const [
     { data: allTeams },
     { data: allGroups },
@@ -70,7 +74,7 @@ export default async function LeaderboardPage() {
     { data: prePreds },
     { data: standingsPreds },
     { data: qualifierPreds },
-    { data: matchPreds },
+    matchPreds,
     { data: rebuys },
     { data: allProfiles },
     communityBetsLockTime,
@@ -81,10 +85,14 @@ export default async function LeaderboardPage() {
     admin.from('pre_tournament_predictions').select('*'),
     admin.from('group_standing_predictions').select('*'),
     admin.from('third_place_qualifier_predictions').select('user_id, team_ids'),
-    // Explicit high limit: PostgREST caps unbounded queries at 1000 rows by default.
-    // With ~25 users × up to 104 matches this table exceeds 1000, silently dropping
-    // late-inserted predictions from the picks/daily grids (high id = submitted later).
-    admin.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score').limit(100000),
+    fetchAll<{ user_id: string; match_id: number; predicted_home_score: number; predicted_away_score: number }>(
+      (from, to) =>
+        admin
+          .from('match_predictions')
+          .select('user_id, match_id, predicted_home_score, predicted_away_score')
+          .order('id', { ascending: true })
+          .range(from, to)
+    ),
     admin.from('champion_rebuys').select('user_id, team_id'),
     admin.from('profiles').select('id, display_name').order('display_name'),
     getFirstGroupMatchLockTime(admin),

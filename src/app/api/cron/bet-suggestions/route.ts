@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, fetchAll } from '@/lib/supabase/admin'
 import { Resend } from 'resend'
 import { PHASES, PHASE_NEXT_STAGE, DIFFICULTY_PTS, type Phase, type Difficulty } from '@/app/community-bets/types'
 
@@ -51,12 +51,14 @@ export async function GET(req: NextRequest) {
     if (existing) continue // already sent
 
     // Fetch open suggestions + votes + profiles
-    const [{ data: suggestions }, { data: votes }, { data: profiles }] = await Promise.all([
+    const [{ data: suggestions }, votes, { data: profiles }] = await Promise.all([
       admin.from('bet_suggestions')
         .select('id, suggestion, difficulty, user_id')
         .eq('phase', p.key)
         .eq('status', 'open'),
-      admin.from('bet_suggestion_votes').select('suggestion_id'),
+      // Paged: vote tally can exceed PostgREST's 1000-row cap — unbounded undercounts. See fetchAll().
+      fetchAll<{ suggestion_id: number }>((from, to) =>
+        admin.from('bet_suggestion_votes').select('suggestion_id').order('id', { ascending: true }).range(from, to)),
       admin.from('profiles').select('id, display_name'),
     ])
 

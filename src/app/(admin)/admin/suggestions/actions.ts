@@ -1,6 +1,6 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, fetchAll } from '@/lib/supabase/admin'
 import { assertAdmin } from '@/lib/supabase/assert-admin'
 import { revalidatePath } from 'next/cache'
 import { Resend } from 'resend'
@@ -28,9 +28,9 @@ export async function sendSuggestionEmail(phase: Phase): Promise<{ error: string
     .eq('phase', phase)
     .eq('status', 'open')
 
-  const { data: votes } = await admin
-    .from('bet_suggestion_votes')
-    .select('suggestion_id')
+  // Paged: vote tally can exceed PostgREST's 1000-row cap — unbounded undercounts. See fetchAll().
+  const votes = await fetchAll<{ suggestion_id: number }>((from, to) =>
+    admin.from('bet_suggestion_votes').select('suggestion_id').order('id', { ascending: true }).range(from, to))
 
   if (!suggestions?.length) return { error: 'No open suggestions for this phase.' }
 
