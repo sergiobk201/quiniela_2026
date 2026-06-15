@@ -81,7 +81,10 @@ export default async function LeaderboardPage() {
     admin.from('pre_tournament_predictions').select('*'),
     admin.from('group_standing_predictions').select('*'),
     admin.from('third_place_qualifier_predictions').select('user_id, team_ids'),
-    admin.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score'),
+    // Explicit high limit: PostgREST caps unbounded queries at 1000 rows by default.
+    // With ~25 users × up to 104 matches this table exceeds 1000, silently dropping
+    // late-inserted predictions from the picks/daily grids (high id = submitted later).
+    admin.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score').limit(100000),
     admin.from('champion_rebuys').select('user_id, team_id'),
     admin.from('profiles').select('id, display_name').order('display_name'),
     getFirstGroupMatchLockTime(admin),

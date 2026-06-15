@@ -58,7 +58,10 @@ Deno.serve(async (req) => {
         .select('id, stage, group_id, home_team_id, away_team_id, stage_multiplier, home_score, away_score, upset, scheduled_at')
         .eq('status', 'finished')
         .not('home_score', 'is', null),
-      supabase.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score'),
+      // Explicit high limit: PostgREST caps unbounded queries at 1000 rows by default.
+      // With ~25 users × up to 104 matches this table exceeds 1000, silently dropping
+      // late-inserted predictions from scoring (high id = submitted later).
+      supabase.from('match_predictions').select('user_id, match_id, predicted_home_score, predicted_away_score').limit(100000),
       supabase.from('group_standing_predictions').select('user_id, group_id, predicted_1st, predicted_2nd, predicted_3rd, predicted_4th'),
       supabase.from('third_place_qualifier_predictions').select('user_id, team_ids'),
       supabase.from('pre_tournament_predictions').select('*'),
