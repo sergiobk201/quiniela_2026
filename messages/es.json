@@ -244,7 +244,7 @@
     "toolQualifiers": "Elegibilidad de clasificados — el selector de 3er lugar usa tus pronósticos de partidos como fuente de verdad. Los equipos que predices en 1er o 2do lugar quedan bloqueados automáticamente.",
     "faq": "Preguntas Frecuentes",
     "faq1q": "¿Qué pasa si no ingreso un pronóstico?",
-    "faq1a": "Se toma como 0–0. Obtienes 2 pts × multiplicador si el partido termina 0–0; 0 pts en caso contrario.",
+    "faq1a": "Si no pronosticas antes del cierre, no se cuenta y no obtienes puntos en ese partido. No hay marcador por defecto — debes ingresar un pronóstico para poder ganar puntos.",
     "faq2q": "¿Puedo cambiar mis pronósticos después de guardar?",
     "faq2a": "Sí, hasta la hora de cierre de ese partido. La fase de grupos cierra 15 minutos antes del inicio.",
     "faq3q": "¿Cuándo se actualizan los puntajes?",

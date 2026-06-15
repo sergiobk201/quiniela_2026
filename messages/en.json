@@ -244,7 +244,7 @@
     "toolQualifiers": "Qualifier eligibility — the 3rd-place qualifier picker uses your match predictions as the source of truth. Teams you enter as 1st or 2nd in your scores are automatically blocked from the qualifier list.",
     "faq": "FAQ",
     "faq1q": "What if I miss a match prediction?",
-    "faq1a": "It defaults to 0–0. You get 2 pts × multiplier if the match actually ends 0–0; 0 pts otherwise.",
+    "faq1a": "If you miss the lock time, your prediction isn't counted and you get no points for that match. There's no default score — you have to submit a pick to be eligible for points.",
     "faq2q": "Can I change my predictions after saving?",
     "faq2a": "Yes, until the lock time for that match. Group stage locks 15 minutes before kickoff.",
     "faq3q": "When do scores update?",
