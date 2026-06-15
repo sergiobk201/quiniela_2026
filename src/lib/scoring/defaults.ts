@@ -2,7 +2,10 @@
 // Single source of truth for both server-side scoring and client-side display hints.
 
 export const SCORING_DEFAULTS = {
-  // No match prediction submitted → count as 0-0 (earns 0 pts, not penalized)
+  // No match prediction submitted:
+  //   • Matches before NO_DEFAULT_AFTER (see compute-scores/index.ts) → legacy 0-0 default
+  //     (preserves points already banked from lucky draws before the rule changed).
+  //   • Matches from the cutover onward → no row, no points (no free riding).
   missingMatchScore: { home: 0, away: 0 },
 
   // Knockout match where predicted score is a tie (no winner) →

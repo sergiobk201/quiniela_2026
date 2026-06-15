@@ -27,6 +27,13 @@ const PRE_TOURNAMENT_PTS = {
   communityDecepcion: 3,   // Hard
 }
 
+// Frozen cutover for the "no prediction = no points" rule. Matches kicking off at or
+// after this instant award 0 pts to users with no prediction; matches before it keep the
+// legacy 0-0 default so already-banked points are never clawed back on recompute.
+// MUST stay a hardcoded constant — a dynamic `new Date()` would let future matches slip
+// behind a moving "now" and silently revert to the default on a later recompute.
+const NO_DEFAULT_AFTER = new Date('2026-06-15T22:53:00Z')
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -110,6 +117,8 @@ Deno.serve(async (req) => {
             // Late joiner: skip matches scheduled before they joined (no free 0-0 default)
             const joinedAt = userJoinedAt.get(uid)
             if (joinedAt && joinedAt > new Date(match.scheduled_at)) continue
+            // No free riding: from the cutover onward, no prediction earns no points
+            if (new Date(match.scheduled_at) >= NO_DEFAULT_AFTER) continue
           }
           const effectivePred = pred ?? { home: 0, away: 0 }
           const pts  = scoreMatch(effectivePred, actual, match.stage_multiplier, match.upset ?? false)
