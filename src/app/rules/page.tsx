@@ -74,7 +74,6 @@ export default async function RulesPage() {
 
         <div className="text-xs text-muted-foreground space-y-1 mt-2">
           <p>{t('missingDefault')}</p>
-          <p>{t('knockoutTie')}</p>
         </div>
       </section>
 

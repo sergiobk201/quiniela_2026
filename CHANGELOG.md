@@ -2,6 +2,47 @@
 
 ---
 
+## [Day 18] — 2026-06-15 (PostgREST Row-Cap Bug + No-Prediction Scoring Rule)
+
+### Shipped
+
+**Fix: PostgREST 1000-row cap silently truncating prediction reads**
+- Root cause of a user (Mattoski) whose valid, on-time 1-1 prediction (row id 1262) was in the DB and audit log but missing from the leaderboard picks/daily grid. Supabase enforces a hard server-side `db-max-rows` cap (default 1000) that `.limit(n)` cannot exceed; unbounded `.select()` on `match_predictions` (~25 users × up to 104 matches) silently dropped the newest rows (highest id) — i.e. the latest submitters.
+- Earlier `.limit(100000)` attempt did NOT work — the server caps regardless of requested limit.
+- Fix: added reusable `fetchAll()` pager in `src/lib/supabase/admin.ts` (1000-row pages, ordered by `id` for deterministic paging, immune to the cap).
+- Applied to every growable-table read found in a full audit:
+  - `match_predictions` → leaderboard grid + `compute-scores` edge function
+  - `bet_suggestion_votes` → same latent bug in 4 vote-tally sites (community-bets page, cron email, admin suggestions page + action)
+- Per-user reads (`.eq('user_id')`) and domain-bounded tables (teams, matches, one-per-user predictions) verified safe, left unchanged.
+- Documented as a hard data-access constraint in `CLAUDE.md` so it can't be reintroduced.
+
+**Feat: No prediction = no points (timestamp cutover, not retroactive)**
+- Resolves the Day 17 "Missing prediction defaults to 0-0" pending bug.
+- Missing predictions defaulted to 0-0, handing free points to non-bettors whenever a match drew. Now enforced "no bet = no points" from a frozen cutover (`NO_DEFAULT_AFTER = 2026-06-15T22:53:00Z`) onward.
+- Rejected the originally-planned DB backfill: `match_predictions` feeds the picks grid, daily grid and PDF receipts, so fake 0-0 rows would render as phantom bets users never placed. Chose an engine-side cutover instead — zero DB writes.
+- Matches before the cutover keep the legacy 0-0 default → recompute reproduces current totals bit-for-bit (verified against prod: no already-scored match sits at/after the cutover).
+- Constant is hardcoded, never `new Date()`, so future matches can't slip behind a moving "now" and revert on a later recompute.
+
+### Files Changed
+- `src/lib/supabase/admin.ts` — new `fetchAll()` pager
+- `src/app/leaderboard/page.tsx` — paged `match_predictions`
+- `supabase/functions/compute-scores/index.ts` — paged `match_predictions`; cutover constant + no-prediction guard
+- `src/app/community-bets/page.tsx`, `src/app/api/cron/bet-suggestions/route.ts`, `src/app/(admin)/admin/suggestions/{page.tsx,actions.ts}` — paged `bet_suggestion_votes`
+- `src/lib/scoring/defaults.ts` — document cutover behavior
+- `CLAUDE.md` — PostgREST row-cap constraint
+- `plan.md` — Phase 9 items updated (knockout tie default, no-prediction cutover)
+
+### Commits
+- `6bb5314` fix(data): page past PostgREST 1000-row cap on all growable-table reads
+- `4b52984` feat(scoring): no prediction = no points from deploy cutover onward
+
+### Deployed
+- Frontend: `vercel --prod` → `https://www.quiniela2026.space`
+- Edge function: `supabase functions deploy compute-scores` → project `wzaykobnbrmksppsecvb`
+- Post-deploy: recompute scores from `/admin/scoring`; current totals expected unchanged (non-retroactive)
+
+---
+
 ## [Day 17] — 2026-06-14 (Scoring Fixes + Lock Time Change + Data Corrections)
 
 ### Shipped
