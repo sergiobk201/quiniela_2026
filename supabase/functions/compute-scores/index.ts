@@ -153,17 +153,13 @@ Deno.serve(async (req) => {
         preTournamentPts.set(pred.user_id, (preTournamentPts.get(pred.user_id) ?? 0) + pts)
       }
 
-      // 3rd-place qualifier predictions
+      // 3rd-place qualifier predictions — scored ONLY against the official 8 qualifiers
+      // the admin enters after the group stage ends. NEVER derived from standings:
+      // mid-tournament, a derived "3rd place per group" set fills to 8 from partial,
+      // meaningless tables and silently awards phantom points (the Day 18 leaderboard bug).
       const adminQualifiers: number[] | null = tournamentResults?.third_place_qualifier_ids ?? null
-      const actualQualifiers = adminQualifiers
-        ? new Set<number>(adminQualifiers)
-        : (() => {
-            // Derive from standings: take 3rd-place team from each group
-            const thirdPlaceIds = [...actualStandings.values()].map((r) => r[2]).filter(Boolean) as number[]
-            return new Set<number>(thirdPlaceIds.slice(0, 8)) // best 8 by insertion order (limited)
-          })()
-
-      if (actualQualifiers.size === 8) {
+      if (adminQualifiers && adminQualifiers.length === 8) {
+        const actualQualifiers = new Set<number>(adminQualifiers)
         for (const pred of qualifierPreds ?? []) {
           const pts = scoreThirdPlaceQualifiers(pred.team_ids as number[], actualQualifiers)
           preTournamentPts.set(pred.user_id, (preTournamentPts.get(pred.user_id) ?? 0) + pts)

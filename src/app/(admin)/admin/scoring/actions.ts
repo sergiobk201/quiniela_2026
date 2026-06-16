@@ -46,6 +46,10 @@ export async function saveTournamentResults(formData: FormData) {
     community_balon_de_oro:        str(formData.get('community_balon_de_oro')),
     community_revelacion_team_id:  toInt(formData.get('community_revelacion_team_id')),
     community_decepcion_team_id:   toInt(formData.get('community_decepcion_team_id')),
+    // Official 8 third-place qualifiers — only persisted once all 8 distinct teams are
+    // chosen. A partial set stays null so the scoring engine never fires early (see
+    // compute-scores: it scores qualifiers only when this is exactly length 8).
+    third_place_qualifier_ids:     parseQualifiers(formData.getAll('third_place_qualifier_ids')),
     updated_at:                    new Date().toISOString(),
   }
 
@@ -110,4 +114,15 @@ function toInt(v: FormDataEntryValue | null): number | null {
 function str(v: FormDataEntryValue | null): string | null {
   const s = (v as string)?.trim()
   return s || null
+}
+
+// Returns the 8 third-place qualifier team IDs only when all 8 slots hold distinct
+// teams; otherwise null. Guarantees the scoring engine never sees a partial set
+// (it requires length 8), so qualifiers can't be scored before the group stage ends.
+function parseQualifiers(values: FormDataEntryValue[]): number[] | null {
+  const ids = values
+    .map((v) => Number(v))
+    .filter((n) => Number.isFinite(n) && n > 0)
+  const distinct = [...new Set(ids)]
+  return distinct.length === 8 ? distinct : null
 }

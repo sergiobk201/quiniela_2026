@@ -141,6 +141,31 @@ export default async function ScoringPage() {
               </div>
             </div>
 
+            {/* 3rd-Place Qualifiers — the official 8 of 12 advancing third-place teams.
+                Enter only after the group stage ends; all 8 must be distinct to score. */}
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground mb-3 font-medium">
+                3rd-Place Qualifiers <span className="text-green-400">8 of 12 · 3pts each</span>
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i}>
+                    <label className="text-xs text-muted-foreground mb-1 block">#{i + 1}</label>
+                    <select
+                      name="third_place_qualifier_ids"
+                      defaultValue={results?.third_place_qualifier_ids?.[i] ?? ''}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">—</option>
+                      {(teams ?? []).map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <Button type="submit">Save Tournament Results</Button>
           </form>
         </CardContent>
