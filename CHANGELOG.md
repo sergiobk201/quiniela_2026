@@ -2,6 +2,42 @@
 
 ---
 
+## [Day 19] — 2026-06-16 (Phantom Pre-Tournament Points — 3rd-Place Qualifier Premature Scoring)
+
+### Shipped
+
+**Fix: 3rd-place qualifiers scored against partial standings (phantom `pre_tournament_points`)**
+- Symptom: Sergio's leaderboard total jumped 6 → 15 overnight with no new correct predictions. Breakdown showed `pre_tournament_points: 9` despite the group stage being far from over and no `tournament_results` entered.
+- Root cause: `compute-scores/index.ts` scored 3rd-place qualifier picks against a set *derived from current group standings* whenever `tournament_results.third_place_qualifier_ids` was null. That column was **always** null — `saveTournamentResults` never wrote it and `/admin/scoring` had no UI (the open Phase 9 gap). With 8 groups holding ≥1 finished match, the derived "3rd place per group" set reached size 8 and fired, scoring everyone's picks against a meaningless mid-tournament table.
+- Confirmed against prod: derived partial 3rds `{4,7,10,16,20,21,25,29}` ∩ Sergio's picks `[2,7,40,20,47,27,10,36]` = `{7,10,20}` → 3 × 3 pts = the phantom 9. Group standings were correctly *not* scored (every group only 2/6 finished — the Day 17 six-match guard held).
+- Same class of bug as the Day 17 group-standings premature scoring, on the one scoring path that never received a completion guard.
+- Fix:
+  - `compute-scores/index.ts` — deleted the derive-from-standings fallback. Qualifiers score ONLY when `third_place_qualifier_ids` holds exactly 8 admin-entered teams.
+  - `saveTournamentResults` — now persists `third_place_qualifier_ids` via `parseQualifiers()`, which returns the array only when all 8 are distinct (else null, so a partial entry can never trip the engine).
+  - `/admin/scoring` — new 8-team "3rd-Place Qualifiers" selector, pre-filled from existing results. Closes the Phase 9 input gap.
+- No migration — the `INT[]` column already existed.
+
+### Files Changed
+- `supabase/functions/compute-scores/index.ts` — removed partial-standings fallback; gated on admin-entered 8
+- `src/app/(admin)/admin/scoring/actions.ts` — persist `third_place_qualifier_ids`; `parseQualifiers()` helper
+- `src/app/(admin)/admin/scoring/page.tsx` — 8-team qualifier selector
+- `plan.md` — Phase 9 qualifier item marked shipped
+
+### Commits
+- `6ab6198` fix(scoring): stop premature qualifier scoring
+
+### Deploy Required
+- `supabase functions deploy compute-scores` (clears the stale phantom points on recompute)
+- `git push` → `vercel --prod` (admin selector)
+- `/admin/scoring` → Recompute Scores → phantom 9 clears (Sergio back to 6)
+
+### Lessons Learned
+- A "derive a sensible default when the admin hasn't entered it" fallback is dangerous for scoring inputs that are only knowable at a specific phase boundary. Deriving 3rd-place qualifiers from *partial* standings doesn't just produce an inaccurate set — it silently activates an entire scoring category early. Scoring inputs that depend on a completed phase must score ONLY from explicit, admin-confirmed data; never from a mid-tournament derivation.
+- Every premature-scoring guard added for one category (Day 17: group standings 6-match gate) should prompt an audit of sibling categories. The qualifier path shared the same `actualStandings` source but was never gated.
+- A "shipped" mark in docs/rules is not proof the code shipped — the Phase 9 item was marked done in a docs commit while `saveTournamentResults` still lacked the field. Verify the code path, not the checklist.
+
+---
+
 ## [Day 18] — 2026-06-15 (PostgREST Row-Cap Bug + No-Prediction Scoring Rule)
 
 ### Shipped
