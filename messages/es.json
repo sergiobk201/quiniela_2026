@@ -399,7 +399,8 @@
     "stageQF": "Cuartos de Final",
     "stageSF": "Semifinales",
     "stage3rd": "Partido 3er Lugar",
-    "stageFinal": "Final"
+    "stageFinal": "Final",
+    "autoZeroNote": "Casilla vacía puesta en 0 — guardado como {home}:{away}"
   },
   "admin": {
     "nav": {

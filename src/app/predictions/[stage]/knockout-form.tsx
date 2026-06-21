@@ -56,6 +56,7 @@ export default function KnockoutForm({ matches, predictions }: Props) {
   })
 
   const [statuses, setStatuses] = useState<Record<number, SaveStatus>>({})
+  const [notes, setNotes] = useState<Record<number, string>>({})
 
   const setStatus = (id: number, s: SaveStatus) =>
     setStatuses((prev) => ({ ...prev, [id]: s }))
@@ -63,22 +64,35 @@ export default function KnockoutForm({ matches, predictions }: Props) {
   const handleBlur = useCallback(
     async (match: Match) => {
       const { home, away } = scores[match.id]
-      if (home === '' || away === '') return
-      const h = Number(home)
-      const a = Number(away)
-      if (!Number.isInteger(h) || !Number.isInteger(a) || h < 0 || a < 0) return
+      // Both blank = no bet. Nulls are not a prediction (see compute-scores cutover).
+      if (home === '' && away === '') return
+
+      // One side filled, the other blank: treat the blank as 0 so the bet counts,
+      // and snap the empty box to "0" + show a note so the user knows what was saved.
+      const h = home === '' ? '0' : home
+      const a = away === '' ? '0' : away
+      const coerced = home === '' || away === ''
+      if (coerced) {
+        setScores((prev) => ({ ...prev, [match.id]: { home: h, away: a } }))
+        setNotes((prev) => ({ ...prev, [match.id]: t('autoZeroNote', { home: h, away: a }) }))
+      }
+
+      const hn = Number(h)
+      const an = Number(a)
+      if (!Number.isInteger(hn) || !Number.isInteger(an) || hn < 0 || an < 0) return
 
       setStatus(match.id, 'saving')
-      const { error } = await saveMatchPrediction(match.id, h, a)
+      const { error } = await saveMatchPrediction(match.id, hn, an)
       setStatus(match.id, error ? 'error' : 'saved')
     },
-    [scores]
+    [scores, t]
   )
 
   function updateScore(matchId: number, side: 'home' | 'away', value: string) {
     if (value !== '' && (!/^\d+$/.test(value) || Number(value) > 20 || (value.length > 1 && value.startsWith('0')))) return
     setScores((prev) => ({ ...prev, [matchId]: { ...prev[matchId], [side]: value } }))
     setStatus(matchId, 'idle')
+    setNotes((prev) => (prev[matchId] ? { ...prev, [matchId]: '' } : prev))
   }
 
   if (matches.length === 0) {
@@ -143,6 +157,11 @@ export default function KnockoutForm({ matches, predictions }: Props) {
                       className="w-10 h-8 text-center rounded border border-input bg-background text-sm disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
+                  {notes[match.id] && (
+                    <p className="mt-1 text-[10px] leading-tight text-muted-foreground text-center">
+                      {notes[match.id]}
+                    </p>
+                  )}
                 </td>
                 <td className="px-3 py-2 font-medium"><span className="mr-1">{awayFlag}</span>{awayName}</td>
                 <td className="px-3 py-2 text-center">

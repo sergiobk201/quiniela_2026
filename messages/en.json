@@ -399,7 +399,8 @@
     "stageQF": "Quarter-Finals",
     "stageSF": "Semi-Finals",
     "stage3rd": "3rd Place Match",
-    "stageFinal": "Final"
+    "stageFinal": "Final",
+    "autoZeroNote": "Empty box set to 0 — saved as {home}:{away}"
   },
   "admin": {
     "nav": {
