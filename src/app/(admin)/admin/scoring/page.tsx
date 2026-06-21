@@ -61,7 +61,10 @@ export default async function ScoringPage() {
           <CardTitle className="text-base">Tournament Results</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={saveTournamentResults} className="space-y-4">
+          {/* key on updated_at: forces a full remount after each save so the
+              uncontrolled defaultValue inputs re-sync to the freshly-saved row
+              (React never re-applies defaultValue on a plain re-render). */}
+          <form key={results?.updated_at ?? 'empty'} action={saveTournamentResults} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { name: 'champion_team_id',        label: 'Champion' },
