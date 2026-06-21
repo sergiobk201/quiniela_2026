@@ -2,6 +2,34 @@
 
 ---
 
+## [Day 24] — 2026-06-21 (Partial Score Entry — Default Blank Side to 0)
+
+### Shipped
+
+**Feat: one filled score box + one blank now saves as a real bet (blank → 0)**
+- Symptom: a friend entered "2" on one side and left the other blank, expecting a `2-?` bet. Nothing was saved — `handleBlur` bailed on `home === '' || away === ''` — so post-cutover (`NO_DEFAULT_AFTER`) the match scored 0. The drop was silent; the user believed they had bet.
+- Root cause: the forms required BOTH boxes filled before calling `saveMatchPrediction`. A partial entry never reached the DB (columns are `INT NOT NULL`; nothing to store), so the user's intent was discarded with no feedback.
+- Fix: `handleBlur` now only skips when BOTH boxes are blank (true no-bet — null ≠ prediction). When exactly one is blank, it coerces that side to `0`, saves the real row (e.g. `2 + empty → 2-0`), snaps the empty input to `"0"`, and shows an `autoZeroNote` caption so the user sees exactly what was saved — no silent coercion.
+- Scope: save-time, client-only, both forms. Applies to future picks only — no retroactive DB change, `compute-scores` cutover untouched.
+- Audited 10 downstream touchpoints (scoring engine + edge fn, group-standings live preview, picks/daily grids, receipt PDF, dashboard `/104` count, save validation, upset bonus, participation): all absorb the extra rows correctly — a coerced `2-0` is identical to a hand-typed one everywhere it flows. No concerns.
+
+### Files Changed
+- `src/app/predictions/group-stage/group-stage-form.tsx` — coerce blank side to 0; note state + caption
+- `src/app/predictions/[stage]/knockout-form.tsx` — same logic mirrored
+- `messages/en.json`, `messages/es.json` — add `predictions.autoZeroNote`
+
+### Commits
+- `b213944` feat(predictions): default blank score side to 0
+
+### Deploy Required
+- `git push` → `vercel --prod` (client-only change; no edge function redeploy, no migration)
+
+### Lessons Learned
+- A validation gate that silently discards input is worse than one that complains: requiring both boxes meant a half-filled bet vanished with zero feedback, and the user only discovered it when scoring came in at 0. When rejecting partial input, either save a sensible interpretation (and show it) or surface the rejection — never drop it quietly.
+- "Nulls aren't a bet" and "a blank beside a number is a bet" are different rules; the original both-or-nothing gate conflated them. The distinction is one-blank (intent present → default 0) vs both-blank (no intent → skip).
+
+---
+
 ## [Day 19] — 2026-06-16 (Phantom Pre-Tournament Points — 3rd-Place Qualifier Premature Scoring)
 
 ### Shipped
