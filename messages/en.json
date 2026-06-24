@@ -546,7 +546,10 @@
   },
   "error": {
     "title": "Something went wrong",
-    "retry": "Try again"
+    "retry": "Try again",
+    "staleTitle": "Page updated",
+    "staleMessage": "A new version of this page is available. Reload to continue.",
+    "reload": "Reload page"
   },
   "notFound": {
     "title": "Page not found",

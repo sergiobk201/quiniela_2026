@@ -4,6 +4,14 @@ import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
+function isStaleActionError(error: Error): boolean {
+  return (
+    error.message?.includes('Server Action') ||
+    error.message?.includes('failed-to-find-server-action') ||
+    error.message?.includes('was not found on the server')
+  )
+}
+
 export default function GlobalError({
   error,
   reset,
@@ -12,10 +20,23 @@ export default function GlobalError({
   reset: () => void
 }) {
   const t = useTranslations('error')
+  const stale = isStaleActionError(error)
 
   useEffect(() => {
     console.error(error)
   }, [error])
+
+  if (stale) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6 text-center">
+        <h2 className="text-xl font-bold">{t('staleTitle')}</h2>
+        <p className="text-muted-foreground text-sm max-w-sm">{t('staleMessage')}</p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          {t('reload')}
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6 text-center">

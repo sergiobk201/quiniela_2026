@@ -546,7 +546,10 @@
   },
   "error": {
     "title": "Algo salió mal",
-    "retry": "Intentar de nuevo"
+    "retry": "Intentar de nuevo",
+    "staleTitle": "Página actualizada",
+    "staleMessage": "Hay una versión nueva de esta página. Recarga para continuar.",
+    "reload": "Recargar página"
   },
   "notFound": {
     "title": "Página no encontrada",
