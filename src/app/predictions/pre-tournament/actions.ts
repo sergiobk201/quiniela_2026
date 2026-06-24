@@ -153,6 +153,12 @@ export async function saveGroupStandings(
     return { error: null, warnings: [] }
   }
 
+  // Use full standings for validation: locked groups from DB + newly saved unlocked groups.
+  const savedGroupIds = new Set(unlockedStandings.map(s => s.group_id))
+  const allStandingsForValidation = [
+    ...(existingStandings ?? []).filter((s: any) => !savedGroupIds.has(s.group_id)),
+    ...unlockedStandings,
+  ]
   const { conflicts } = validateTrophyPicks(
     {
       champion_team_id:    picks?.champion_team_id ?? null,
@@ -161,7 +167,7 @@ export async function saveGroupStandings(
     },
     teams ?? [],
     groups ?? [],
-    unlockedStandings,
+    allStandingsForValidation,
     (qualifiers?.team_ids ?? []) as number[]
   )
 

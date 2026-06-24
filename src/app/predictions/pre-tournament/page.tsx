@@ -117,7 +117,7 @@ export default async function PreTournamentPage() {
         qualifierTeamIds={(qualifiers as any)?.team_ids ?? []}
         trophyLocked={isPreTournamentLocked()}
         groupStageLocked={isGroupStageLocked(groupStageLockTime)}
-        lockedGroupIds={lockedGroupIds}
+        lockedGroupIds={Array.from(lockedGroupIds)}
         initialWarnings={initialWarnings}
         computedByGroup={computedByGroup}
       />

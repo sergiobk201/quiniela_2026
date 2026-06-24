@@ -50,7 +50,7 @@ interface Props {
   qualifierTeamIds: number[]
   trophyLocked: boolean
   groupStageLocked: boolean
-  lockedGroupIds: Set<number>
+  lockedGroupIds: number[]
   initialWarnings: TrophyConflict[]
   computedByGroup: Record<number, StandingsRow[]>
 }
@@ -100,10 +100,11 @@ export default function PreTournamentForm({
   qualifierTeamIds,
   trophyLocked,
   groupStageLocked,
-  lockedGroupIds,
+  lockedGroupIds: lockedGroupIdsArr,
   initialWarnings,
   computedByGroup,
 }: Props) {
+  const lockedGroupIds = new Set(lockedGroupIdsArr)
   const t = useTranslations('predictions')
 
   const TROPHY_FIELDS = [
