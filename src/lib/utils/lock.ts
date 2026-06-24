@@ -11,7 +11,7 @@ export function isMatchLocked(lockedAt: string): boolean {
 }
 
 // Returns the locked_at time of the last group-stage match.
-// Standings and qualifiers lock at this moment (15 min before last group kickoff).
+// Qualifiers lock at this moment (15 min before last group kickoff).
 export async function getGroupStageLockTime(
   supabase: SupabaseClient
 ): Promise<Date | null> {
@@ -23,6 +23,33 @@ export async function getGroupStageLockTime(
     .limit(1)
     .single()
   return data?.locked_at ? new Date(data.locked_at) : null
+}
+
+// Returns the locked_at of each group's final-round match (max scheduled_at per group).
+// Used for per-group locking of group standing predictions.
+export async function getGroupFinalLockTimes(
+  supabase: SupabaseClient
+): Promise<Map<number, Date>> {
+  const { data } = await supabase
+    .from('matches')
+    .select('group_id, scheduled_at, locked_at')
+    .eq('stage', 'group')
+
+  const maxScheduled = new Map<number, string>()
+  for (const m of data ?? []) {
+    if (!m.group_id || !m.scheduled_at) continue
+    const cur = maxScheduled.get(m.group_id)
+    if (!cur || m.scheduled_at > cur) maxScheduled.set(m.group_id, m.scheduled_at)
+  }
+
+  const result = new Map<number, Date>()
+  for (const m of data ?? []) {
+    if (!m.group_id || !m.locked_at) continue
+    if (m.scheduled_at === maxScheduled.get(m.group_id)) {
+      result.set(m.group_id, new Date(m.locked_at))
+    }
+  }
+  return result
 }
 
 export function isGroupStageLocked(lockTime: Date | null): boolean {

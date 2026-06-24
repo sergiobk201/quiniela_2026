@@ -1,6 +1,6 @@
 import { getUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { isPreTournamentLocked, getGroupStageLockTime, isGroupStageLocked } from '@/lib/utils/lock'
+import { isPreTournamentLocked, isGroupStageLocked } from '@/lib/utils/lock'
 import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 import { computeGroupStandings, type StandingsRow } from '@/lib/scoring/group-standings'
 import { LocalDateTime } from '@/components/ui/local-time'
@@ -22,7 +22,6 @@ export default async function PreTournamentPage() {
     { data: qualifiers },
     { data: matchPredictions },
     { data: groupMatches },
-    groupStageLockTime,
   ] = await Promise.all([
     supabase.from('teams').select('id, name, code, group_id').order('name'),
     supabase.from('groups').select('id, name').order('name'),
@@ -39,10 +38,35 @@ export default async function PreTournamentPage() {
       .eq('user_id', user.id),
     supabase
       .from('matches')
-      .select('id, group_id, home_team:teams!home_team_id(id, name, code), away_team:teams!away_team_id(id, name, code)')
+      .select('id, group_id, scheduled_at, locked_at, home_team:teams!home_team_id(id, name, code), away_team:teams!away_team_id(id, name, code)')
       .eq('stage', 'group'),
-    getGroupStageLockTime(supabase),
   ])
+
+  // Derive lock times from already-fetched groupMatches (no extra DB round-trip).
+  // groupStageLockTime = MAX locked_at across all group matches (qualifiers gate).
+  // lockedGroupIds     = groups whose final-round match locked_at has already passed.
+  const maxScheduledPerGroup = new Map<number, string>()
+  for (const m of groupMatches ?? []) {
+    const gid = (m as any).group_id as number | null
+    const sa = (m as any).scheduled_at as string | undefined
+    if (!gid || !sa) continue
+    const cur = maxScheduledPerGroup.get(gid)
+    if (!cur || sa > cur) maxScheduledPerGroup.set(gid, sa)
+  }
+  let groupStageLockTime: Date | null = null
+  const lockedGroupIds = new Set<number>()
+  const now = new Date()
+  for (const m of groupMatches ?? []) {
+    const gid = (m as any).group_id as number | null
+    const sa = (m as any).scheduled_at as string | undefined
+    const la = (m as any).locked_at as string | undefined
+    if (!gid || !la) continue
+    const lockDate = new Date(la)
+    if (!groupStageLockTime || lockDate > groupStageLockTime) groupStageLockTime = lockDate
+    if (sa && sa === maxScheduledPerGroup.get(gid) && now >= lockDate) {
+      lockedGroupIds.add(gid)
+    }
+  }
 
   // Build computed standings from match predictions
   const scoresMap: Record<number, { home: string; away: string }> = {}
@@ -93,6 +117,7 @@ export default async function PreTournamentPage() {
         qualifierTeamIds={(qualifiers as any)?.team_ids ?? []}
         trophyLocked={isPreTournamentLocked()}
         groupStageLocked={isGroupStageLocked(groupStageLockTime)}
+        lockedGroupIds={lockedGroupIds}
         initialWarnings={initialWarnings}
         computedByGroup={computedByGroup}
       />

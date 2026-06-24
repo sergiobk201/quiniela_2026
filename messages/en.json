@@ -319,6 +319,7 @@
     "preLockNote": "Pre-tournament predictions are locked.",
     "predictionsLocked": "Trophy picks are locked.",
     "standingsLocked": "Group stage has ended — standings and qualifiers are locked.",
+    "groupLocked": "Locked",
     "trophyWarningTitle": "Heads up — possible inconsistency",
     "trophyWarningSub": "Your picks were saved. Fix your group standings or trophy picks to resolve this.",
     "conflictEliminatedInGroup": "{label}: {flag} {name} is predicted 4th in Group {group} — they will be eliminated in the group stage.",

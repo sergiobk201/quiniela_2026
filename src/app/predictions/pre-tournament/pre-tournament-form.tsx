@@ -50,6 +50,7 @@ interface Props {
   qualifierTeamIds: number[]
   trophyLocked: boolean
   groupStageLocked: boolean
+  lockedGroupIds: Set<number>
   initialWarnings: TrophyConflict[]
   computedByGroup: Record<number, StandingsRow[]>
 }
@@ -99,6 +100,7 @@ export default function PreTournamentForm({
   qualifierTeamIds,
   trophyLocked,
   groupStageLocked,
+  lockedGroupIds,
   initialWarnings,
   computedByGroup,
 }: Props) {
@@ -185,7 +187,9 @@ export default function PreTournamentForm({
 
   function handleSaveStandings() {
     startStandingsTransition(async () => {
-      const { error, warnings } = await saveGroupStandings(Object.values(groupStandings))
+      const unlocked = Object.values(groupStandings).filter(s => !lockedGroupIds.has(s.group_id))
+      if (unlocked.length === 0) return
+      const { error, warnings } = await saveGroupStandings(unlocked)
       if (error) {
         toast.error(error)
       } else {
@@ -297,17 +301,20 @@ export default function PreTournamentForm({
   function syncAll() {
     const newStandings: Record<number, GroupStandingRow> = { ...groupStandings }
     for (const g of groups) {
+      if (lockedGroupIds.has(g.id)) continue
       newStandings[g.id] = buildSyncedStandings(g.id)
     }
     setGroupStandings(newStandings)
     startStandingsTransition(async () => {
-      const { error, warnings } = await saveGroupStandings(Object.values(newStandings))
+      const unlocked = Object.values(newStandings).filter(s => !lockedGroupIds.has(s.group_id))
+      if (unlocked.length === 0) return
+      const { error, warnings } = await saveGroupStandings(unlocked)
       if (error) { toast.error(error) }
       else { setTrophyWarnings(warnings); toast.success(t('syncedSaved')) }
     })
   }
 
-  const mismatchCount = groups.filter(g => hasMismatch(g.id)).length
+  const mismatchCount = groups.filter(g => !lockedGroupIds.has(g.id) && hasMismatch(g.id)).length
 
   // Ranked 3rd-place teams derived from match predictions
   const rankedThirds: RankedThirdPlace[] = rankThirdPlaceTeams(
@@ -602,12 +609,15 @@ export default function PreTournamentForm({
           {groups.map(group => {
             const standing = groupStandings[group.id]
             const mismatch = hasMismatch(group.id)
+            const groupLocked = lockedGroupIds.has(group.id)
             return (
-              <Card key={group.id} className={mismatch ? 'border-amber-400/60' : ''}>
+              <Card key={group.id} className={mismatch && !groupLocked ? 'border-amber-400/60' : ''}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle>{t('groupLabel', { name: group.name })}</CardTitle>
-                    {mismatch && !groupStageLocked && (
+                    {groupLocked ? (
+                      <span className="text-xs text-muted-foreground">🔒 {t('groupLocked')}</span>
+                    ) : mismatch && !groupStageLocked ? (
                       <button
                         type="button"
                         onClick={() => syncGroup(group.id)}
@@ -615,7 +625,7 @@ export default function PreTournamentForm({
                       >
                         ⚠ {t('syncFromMatches')}
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -626,7 +636,7 @@ export default function PreTournamentForm({
                         value={standing[key]}
                         onChange={id => updateStanding(group.id, key, id)}
                         teams={getAvailableForPos(group.id, key)}
-                        disabled={groupStageLocked}
+                        disabled={groupStageLocked || groupLocked}
                         placeholder="—"
                       />
                     </div>

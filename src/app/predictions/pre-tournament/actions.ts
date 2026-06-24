@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { isPreTournamentLocked, getGroupStageLockTime, isGroupStageLocked } from '@/lib/utils/lock'
+import { isPreTournamentLocked, getGroupStageLockTime, isGroupStageLocked, getGroupFinalLockTimes } from '@/lib/utils/lock'
 import { validateTrophyPicks, type TrophyConflict } from '@/lib/scoring/validate-trophy'
 import { logAudit } from '@/lib/supabase/audit'
 
@@ -106,7 +106,15 @@ export async function saveGroupStandings(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated', warnings: [] }
 
-  if (await checkGroupStageLocked(supabase)) {
+  // Per-group lock: only save groups whose final-round match hasn't started yet.
+  // The global RLS policy (migration 009) backstops once the last group match fires.
+  const finalLockTimes = await getGroupFinalLockTimes(supabase)
+  const now = new Date()
+  const unlockedStandings = standings.filter(s => {
+    const lt = finalLockTimes.get(s.group_id)
+    return !lt || now < lt
+  })
+  if (unlockedStandings.length === 0) {
     await logAudit({ userId: user.id, action: 'group_standings_save_blocked_locked', table_name: 'group_standing_predictions', new_value: { standings } })
     return { error: 'Group stage predictions are locked', warnings: [] }
   }
@@ -116,13 +124,13 @@ export async function saveGroupStandings(
     .select('*')
     .eq('user_id', user.id)
 
-  const rows = standings.map(s => ({ user_id: user.id, ...s }))
+  const rows = unlockedStandings.map(s => ({ user_id: user.id, ...s }))
   const { error } = await supabase
     .from('group_standing_predictions')
     .upsert(rows, { onConflict: 'user_id,group_id' })
 
   if (error) return { error: error.message, warnings: [] }
-  await logAudit({ userId: user.id, action: 'group_standings_saved', table_name: 'group_standing_predictions', old_value: { standings: existingStandings }, new_value: { standings } })
+  await logAudit({ userId: user.id, action: 'group_standings_saved', table_name: 'group_standing_predictions', old_value: { standings: existingStandings }, new_value: { standings: unlockedStandings } })
   revalidatePath('/predictions/pre-tournament')
 
   // Re-validate trophy picks against the newly saved standings
@@ -153,7 +161,7 @@ export async function saveGroupStandings(
     },
     teams ?? [],
     groups ?? [],
-    standings,
+    unlockedStandings,
     (qualifiers?.team_ids ?? []) as number[]
   )
 

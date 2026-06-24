@@ -319,6 +319,7 @@
     "preLockNote": "Los pronósticos pre-torneo están cerrados.",
     "predictionsLocked": "Los picks del trofeo están cerrados.",
     "standingsLocked": "La fase de grupos terminó — posiciones y clasificados están cerrados.",
+    "groupLocked": "Cerrado",
     "trophyWarningTitle": "Atención — posible inconsistencia",
     "trophyWarningSub": "Tus picks se guardaron. Corrige tu clasificación de grupos o tus picks para resolver esto.",
     "conflictEliminatedInGroup": "{label}: {flag} {name} está predicho 4to en el Grupo {group} — será eliminado en la fase de grupos.",
