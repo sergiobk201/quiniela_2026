@@ -152,22 +152,9 @@ export default function PreTournamentForm({
     return init
   })
 
-  const [selectedQualifiers, setSelectedQualifiers] = useState<Set<number>>(() => {
-    const valid = new Set<number>()
-    for (const id of qualifierTeamIds) {
-      const team = teams.find(t => t.id === id)
-      if (!team?.group_id) { valid.add(id); continue }
-      const rows = computedByGroup[team.group_id]
-      if (rows && rows.some(r => r.p > 0)) {
-        // Computed data exists — only keep if this team is computed 3rd
-        if (rows.find(r => r.teamId === id)?.rank === 3) valid.add(id)
-        // else: stale selection from old standings — silently drop
-      } else {
-        valid.add(id) // no computed data, trust saved selection
-      }
-    }
-    return valid
-  })
+  const [selectedQualifiers, setSelectedQualifiers] = useState<Set<number>>(
+    () => new Set(qualifierTeamIds)
+  )
 
   const [pendingTrophy, startTrophyTransition] = useTransition()
   const [pendingStandings, startStandingsTransition] = useTransition()
@@ -694,9 +681,9 @@ export default function PreTournamentForm({
                   {groupTeams.map(team => {
                     const isSelected = selectedQualifiers.has(team.id)
                     const pos = getEffectivePosInGroup(team.id, group.id)
-                    const isIneligible = pos === 1 || pos === 2 || pos === 4
+                    const isMismatch = isSelected && pos !== null && pos !== 3
                     const isMaxed = !isSelected && !groupHasSelection && selectedQualifiers.size >= 8
-                    const isDisabled = groupStageLocked || isIneligible || (isMaxed && !isSelected)
+                    const isDisabled = groupStageLocked || (isMaxed && !isSelected)
                     const ranked = rankedThirdsMap.get(team.id)
 
                     return (
@@ -704,21 +691,24 @@ export default function PreTournamentForm({
                         key={team.id}
                         className={`flex items-center gap-2 text-sm rounded px-2 py-1 transition-colors ${
                           isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted'
-                        } ${isIneligible ? 'opacity-30' : isMaxed ? 'opacity-40' : ''} ${
+                        } ${isMaxed ? 'opacity-40' : ''} ${
                           isSelected ? 'bg-muted' : ''
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => !groupStageLocked && !isIneligible && toggleQualifier(team.id, group.id)}
+                          onChange={() => !groupStageLocked && toggleQualifier(team.id, group.id)}
                           disabled={isDisabled}
                           className="accent-primary"
                         />
-                        <span className={isIneligible ? 'text-muted-foreground' : ''}>
+                        <span>
                           {team.name} {getFlag(team.code)}
                         </span>
                         <span className="ml-auto flex items-center gap-1.5 shrink-0">
+                          {isMismatch && (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium" title={t('qualifierMismatchWarn')}>⚠</span>
+                          )}
                           {ranked && hasAnyMatchData && (
                             <span className="text-xs text-muted-foreground">
                               {ranked.pts}pt{ranked.pts !== 1 ? 's' : ''} · {ranked.gd >= 0 ? '+' : ''}{ranked.gd}
