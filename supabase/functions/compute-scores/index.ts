@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       supabase.from('profiles').select('id, created_at'),
       supabase
         .from('matches')
-        .select('id, stage, group_id, home_team_id, away_team_id, stage_multiplier, home_score, away_score, upset, scheduled_at')
+        .select('id, stage, group_id, home_team_id, away_team_id, stage_multiplier, home_score, away_score, upset, scheduled_at, winner_team_id')
         .eq('status', 'finished')
         .not('home_score', 'is', null),
       // Paged fetch: match_predictions exceeds PostgREST's hard 1000-row cap
@@ -71,11 +71,11 @@ Deno.serve(async (req) => {
       // in 1000-row chunks ordered by id until a short page returns.
       (async () => {
         const PAGE = 1000
-        const rows: { user_id: string; match_id: number; predicted_home_score: number; predicted_away_score: number }[] = []
+        const rows: { user_id: string; match_id: number; predicted_home_score: number; predicted_away_score: number; predicted_winner_team_id: number | null }[] = []
         for (let from = 0; ; from += PAGE) {
           const { data, error } = await supabase
             .from('match_predictions')
-            .select('user_id, match_id, predicted_home_score, predicted_away_score')
+            .select('user_id, match_id, predicted_home_score, predicted_away_score, predicted_winner_team_id')
             .order('id', { ascending: true })
             .range(from, from + PAGE - 1)
           if (error) throw error
@@ -97,10 +97,14 @@ Deno.serve(async (req) => {
     for (const p of profiles ?? []) userJoinedAt.set(p.id, new Date(p.created_at))
 
     // Index match predictions by userId → matchId → result
-    const matchPredMap = new Map<string, Map<number, { home: number; away: number }>>()
+    const matchPredMap = new Map<string, Map<number, { home: number; away: number; winnerId: number | null }>>()
     for (const p of matchPreds ?? []) {
       if (!matchPredMap.has(p.user_id)) matchPredMap.set(p.user_id, new Map())
-      matchPredMap.get(p.user_id)!.set(p.match_id, { home: p.predicted_home_score, away: p.predicted_away_score })
+      matchPredMap.get(p.user_id)!.set(p.match_id, {
+        home: p.predicted_home_score,
+        away: p.predicted_away_score,
+        winnerId: p.predicted_winner_team_id ?? null,
+      })
     }
 
     // ── Match points ─────────────────────────────────────────────────────────
@@ -120,8 +124,15 @@ Deno.serve(async (req) => {
             // No free riding: from the cutover onward, no prediction earns no points
             if (new Date(match.scheduled_at) >= NO_DEFAULT_AFTER) continue
           }
-          const effectivePred = pred ?? { home: 0, away: 0 }
-          const pts  = scoreMatch(effectivePred, actual, match.stage_multiplier, match.upset ?? false)
+          const effectivePred = pred ?? { home: 0, away: 0, winnerId: null }
+          const pts  = scoreMatch(
+            effectivePred,
+            actual,
+            match.stage_multiplier,
+            match.upset ?? false,
+            match.winner_team_id ?? null,
+            effectivePred.winnerId,
+          )
           if (isGroup) groupMatchPts.set(uid, (groupMatchPts.get(uid) ?? 0) + pts)
           else         knockoutPts.set(uid,   (knockoutPts.get(uid)   ?? 0) + pts)
         }

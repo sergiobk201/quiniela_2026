@@ -56,7 +56,7 @@ export default async function KnockoutPage({
       .order('scheduled_at'),
     supabase
       .from('match_predictions')
-      .select('match_id, predicted_home_score, predicted_away_score')
+      .select('match_id, predicted_home_score, predicted_away_score, predicted_winner_team_id')
       .eq('user_id', user.id),
   ])
 

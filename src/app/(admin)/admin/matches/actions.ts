@@ -20,12 +20,23 @@ async function triggerRecompute() {
   }
 }
 
-export async function updateScore(matchId: number, homeScore: number, awayScore: number) {
+export async function updateScore(
+  matchId: number,
+  homeScore: number,
+  awayScore: number,
+  winnerTeamId: number | null,
+) {
   await assertAdmin()
   const admin = createAdminClient()
   await admin
     .from('matches')
-    .update({ home_score: homeScore, away_score: awayScore, status: 'finished' })
+    .update({
+      home_score: homeScore,
+      away_score: awayScore,
+      status: 'finished',
+      // winner_team_id: only set for knockout draws (ET/penalties); null otherwise
+      winner_team_id: winnerTeamId,
+    })
     .eq('id', matchId)
   revalidatePath('/admin/matches')
   revalidatePath('/leaderboard')

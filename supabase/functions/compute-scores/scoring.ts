@@ -11,14 +11,30 @@ export function scoreMatch(
   predicted: MatchResult,
   actual: MatchResult,
   multiplier: number,
-  upset: boolean
+  upset: boolean,
+  actualWinnerId?: number | null,
+  predictedWinnerId?: number | null,
 ): number {
   let pts = 0
-  if (predicted.home === actual.home && predicted.away === actual.away) {
-    pts += 5 * multiplier
-  } else if (resultSign(predicted.home, predicted.away) === resultSign(actual.home, actual.away)) {
-    pts += 2 * multiplier
+
+  // Knockout draw: actual 90-min ended in a tie → winner by ET/penalties.
+  // "Correct result" requires predicting a draw AND the correct advancing team.
+  // "Exact score" requires the exact 90-min scoreline AND the correct advancing team.
+  if (actual.home === actual.away && actualWinnerId != null) {
+    const correctWinner = predictedWinnerId != null && predictedWinnerId === actualWinnerId
+    if (predicted.home === actual.home && predicted.away === actual.away && correctWinner) {
+      pts += 5 * multiplier
+    } else if (predicted.home === predicted.away && correctWinner) {
+      pts += 2 * multiplier
+    }
+  } else {
+    if (predicted.home === actual.home && predicted.away === actual.away) {
+      pts += 5 * multiplier
+    } else if (resultSign(predicted.home, predicted.away) === resultSign(actual.home, actual.away)) {
+      pts += 2 * multiplier
+    }
   }
+
   // Upset bonus: only when user got the result right
   if (upset && pts > 0) pts += 3
   return pts

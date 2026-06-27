@@ -16,6 +16,7 @@ interface MatchRowProps {
   awayTeam: Team
   homeScore: number | null
   awayScore: number | null
+  winnerTeamId: number | null
   status: string
   upset: boolean | null
   scheduledAt: string
@@ -28,25 +29,36 @@ const statusColors: Record<string, string> = {
   finished:  'bg-green-500/20 text-green-400',
 }
 
+const KNOCKOUT_STAGES = new Set(['r32', 'r16', 'qf', 'sf', '3rd', 'final'])
+
 export function MatchRow({
   id, homeTeam, awayTeam,
-  homeScore, awayScore,
-  status, upset, scheduledAt,
+  homeScore, awayScore, winnerTeamId,
+  status, upset, scheduledAt, stage,
 }: MatchRowProps) {
   const [home, setHome] = useState(homeScore?.toString() ?? '')
   const [away, setAway] = useState(awayScore?.toString() ?? '')
+  const [winner, setWinner] = useState<number | null>(winnerTeamId)
   const [pending, startTransition] = useTransition()
 
+  const isKnockout = KNOCKOUT_STAGES.has(stage)
+  const h = parseInt(home)
+  const a = parseInt(away)
+  const scoresEqual = !isNaN(h) && !isNaN(a) && h >= 0 && a >= 0 && h === a
+  const showWinner = isKnockout && scoresEqual
+
   function handleSave() {
-    const h = parseInt(home)
-    const a = parseInt(away)
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) {
       toast.error('Enter valid scores (0 or higher)')
       return
     }
+    if (isKnockout && scoresEqual && winner == null) {
+      toast.warning('No winner selected — save anyway? Pick ET/penalties winner before recomputing scores.')
+    }
     startTransition(async () => {
       try {
-        await updateScore(id, h, a)
+        // Pass winner only for knockout draws; null clears it for regulation wins
+        await updateScore(id, h, a, isKnockout && scoresEqual ? winner : null)
         toast.success('Score saved')
       } catch {
         toast.error('Failed to save score')
@@ -115,6 +127,38 @@ export function MatchRow({
         {awayTeam
           ? <>{getFlag(awayTeam.code)} {awayTeam.name}</>
           : <span className="text-muted-foreground">TBD</span>}
+      </td>
+
+      {/* Knockout tiebreaker winner (ET/penalties) */}
+      <td className="px-3 py-2">
+        {showWinner && homeTeam && awayTeam ? (
+          <div className="flex gap-1">
+            <button
+              onClick={() => setWinner(homeTeam.id)}
+              disabled={pending}
+              className={`text-xs px-1.5 py-0.5 rounded border transition-colors ${
+                winner === homeTeam.id
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:border-primary'
+              }`}
+            >
+              {getFlag(homeTeam.code)} {homeTeam.code}
+            </button>
+            <button
+              onClick={() => setWinner(awayTeam.id)}
+              disabled={pending}
+              className={`text-xs px-1.5 py-0.5 rounded border transition-colors ${
+                winner === awayTeam.id
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:border-primary'
+              }`}
+            >
+              {getFlag(awayTeam.code)} {awayTeam.code}
+            </button>
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )}
       </td>
 
       {/* Status badge */}

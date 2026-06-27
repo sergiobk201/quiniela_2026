@@ -19,7 +19,7 @@ async function getMatches() {
   const { data } = await admin
     .from('matches')
     .select(`
-      id, stage, scheduled_at, home_score, away_score, status, upset, group_id,
+      id, stage, scheduled_at, home_score, away_score, winner_team_id, status, upset, group_id,
       home_team:teams!home_team_id(id, name, code),
       away_team:teams!away_team_id(id, name, code),
       group:groups(name)
@@ -50,6 +50,7 @@ function MatchTable({ matches }: { matches: Match[] }) {
           <th className="px-3 py-2 text-right">Home</th>
           <th className="px-3 py-2 text-center">Score</th>
           <th className="px-3 py-2 text-left">Away</th>
+          <th className="px-3 py-2 text-left">Winner</th>
           <th className="px-3 py-2 text-left">Status</th>
           <th className="px-3 py-2 text-left">Upset</th>
           <th className="px-3 py-2" />
@@ -64,6 +65,7 @@ function MatchTable({ matches }: { matches: Match[] }) {
             awayTeam={m.away_team as unknown as { id: number; name: string; code: string } | null}
             homeScore={m.home_score}
             awayScore={m.away_score}
+            winnerTeamId={m.winner_team_id ?? null}
             status={m.status ?? 'scheduled'}
             upset={m.upset}
             scheduledAt={m.scheduled_at}

@@ -402,7 +402,9 @@
     "stageSF": "Semi-Finals",
     "stage3rd": "3rd Place Match",
     "stageFinal": "Final",
-    "autoZeroNote": "Empty box set to 0 — saved as {home}:{away}"
+    "autoZeroNote": "Empty box set to 0 — saved as {home}:{away}",
+    "knockoutTiebreaker": "Who wins?",
+    "knockoutPickWinner": "⚠ Pick a winner"
   },
   "admin": {
     "nav": {
