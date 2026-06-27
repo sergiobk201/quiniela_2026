@@ -41,6 +41,12 @@
 - For knockout scoring, "correct result" must mean the team that *advances*, not just the 90-minute outcome. A draw that goes to penalties has a definitive winner; scoring that ignores it rewards a guess as much as a correct call.
 - Retroactive scoring shifts are a UX concern even when technically correct: setting `winner_team_id` on an already-played draw immediately reprices existing predictions. Communicate this to players before entering past results.
 
+### Challenges to Reflect On
+- **Scoring model ambiguity**: The right semantics for "exact score + wrong winner" in a knockout draw required deliberate reasoning (should getting 1-1 right but missing the penalty winner still earn partial credit?). The chosen model — both exact score AND correct winner required for full points — is defensible but was not obvious. Worth documenting in the rules page so players understand.
+- **Pre-emptive audit before shipping**: The instinct to audit first (regression pass across 8+ touchpoints) before touching the DB or deploying saved a potential live breakage. Group stage points were untouched only because the scoring branch is strictly gated on `actualWinnerId != null`. The lesson: any change to a scoring function that is already live and has real user data deserves an adversarial audit before the migration runs, not after.
+- **Schema vs. code drift**: `winner_team_id` was designed and migrated weeks ago but never consumed — a dead column in production. Future schema additions should be paired with a TODO in the scoring engine or a failing test so drift like this is caught before the tournament phase it was meant for arrives.
+- **Admin UX for live matches**: The original hard-block on saving a tied score without a winner was too strict — it would have prevented saving a `1-1` score during extra time before the penalty shootout finishes. The fix (warning toast, not a blocker) is correct, but the initial implementation shows the gap between "logically correct" and "operationally correct" in a live tournament context.
+
 ---
 
 ## [Day 24] — 2026-06-21 (Partial Score Entry — Default Blank Side to 0)
