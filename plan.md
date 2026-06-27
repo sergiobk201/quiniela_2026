@@ -64,6 +64,7 @@ Users submit pre-tournament + match predictions. Scoring is automated. Leaderboa
 - [x] Admin trigger: "recompute scores" button — `/admin/scoring`
 - [x] `/leaderboard` — ranked table, top-3 podium, Realtime subscription
 - [x] `/dashboard` — user score breakdown, champion pick, prediction fill progress
+- [x] Knockout tiebreaker scoring — `predicted_winner_team_id` on `match_predictions`; `scoreMatch` ET/penalties branch; admin winner toggle; user tiebreaker row (Day 27)
 
 ### Phase 5 — Hardening + Deploy (Days 16–17) ✅ COMPLETE
 > **Day 4 (2026-05-25):** Deployed to Vercel prod. Custom domain `quiniela2026.space` live. Admin auth hardened via service-role pattern. Resend SMTP configured.

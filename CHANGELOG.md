@@ -2,6 +2,47 @@
 
 ---
 
+## [Day 27] — 2026-06-27 (Knockout Tiebreaker — ET/Penalties Winner Prediction)
+
+### Shipped
+
+**Feat: users can now predict the winner of knockout matches that go to ET/penalties**
+- Gap: `matches.winner_team_id` existed (migration 003) but was never written or read. `match_predictions` had no `predicted_winner_team_id` column. The scoring engine used `resultSign()` for all draws, meaning any draw prediction in a knockout match earned 2× mult regardless of who actually advanced — no mechanism to reward the correct winner.
+- Fix:
+  - **Migration 013**: adds nullable `predicted_winner_team_id INT REFERENCES teams(id)` to `match_predictions`. Zero-downtime; existing rows get NULL.
+  - **`scoreMatch` (edge fn + client mirror)**: when `actual.home === actual.away` AND `winner_team_id` is set (knockout draw → ET/penalties), "exact score" requires the exact tie scoreline + correct advancing team (5× mult); "correct result" requires any draw prediction + correct advancing team (2× mult). When `winner_team_id` is null (group stage, regulation knockout wins) the original `resultSign` path is unchanged — zero regression to already-scored matches.
+  - **Admin match row**: knockout tabs show a winner toggle (home/away) when entered scores are equal. Non-blocking warning toast if admin saves without a winner (allows saving `1-1` during live ET before penalties finish). Clears `winner_team_id` automatically if scores are corrected to a non-draw.
+  - **Knockout prediction form**: an amber tiebreaker row slides in below a match row when both predicted scores are equal. "Who wins?" buttons save immediately on click. `flex-wrap` ensures it renders cleanly on narrow mobile screens. Fully i18n'd (EN + ES).
+- Audited 8 downstream touchpoints (group stage scoring, regulation knockout wins, no-prediction default, leaderboard, receipt, grids, group-stage form, `saveMatchPrediction` callers): all unaffected. The new branch in `scoreMatch` is gated strictly on `actualWinnerId != null`, which is only set by an explicit admin action.
+
+### Files Changed
+- `supabase/migrations/013_predicted_winner.sql` — add `predicted_winner_team_id` to `match_predictions`
+- `supabase/functions/compute-scores/scoring.ts` — tiebreaker branch in `scoreMatch`
+- `supabase/functions/compute-scores/index.ts` — fetch `winner_team_id` + `predicted_winner_team_id`; pass to `scoreMatch`
+- `src/lib/scoring/engine.ts` — mirror `scoreMatch` change
+- `src/app/predictions/[stage]/actions.ts` — add `predictedWinnerId` param to `saveMatchPrediction`
+- `src/app/predictions/[stage]/page.tsx` — fetch `predicted_winner_team_id` from predictions
+- `src/app/predictions/[stage]/knockout-form.tsx` — Fragment-based tiebreaker row with winner buttons
+- `src/app/(admin)/admin/matches/actions.ts` — `updateScore` saves `winner_team_id`
+- `src/app/(admin)/admin/matches/match-row.tsx` — winner toggle for knockout draws
+- `src/app/(admin)/admin/matches/page.tsx` — fetch `winner_team_id`; Winner column header
+- `messages/en.json`, `messages/es.json` — add `knockoutTiebreaker`, `knockoutPickWinner`
+
+### Commits
+- `b547de7` feat(knockout): add ET/penalties winner prediction
+
+### Deploy
+- SQL migration run manually in Supabase SQL Editor
+- Edge function redeployed: `supabase functions deploy compute-scores`
+- `git push` → `vercel --prod` — live at `https://www.quiniela2026.space`
+
+### Lessons Learned
+- A column existing in the schema is not the same as it being wired end-to-end. `winner_team_id` sat unused in the DB for weeks — always audit read + write paths, not just existence.
+- For knockout scoring, "correct result" must mean the team that *advances*, not just the 90-minute outcome. A draw that goes to penalties has a definitive winner; scoring that ignores it rewards a guess as much as a correct call.
+- Retroactive scoring shifts are a UX concern even when technically correct: setting `winner_team_id` on an already-played draw immediately reprices existing predictions. Communicate this to players before entering past results.
+
+---
+
 ## [Day 24] — 2026-06-21 (Partial Score Entry — Default Blank Side to 0)
 
 ### Shipped
