@@ -54,6 +54,17 @@ const DIFF_LABEL_KEY: Record<Difficulty, string> = {
   expert: 'difficultyExpert',
 }
 
+// Compact points chip: a difficulty-colored dot + point value. Keeps the bet rows
+// scannable without the heavier full-width difficulty badge.
+function PointsPill({ pts, dot }: { pts: number; dot: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      {pts} pts
+    </span>
+  )
+}
+
 export default function CommunityBetsClient({ suggestions, deadlines, teams, profiles, communityBetsPick, communityBetsLocked, r32Pick, r32BetsLocked }: Props) {
   const t = useTranslations('communityBets')
   const now = new Date()
@@ -169,21 +180,20 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, pro
               {deadlineLabel(p.key)}
             </p>
 
-            {p.key === 'r32' && (
+            {p.key === 'group' && (
               <Card className="border-[var(--champion-primary)]/30">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-2">
                   <CardTitle className="text-sm">{t('r32PicksTitle')}</CardTitle>
                   <p className="text-xs text-muted-foreground">{t('r32PicksSub')}</p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
-                        <span>{t('r32UsaToR16')}</span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.medium}`}>
-                          {t('difficultyMedium')} · 2pts
-                        </span>
-                      </label>
+                <CardContent>
+                  <div className="divide-y divide-border/60">
+                    {/* USA to R16 — Medium · 2pts */}
+                    <div className="space-y-2 py-3 first:pt-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium">{t('r32UsaToR16')}</span>
+                        <PointsPill pts={2} dot="bg-blue-500" />
+                      </div>
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -191,7 +201,7 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, pro
                           onClick={() => setR32Picks(prev => ({ ...prev, usa_to_r16: true }))}
                           className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                             r32Picks.usa_to_r16 === true
-                              ? 'bg-green-600 border-green-600 text-white'
+                              ? 'bg-primary border-primary text-primary-foreground'
                               : 'border-input hover:bg-muted'
                           }`}
                         >
@@ -203,7 +213,7 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, pro
                           onClick={() => setR32Picks(prev => ({ ...prev, usa_to_r16: false }))}
                           className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                             r32Picks.usa_to_r16 === false
-                              ? 'bg-green-600 border-green-600 text-white'
+                              ? 'bg-primary border-primary text-primary-foreground'
                               : 'border-input hover:bg-muted'
                           }`}
                         >
@@ -212,13 +222,12 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, pro
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
-                        <span>{t('r32WorstPredictor')}</span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.medium}`}>
-                          {t('difficultyMedium')} · 2pts
-                        </span>
-                      </label>
+                    {/* Worst predictor — Medium · 2pts */}
+                    <div className="space-y-2 py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium">{t('r32WorstPredictor')}</span>
+                        <PointsPill pts={2} dot="bg-blue-500" />
+                      </div>
                       <select
                         value={r32Picks.worst_predictor}
                         onChange={e => setR32Picks(prev => ({ ...prev, worst_predictor: e.target.value }))}
@@ -232,13 +241,12 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, pro
                       </select>
                     </div>
 
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
-                        <span>{t('r32WorstRanked')}</span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.hard}`}>
-                          {t('difficultyHard')} · 3pts
-                        </span>
-                      </label>
+                    {/* Worst ranked → R16 — Hard · 3pts */}
+                    <div className="space-y-2 py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium">{t('r32WorstRanked')}</span>
+                        <PointsPill pts={3} dot="bg-orange-500" />
+                      </div>
                       <select
                         value={r32Picks.worst_ranked_team_id ?? ''}
                         onChange={e => setR32Picks(prev => ({ ...prev, worst_ranked_team_id: e.target.value ? Number(e.target.value) : null }))}
@@ -254,9 +262,9 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, pro
                   </div>
 
                   {r32BetsLocked ? (
-                    <p className="text-sm text-destructive">{t('r32PicksLocked')}</p>
+                    <p className="pt-3 text-sm text-destructive">{t('r32PicksLocked')}</p>
                   ) : (
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-4">
                       <Button size="sm" onClick={handleSaveR32} disabled={pendingR32}>
                         {pendingR32 ? '…' : t('r32SavePicks')}
                       </Button>
