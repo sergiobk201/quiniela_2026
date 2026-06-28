@@ -46,6 +46,9 @@ export async function saveTournamentResults(formData: FormData) {
     community_balon_de_oro:        str(formData.get('community_balon_de_oro')),
     community_revelacion_team_id:  toInt(formData.get('community_revelacion_team_id')),
     community_decepcion_team_id:   toInt(formData.get('community_decepcion_team_id')),
+    r32_usa_to_r16:                toBool(formData.get('r32_usa_to_r16')),
+    r32_worst_predictor:           str(formData.get('r32_worst_predictor')),
+    r32_worst_ranked_team_id:      toInt(formData.get('r32_worst_ranked_team_id')),
     // Official 8 third-place qualifiers — only persisted once all 8 distinct teams are
     // chosen. A partial set stays null so the scoring engine never fires early (see
     // compute-scores: it scores qualifiers only when this is exactly length 8).
@@ -103,6 +106,12 @@ export async function sendIntegrityAlert(lines: string[]): Promise<void> {
       </div>
     `,
   })
+}
+
+function toBool(v: FormDataEntryValue | null): boolean | null {
+  if (v === 'true') return true
+  if (v === 'false') return false
+  return null
 }
 
 function toInt(v: FormDataEntryValue | null): number | null {

@@ -76,3 +76,21 @@ export function isCommunityBetsLocked(lockTime: Date | null): boolean {
   if (!lockTime) return false
   return new Date() >= lockTime
 }
+
+export async function getFirstR32MatchLockTime(
+  supabase: SupabaseClient
+): Promise<Date | null> {
+  const { data } = await supabase
+    .from('matches')
+    .select('locked_at')
+    .eq('stage', 'r32')
+    .order('locked_at', { ascending: true })
+    .limit(1)
+    .single()
+  return data?.locked_at ? new Date(data.locked_at) : null
+}
+
+export function isR32BetsLocked(lockTime: Date | null): boolean {
+  if (!lockTime) return false
+  return new Date() >= lockTime
+}

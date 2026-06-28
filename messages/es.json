@@ -545,7 +545,18 @@
     "selectTeam": "Seleccionar equipo",
     "savePicks": "Guardar Picks",
     "picksSaved": "¡Picks comunitarios guardados!",
-    "picksLocked": "Los picks de apuestas comunitarias están cerrados."
+    "picksLocked": "Los picks de apuestas comunitarias están cerrados.",
+    "selectPlayer": "Seleccionar jugador",
+    "r32PicksTitle": "Picks R32",
+    "r32PicksSub": "3 apuestas votadas por la comunidad — se bloquean cuando inicia el primer partido de R32.",
+    "r32UsaToR16": "USA pasa a octavos de final",
+    "r32WorstPredictor": "Peor predictor",
+    "r32WorstRanked": "Peor equipo del ranking en llegar a octavos",
+    "r32Yes": "Sí",
+    "r32No": "No",
+    "r32SavePicks": "Guardar picks R32",
+    "r32PicksSaved": "¡Picks R32 guardados!",
+    "r32PicksLocked": "Los picks de R32 están bloqueados."
   },
   "error": {
     "title": "Algo salió mal",

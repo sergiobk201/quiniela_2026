@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { PHASE_NEXT_STAGE, type Phase, type Difficulty } from './types'
-import { getFirstGroupMatchLockTime, isCommunityBetsLocked } from '@/lib/utils/lock'
+import { getFirstGroupMatchLockTime, isCommunityBetsLocked, getFirstR32MatchLockTime, isR32BetsLocked } from '@/lib/utils/lock'
 
 export async function submitSuggestion(
   phase: Phase,
@@ -68,6 +68,32 @@ export async function saveCommunityBets(data: {
       community_balon_de_oro:       data.community_balon_de_oro.trim() || null,
       community_revelacion_team_id: data.community_revelacion_team_id,
       community_decepcion_team_id:  data.community_decepcion_team_id,
+    }, { onConflict: 'user_id' })
+
+  if (error) return { error: error.message }
+  revalidatePath('/community-bets')
+  return { error: null }
+}
+
+export async function saveR32Bets(data: {
+  r32_usa_to_r16: boolean | null
+  r32_worst_predictor: string | null
+  r32_worst_ranked_team_id: number | null
+}): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return { error: 'Not authenticated' }
+
+  const lockTime = await getFirstR32MatchLockTime(supabase)
+  if (isR32BetsLocked(lockTime)) return { error: 'R32 bets are locked' }
+
+  const { error } = await createAdminClient()
+    .from('pre_tournament_predictions')
+    .upsert({
+      user_id: user.id,
+      r32_usa_to_r16:           data.r32_usa_to_r16,
+      r32_worst_predictor:      data.r32_worst_predictor?.trim() || null,
+      r32_worst_ranked_team_id: data.r32_worst_ranked_team_id,
     }, { onConflict: 'user_id' })
 
   if (error) return { error: error.message }

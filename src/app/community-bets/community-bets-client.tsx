@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { submitSuggestion, toggleVote, saveCommunityBets } from './actions'
+import { submitSuggestion, toggleVote, saveCommunityBets, saveR32Bets } from './actions'
 import { PHASES, DIFFICULTY_PTS, type Phase, type Difficulty, type EnrichedSuggestion } from './types'
 import { getFlag } from '@/lib/teams/meta'
 
@@ -15,12 +15,19 @@ interface Props {
   suggestions: EnrichedSuggestion[]
   deadlines: Record<string, string | null>
   teams: { id: number; name: string; code: string }[]
+  profiles: { id: string; display_name: string }[]
   communityBetsPick: {
     balon_de_oro: string | null
     revelacion_team_id: number | null
     decepcion_team_id: number | null
   }
   communityBetsLocked: boolean
+  r32Pick: {
+    usa_to_r16: boolean | null
+    worst_predictor: string | null
+    worst_ranked_team_id: number | null
+  }
+  r32BetsLocked: boolean
 }
 
 const DIFF_BADGE: Record<string, string> = {
@@ -47,7 +54,7 @@ const DIFF_LABEL_KEY: Record<Difficulty, string> = {
   expert: 'difficultyExpert',
 }
 
-export default function CommunityBetsClient({ suggestions, deadlines, teams, communityBetsPick, communityBetsLocked }: Props) {
+export default function CommunityBetsClient({ suggestions, deadlines, teams, profiles, communityBetsPick, communityBetsLocked, r32Pick, r32BetsLocked }: Props) {
   const t = useTranslations('communityBets')
   const now = new Date()
 
@@ -68,6 +75,25 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, com
     decepcion_team_id:  communityBetsPick.decepcion_team_id,
   })
   const [pendingPicks, startPicksTransition] = useTransition()
+
+  const [r32Picks, setR32Picks] = useState({
+    usa_to_r16:          r32Pick.usa_to_r16,
+    worst_predictor:     r32Pick.worst_predictor ?? '',
+    worst_ranked_team_id: r32Pick.worst_ranked_team_id,
+  })
+  const [pendingR32, startR32] = useTransition()
+
+  function handleSaveR32() {
+    startR32(async () => {
+      const { error } = await saveR32Bets({
+        r32_usa_to_r16:           r32Picks.usa_to_r16,
+        r32_worst_predictor:      r32Picks.worst_predictor.trim() || null,
+        r32_worst_ranked_team_id: r32Picks.worst_ranked_team_id,
+      })
+      if (error) toast.error(error)
+      else toast.success(t('r32PicksSaved'))
+    })
+  }
 
   function handleSavePicks() {
     startPicksTransition(async () => {
@@ -142,6 +168,103 @@ export default function CommunityBetsClient({ suggestions, deadlines, teams, com
             <p className={`text-xs font-medium ${open ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
               {deadlineLabel(p.key)}
             </p>
+
+            {p.key === 'r32' && (
+              <Card className="border-[var(--champion-primary)]/30">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">{t('r32PicksTitle')}</CardTitle>
+                  <p className="text-xs text-muted-foreground">{t('r32PicksSub')}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                        <span>{t('r32UsaToR16')}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.medium}`}>
+                          {t('difficultyMedium')} · 2pts
+                        </span>
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={r32BetsLocked}
+                          onClick={() => setR32Picks(prev => ({ ...prev, usa_to_r16: true }))}
+                          className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            r32Picks.usa_to_r16 === true
+                              ? 'bg-green-600 border-green-600 text-white'
+                              : 'border-input hover:bg-muted'
+                          }`}
+                        >
+                          {t('r32Yes')}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={r32BetsLocked}
+                          onClick={() => setR32Picks(prev => ({ ...prev, usa_to_r16: false }))}
+                          className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            r32Picks.usa_to_r16 === false
+                              ? 'bg-green-600 border-green-600 text-white'
+                              : 'border-input hover:bg-muted'
+                          }`}
+                        >
+                          {t('r32No')}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                        <span>{t('r32WorstPredictor')}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.medium}`}>
+                          {t('difficultyMedium')} · 2pts
+                        </span>
+                      </label>
+                      <select
+                        value={r32Picks.worst_predictor}
+                        onChange={e => setR32Picks(prev => ({ ...prev, worst_predictor: e.target.value }))}
+                        disabled={r32BetsLocked}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">{t('selectPlayer')}</option>
+                        {profiles.map(pr => (
+                          <option key={pr.id} value={pr.display_name ?? ''}>{pr.display_name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                        <span>{t('r32WorstRanked')}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_BADGE.hard}`}>
+                          {t('difficultyHard')} · 3pts
+                        </span>
+                      </label>
+                      <select
+                        value={r32Picks.worst_ranked_team_id ?? ''}
+                        onChange={e => setR32Picks(prev => ({ ...prev, worst_ranked_team_id: e.target.value ? Number(e.target.value) : null }))}
+                        disabled={r32BetsLocked}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">{t('selectTeam')}</option>
+                        {teams.map(tm => (
+                          <option key={tm.id} value={tm.id}>{tm.name} {getFlag(tm.code)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {r32BetsLocked ? (
+                    <p className="text-sm text-destructive">{t('r32PicksLocked')}</p>
+                  ) : (
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={handleSaveR32} disabled={pendingR32}>
+                        {pendingR32 ? '…' : t('r32SavePicks')}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Community bet picks — only shown on pre_tournament tab */}
             {p.key === 'pre_tournament' && (

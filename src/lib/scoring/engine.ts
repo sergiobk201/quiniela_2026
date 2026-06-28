@@ -15,6 +15,9 @@ export const PRE_TOURNAMENT_PTS = {
   totalGoalsClose: 5,
   firstEliminated: 5,
   mostYellows: 5,
+  r32UsaToR16: 2,
+  r32WorstPredictor: 2,
+  r32WorstRanked: 3,
 } as const
 
 // Max possible points per category (for progress bars / display)

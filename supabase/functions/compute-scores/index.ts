@@ -25,6 +25,9 @@ const PRE_TOURNAMENT_PTS = {
   communityBalonDeOro: 5,  // Expert
   communityRevelacion: 2,  // Medium
   communityDecepcion: 3,   // Hard
+  r32UsaToR16:    2,       // Medium
+  r32WorstPredictor: 2,    // Medium
+  r32WorstRanked: 3,       // Hard
 }
 
 // Frozen cutover for the "no prediction = no points" rule. Matches kicking off at or
@@ -199,6 +202,9 @@ Deno.serve(async (req) => {
         if (tr.community_balon_de_oro && pred.community_balon_de_oro?.toLowerCase() === tr.community_balon_de_oro?.toLowerCase()) pts += PRE_TOURNAMENT_PTS.communityBalonDeOro
         if (tr.community_revelacion_team_id && pred.community_revelacion_team_id === tr.community_revelacion_team_id) pts += PRE_TOURNAMENT_PTS.communityRevelacion
         if (tr.community_decepcion_team_id  && pred.community_decepcion_team_id  === tr.community_decepcion_team_id)  pts += PRE_TOURNAMENT_PTS.communityDecepcion
+        if (tr.r32_usa_to_r16 != null && pred.r32_usa_to_r16 != null && pred.r32_usa_to_r16 === tr.r32_usa_to_r16) pts += PRE_TOURNAMENT_PTS.r32UsaToR16
+        if (tr.r32_worst_predictor && pred.r32_worst_predictor?.toLowerCase() === tr.r32_worst_predictor.toLowerCase()) pts += PRE_TOURNAMENT_PTS.r32WorstPredictor
+        if (tr.r32_worst_ranked_team_id && pred.r32_worst_ranked_team_id === tr.r32_worst_ranked_team_id) pts += PRE_TOURNAMENT_PTS.r32WorstRanked
         preTournamentPts.set(pred.user_id, (preTournamentPts.get(pred.user_id) ?? 0) + pts)
       }
     }

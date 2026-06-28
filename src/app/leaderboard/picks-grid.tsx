@@ -31,6 +31,9 @@ export type PlayerPick = {
     balonDeOro: string
     revelacion: string
     decepcion: string
+    r32UsaToR16: string
+    r32WorstPredictor: string
+    r32WorstRanked: string
   } | null
 }
 
@@ -293,6 +296,18 @@ export default function PicksGrid({ players, playerPicks, groupStandings, matche
                         <div className="flex justify-between gap-2 text-xs">
                           <dt className="text-muted-foreground shrink-0">{tCb('decepcion')}</dt>
                           <dd className="text-right font-medium">{p.communityBets.decepcion}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 text-xs">
+                          <dt className="text-muted-foreground shrink-0">{tCb('r32UsaToR16')}</dt>
+                          <dd className="text-right font-medium">{p.communityBets.r32UsaToR16}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 text-xs">
+                          <dt className="text-muted-foreground shrink-0">{tCb('r32WorstPredictor')}</dt>
+                          <dd className="text-right font-medium truncate max-w-[60%]">{p.communityBets.r32WorstPredictor || '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 text-xs">
+                          <dt className="text-muted-foreground shrink-0">{tCb('r32WorstRanked')}</dt>
+                          <dd className="text-right font-medium">{p.communityBets.r32WorstRanked}</dd>
                         </div>
                       </dl>
                     ) : (

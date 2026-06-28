@@ -169,6 +169,58 @@ export default async function ScoringPage() {
               </div>
             </div>
 
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground mb-3 font-medium">
+                R32 Community Bets
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    USA goes to R16 <span className="text-blue-400">Medium·2pts</span>
+                  </label>
+                  <select
+                    name="r32_usa_to_r16"
+                    defaultValue={results?.r32_usa_to_r16 == null ? '' : results.r32_usa_to_r16 ? 'true' : 'false'}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">—</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Worst Predictor <span className="text-blue-400">Medium·2pts</span>
+                  </label>
+                  <select
+                    name="r32_worst_predictor"
+                    defaultValue={results?.r32_worst_predictor ?? ''}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">—</option>
+                    {(profiles ?? []).map((p) => (
+                      <option key={p.id} value={p.display_name ?? ''}>{p.display_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Worst Ranked to R16 <span className="text-orange-400">Hard·3pts</span>
+                  </label>
+                  <select
+                    name="r32_worst_ranked_team_id"
+                    defaultValue={results?.r32_worst_ranked_team_id ?? ''}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">—</option>
+                    {(teams ?? []).map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <Button type="submit">Save Tournament Results</Button>
           </form>
         </CardContent>
