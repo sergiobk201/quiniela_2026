@@ -2,6 +2,53 @@
 
 ---
 
+## [Day 27] — 2026-06-27 (R32 Community Bets — second round of community bets)
+
+### Shipped
+
+**Feat: a second round of community bets, scored at the R32 phase**
+Three new bets, submitted during the group stage and locked at the first R32 kickoff:
+1. **USA reaches R16** — yes/no — Medium · 2pts
+2. **Worst Predictor** — picks another player by name — Medium · 2pts
+3. **Lowest-ranked team → R16** — team selector — Hard · 3pts
+
+- Mirrors the existing pre-tournament community bets pattern (columns on `pre_tournament_predictions` for picks + `tournament_results` for admin answers; scored in `compute-scores`).
+- **Lock model:** new `getFirstR32MatchLockTime` / `isR32BetsLocked` helpers — picks lock at the first R32 match's `locked_at`, independent of the group-stage and trophy locks. `saveR32Bets` server action enforces the lock app-side and writes via service-role (bypassing the June-7 trophy RLS).
+- **Scoring:** boolean equality for USA-to-R16 (guarded `!= null` both sides), case-insensitive match for worst predictor, FK equality for worst-ranked team. Added to both the edge function and the client mirror (`engine.ts`). Max +7pts.
+- **Admin:** `/admin/scoring` gains an "R32 Community Bets" section — Yes/No select, alphabetically-sorted player dropdown, team dropdown. `toBool()` helper added.
+- **Leaderboard:** the Community Bets tab now shows all six bets per player; USA-to-R16 renders as locale-neutral `✓`/`✗`.
+
+### UX polish (same session)
+- Moved the R32 picks card from the R32 tab to the **Group Stage** tab (the bets are made during group stage).
+- Restyled the card as **stacked compact rows** — bold label + a points pill (difficulty-colored dot + `N pts`) + full-width input, divided by hairlines. Replaced the raw `green-600` toggle with the **brand primary token**.
+- **Abbreviated all community-bets phase tabs** to stop the tab row wrapping (EN: Pre · Group · R32 · R16 · QF · SF · Final; ES uses football terms: Pre · Grupos · 16vos · 8vos · Cuartos · Semis · Final). ES card title → "Picks 16vos".
+
+### Files Changed
+- `supabase/migrations/014_r32_community_bets.sql` — 3 columns on `pre_tournament_predictions` + `tournament_results`
+- `src/lib/utils/lock.ts` — `getFirstR32MatchLockTime` + `isR32BetsLocked`
+- `src/app/community-bets/actions.ts` — `saveR32Bets`
+- `src/app/community-bets/page.tsx` — fetch r32 columns + lock time + profiles
+- `src/app/community-bets/community-bets-client.tsx` — R32 picks card (group tab), stacked-row restyle, `PointsPill`
+- `src/app/(admin)/admin/scoring/page.tsx` — R32 admin section; sorted profiles
+- `src/app/(admin)/admin/scoring/actions.ts` — `toBool` + 3 fields in `saveTournamentResults`
+- `supabase/functions/compute-scores/index.ts` — 3 point constants + scoring lines
+- `src/lib/scoring/engine.ts` — mirror point constants
+- `src/app/leaderboard/picks-grid.tsx` — extended `communityBets` type + 3 display rows
+- `src/app/leaderboard/page.tsx` — map r32 columns; `✓`/`✗` for USA-to-R16
+- `messages/en.json`, `messages/es.json` — r32 keys + abbreviated phase labels
+
+### Commits
+- `2820428` feat(community-bets): add R32 round bets — USA to R16, worst predictor, worst ranked team
+- `b31ed07` fix(community-bets): patch R32 picks display bugs
+- `2fc7894` refactor(community-bets): restyle R32 picks card + abbreviate tabs
+
+### Deploy
+- Migration 014 run manually in Supabase SQL Editor
+- `compute-scores` edge function deployed
+- Vercel production deployed at commit `2fc7894` (`www.quiniela2026.space`)
+
+---
+
 ## [Day 27] — 2026-06-27 (Knockout Tiebreaker — ET/Penalties Winner Prediction)
 
 ### Shipped
