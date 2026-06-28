@@ -25,7 +25,7 @@ export default async function ScoringPage() {
     await Promise.all([
       admin.from('teams').select('id, name').order('name'),
       admin.from('tournament_results').select('*').maybeSingle(),
-      admin.from('profiles').select('id, display_name'),
+      admin.from('profiles').select('id, display_name').order('display_name'),
       admin.from('champion_rebuys').select('user_id'),
     ])
 

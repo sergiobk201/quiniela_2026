@@ -157,7 +157,7 @@ export default async function LeaderboardPage() {
         balonDeOro: pre.community_balon_de_oro ?? '',
         revelacion: flaggedTeam(pre.community_revelacion_team_id),
         decepcion: flaggedTeam(pre.community_decepcion_team_id),
-        r32UsaToR16: pre.r32_usa_to_r16 == null ? '—' : pre.r32_usa_to_r16 ? 'Yes' : 'No',
+        r32UsaToR16: pre.r32_usa_to_r16 == null ? '—' : pre.r32_usa_to_r16 ? '✓' : '✗',
         r32WorstPredictor: pre.r32_worst_predictor ?? '',
         r32WorstRanked: flaggedTeam(pre.r32_worst_ranked_team_id),
       } : null,
