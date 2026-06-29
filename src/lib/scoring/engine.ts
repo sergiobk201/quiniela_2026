@@ -40,6 +40,8 @@ export function scoreMatch(
   upset: boolean,
   actualWinnerId?: number | null,
   predictedWinnerId?: number | null,
+  homeTeamId?: number | null,
+  awayTeamId?: number | null,
 ): number {
   let pts = 0
 
@@ -55,6 +57,17 @@ export function scoreMatch(
       pts += 5 * multiplier
     } else if (resultSign(predicted.home, predicted.away) === resultSign(actual.home, actual.away)) {
       pts += 2 * multiplier
+    } else if (
+      predictedWinnerId != null &&
+      predicted.home === predicted.away &&
+      actual.home !== actual.away
+    ) {
+      // User predicted a tie + picked a winner; actual was a regulation win.
+      // Award "correct result" if their winner matches the team that actually won.
+      const regulationWinner = actual.home > actual.away ? homeTeamId : awayTeamId
+      if (regulationWinner != null && predictedWinnerId === regulationWinner) {
+        pts += 2 * multiplier
+      }
     }
   }
 

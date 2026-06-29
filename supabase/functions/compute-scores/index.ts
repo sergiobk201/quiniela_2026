@@ -135,6 +135,8 @@ Deno.serve(async (req) => {
             match.upset ?? false,
             match.winner_team_id ?? null,
             effectivePred.winnerId,
+            match.home_team_id ?? null,
+            match.away_team_id ?? null,
           )
           if (isGroup) groupMatchPts.set(uid, (groupMatchPts.get(uid) ?? 0) + pts)
           else         knockoutPts.set(uid,   (knockoutPts.get(uid)   ?? 0) + pts)
