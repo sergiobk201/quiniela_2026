@@ -45,13 +45,28 @@ export function scoreMatch(
 ): number {
   let pts = 0
 
+  // Knockout match decided in ET/penalties: actual 90-min ended in a tie and an
+  // advancing team (actualWinnerId) is set. A user earns points by naming the team
+  // that advanced — REGARDLESS of how they expressed it:
+  //   • predicted a tie  → advancing team = their explicit tiebreaker pick.
+  //   • predicted a win  → advancing team = whoever they scored higher (implied).
   if (actual.home === actual.away && actualWinnerId != null) {
-    // Winner pick: correct or absent → scoreline points. Wrong pick → 0.
-    const wrongWinner = predictedWinnerId != null && predictedWinnerId !== actualWinnerId
-    if (!wrongWinner) {
-      if (predicted.home === actual.home && predicted.away === actual.away) {
-        pts += 5 * multiplier
-      } else if (predicted.home === predicted.away) {
+    if (predicted.home === predicted.away) {
+      // Predicted a tie. Winner pick: correct → full points; wrong → 0 (wrong team
+      // advances); absent → graceful (teams may have been TBD at prediction time).
+      const wrongWinner = predictedWinnerId != null && predictedWinnerId !== actualWinnerId
+      if (!wrongWinner) {
+        if (predicted.home === actual.home) {
+          pts += 5 * multiplier  // exact tie scoreline + correct advancing team
+        } else {
+          pts += 2 * multiplier  // correct advancing team, wrong scoreline
+        }
+      }
+    } else {
+      // Predicted a regulation win → implied advancing team is whoever they scored
+      // higher. Award correct-result if that team is the one that actually advanced.
+      const predictedAdvancer = predicted.home > predicted.away ? homeTeamId : awayTeamId
+      if (predictedAdvancer != null && predictedAdvancer === actualWinnerId) {
         pts += 2 * multiplier
       }
     }
