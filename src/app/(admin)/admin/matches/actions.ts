@@ -49,6 +49,7 @@ export async function toggleUpset(matchId: number, current: boolean) {
   const admin = createAdminClient()
   await admin.from('matches').update({ upset: !current }).eq('id', matchId)
   revalidatePath('/admin/matches')
+  void triggerRecompute()
 }
 
 export async function updateStatus(matchId: number, status: 'scheduled' | 'live' | 'finished') {
