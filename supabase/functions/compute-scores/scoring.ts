@@ -20,14 +20,16 @@ export function scoreMatch(
   let pts = 0
 
   // Knockout draw: actual 90-min ended in a tie → winner by ET/penalties.
-  // "Correct result" requires predicting a draw AND the correct advancing team.
-  // "Exact score" requires the exact 90-min scoreline AND the correct advancing team.
+  // Winner pick:  correct → full points.  wrong → 0 (wrong team advances).
+  //               absent  → scoreline points (graceful: teams may have been TBD at prediction time).
   if (actual.home === actual.away && actualWinnerId != null) {
-    const correctWinner = predictedWinnerId != null && predictedWinnerId === actualWinnerId
-    if (predicted.home === actual.home && predicted.away === actual.away && correctWinner) {
-      pts += 5 * multiplier
-    } else if (predicted.home === predicted.away && correctWinner) {
-      pts += 2 * multiplier
+    const wrongWinner = predictedWinnerId != null && predictedWinnerId !== actualWinnerId
+    if (!wrongWinner) {
+      if (predicted.home === actual.home && predicted.away === actual.away) {
+        pts += 5 * multiplier
+      } else if (predicted.home === predicted.away) {
+        pts += 2 * multiplier
+      }
     }
   } else {
     if (predicted.home === actual.home && predicted.away === actual.away) {

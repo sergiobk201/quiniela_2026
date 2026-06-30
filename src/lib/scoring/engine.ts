@@ -46,11 +46,14 @@ export function scoreMatch(
   let pts = 0
 
   if (actual.home === actual.away && actualWinnerId != null) {
-    const correctWinner = predictedWinnerId != null && predictedWinnerId === actualWinnerId
-    if (predicted.home === actual.home && predicted.away === actual.away && correctWinner) {
-      pts += 5 * multiplier
-    } else if (predicted.home === predicted.away && correctWinner) {
-      pts += 2 * multiplier
+    // Winner pick: correct or absent → scoreline points. Wrong pick → 0.
+    const wrongWinner = predictedWinnerId != null && predictedWinnerId !== actualWinnerId
+    if (!wrongWinner) {
+      if (predicted.home === actual.home && predicted.away === actual.away) {
+        pts += 5 * multiplier
+      } else if (predicted.home === predicted.away) {
+        pts += 2 * multiplier
+      }
     }
   } else {
     if (predicted.home === actual.home && predicted.away === actual.away) {
