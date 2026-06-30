@@ -15,7 +15,7 @@ export default async function PublicLeaderboardPage() {
   const t = await getTranslations('leaderboard')
   const admin = createAdminClient()
 
-  const [{ data: scores }, { data: champPreds }] = await Promise.all([
+  const [{ data: scores }, { data: champPreds }, { data: rebuys }] = await Promise.all([
     admin
       .from('scores')
       .select('user_id, total_points, profile:profiles(display_name)')
@@ -23,12 +23,20 @@ export default async function PublicLeaderboardPage() {
     admin
       .from('pre_tournament_predictions')
       .select('user_id, team:teams!champion_team_id(code)'),
+    admin
+      .from('champion_rebuys')
+      .select('user_id, team:teams!team_id(code)'),
   ])
 
   const champMap = new Map<string, string>()
   for (const c of champPreds ?? []) {
     const code = (c.team as unknown as { code: string } | null)?.code
     if (code) champMap.set(c.user_id, code)
+  }
+  // Rebuy precedence: an active rebuy supersedes the original (eliminated) pick.
+  for (const r of rebuys ?? []) {
+    const code = (r.team as unknown as { code: string } | null)?.code
+    if (code) champMap.set(r.user_id, code)
   }
 
   const rows = (scores ?? []).map((s, i) => ({

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -20,11 +20,18 @@ type Row = {
 interface Props {
   initialRows: Row[]
   currentUserId: string
+  championFlags: Record<string, string>
 }
 
-export default function LeaderboardTable({ initialRows, currentUserId }: Props) {
+export default function LeaderboardTable({ initialRows, currentUserId, championFlags }: Props) {
   const t = useTranslations('leaderboard')
   const [rows, setRows] = useState<Row[]>(initialRows)
+
+  // Champion picks are immutable post-lock, so this map is stable for the session.
+  // Held in a ref so the realtime callback reads the latest value without the
+  // subscription re-subscribing on every render.
+  const flagsRef = useRef(championFlags)
+  flagsRef.current = championFlags
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -49,6 +56,7 @@ export default function LeaderboardTable({ initialRows, currentUserId }: Props) 
               rank: i + 1,
               userId: s.user_id,
               displayName: (s.profile as unknown as { display_name: string } | null)?.display_name ?? 'Unknown',
+              championFlag: flagsRef.current[s.user_id] ?? null,
               preTournament: s.pre_tournament_points ?? 0,
               groupStage: s.group_stage_points ?? 0,
               knockout: s.knockout_points ?? 0,

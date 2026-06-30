@@ -102,13 +102,21 @@ export default async function LeaderboardPage() {
   const teamName = new Map((allTeams ?? []).map(t => [t.id, t.name]))
   const teamCode = new Map((allTeams ?? []).map(t => [t.id, t.code]))
 
-  // Fill champion flag for rebuy-only users (no pre-tournament prediction)
+  // Champion flag precedence: an active rebuy supersedes the original pick — the
+  // original champion was eliminated, so the rebuy team is the user's live champion.
+  // Users with no rebuy keep their pre-tournament pick (set above).
   for (const r of rebuys ?? []) {
-    if (!champMap.has(r.user_id)) {
-      const code = teamCode.get(r.team_id)
-      if (code) champMap.set(r.user_id, code)
-    }
+    const code = teamCode.get(r.team_id)
+    if (code) champMap.set(r.user_id, code)
   }
+
+  // Champion flag per user, resolved with the rebuy precedence above. Passed to the
+  // realtime table so score-change refetches don't drop flags, and patched onto the
+  // already-built rows (and thus podium + your-rank card, which share object refs) so
+  // rebuy-only joiners and rebuy overrides are reflected on first render too.
+  const championFlags: Record<string, string> = {}
+  for (const [uid, code] of champMap) championFlags[uid] = getFlag(code)
+  for (const r of rows) r.championFlag = championFlags[r.userId] ?? null
 
   function flaggedTeam(id: number | null | undefined): string {
     if (!id) return '—'
@@ -287,7 +295,7 @@ export default async function LeaderboardPage() {
         </div>
       )}
 
-      <LeaderboardTable initialRows={rows} currentUserId={user.id} />
+      <LeaderboardTable initialRows={rows} currentUserId={user.id} championFlags={championFlags} />
 
       {/* Daily prediction grid */}
       {dailyMatches.length > 0 && (
