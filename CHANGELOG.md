@@ -2,6 +2,29 @@
 
 ---
 
+## Session Log: 2026-06-30 (Knockout penalty scoring fix + stale-deploy discovery)
+
+### Shipped
+**Fix: penalty-decided knockout matches now credit the correct advancing team however predicted** (`91c6ef4`)
+- Gap: yesterday's `c1ef417` handled *predicted-tie → won in regulation* but left the mirror case broken. A match that actually went to ET/penalties only credited users who predicted a *literal tie*; a user who picked the advancing team via a normal scoreline (e.g. `1-2`) earned 0 despite naming the correct winner.
+- Fix (`scoreMatch` in both `compute-scores/scoring.ts` and client mirror `engine.ts`): in a penalty-decided match, the advancing team is derived however the user expressed it — explicit tiebreaker pick (predicted tie) OR the higher-scored team (predicted win). Correct advancing team → 2× correct-result; exact tie scoreline + correct pick → 5×.
+- Verified against live DB (R32 Netherlands 1-1 Morocco, Morocco on penalties): Walter Jesus & Mauri each +4 (both predicted `1-2`). Sandra was already correct (predicted tie + Morocco pick). No group-stage regression (no group match carries `winner_team_id`; the penalty branch can't fire there).
+
+### Major Lessons Learned Today
+1. **Edge function deploys were silently failing → prod ran stale scoring code.**
+   - **Incorrect approach:** Ran `supabase functions deploy compute-scores --project-ref kgrplowqhweshebaojke` (ref guessed from `supabase projects list`) with Docker off. CLI printed "Deployed" but (a) targeted the wrong project and (b) without `--use-api` uploaded a stale bundle. Multiple "successful" deploys changed nothing live; recomputes kept returning old numbers.
+   - **Correct approach:** Confirm the ref against `.env.local`/`supabase/.temp/project-ref` (real = `wzaykobnbrmksppsecvb`) and deploy with `--use-api --no-verify-jwt`. Verify the deploy actually landed (temporary `build:` marker in the response) before trusting a recompute.
+   - **Reasoning:** A green "Deployed" line is not proof. Because prior deploys had silently no-op'd, earlier committed-but-never-deployed fixes (`6ab6198` stop premature qualifier scoring, `4b52984` no-prediction=no-points) only went live with this deploy, shifting many players' pre-tournament totals — surprising the user.
+2. **Diagnose before fixing; account for every delta.**
+   - **Incorrect approach:** Treating an unexplained score shift (pre-tournament 91→79) as acceptable while declaring the fix done.
+   - **Correct approach:** Stop on any delta you didn't intend, trace it to its commit/data cause, and confirm scope before shipping. Query the live DB for real inputs/outputs instead of reasoning from assumptions.
+
+### Deploy
+- `compute-scores` deployed to `wzaykobnbrmksppsecvb` via `--use-api`; scores recomputed (21 users).
+- Vercel: not required for the leaderboard (server-computed); `engine.ts` is display-only and ships with the next prod deploy.
+
+---
+
 ## [Day 27] — 2026-06-27 (R32 Community Bets — second round of community bets)
 
 ### Shipped

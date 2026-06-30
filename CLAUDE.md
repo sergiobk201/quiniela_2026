@@ -11,6 +11,7 @@ Family/friends World Cup prediction app for 2026 FIFA World Cup (25 users).
 - **DB/Auth:** Supabase (Postgres + RLS + Auth + Realtime)
 - **Email:** Resend (invite/reminder emails)
 - **Hosting:** Vercel + Supabase (both free tier)
+- **Supabase project ref:** `wzaykobnbrmksppsecvb` (the linked/production project — matches `.env.local` `NEXT_PUBLIC_SUPABASE_URL` and `supabase/.temp/project-ref`). ⚠️ `supabase projects list` may surface OTHER refs (e.g. `kgrplowqhweshebaojke`) — those are NOT this app. Always deploy/query against `wzaykobnbrmksppsecvb`.
 
 ## Architecture Decisions
 - Route groups: `(auth)`, `(admin)`, `(public)` for layout separation
@@ -73,3 +74,15 @@ Supabase enforces a hard server-side row cap (`db-max-rows`, default 1000) that 
 **Rule:** any *multi-row* read (NOT scoped by `.eq('user_id', …)`, `.maybeSingle()`, or `head:true` count) on a table that scales with users×matches or is insert-only MUST page via `fetchAll()` in `src/lib/supabase/admin.ts` (or the inline pager in the edge function), ordered by `id` for deterministic paging. Never trust a bare `.select()` or `.limit()` for these.
 
 At-risk tables: `match_predictions` (≈25×104), `bet_suggestion_votes` (25×suggestions), `audit_log` (insert-only). Bounded/safe: `teams`, `groups`, `matches`, `scores`, `profiles`, and all `*_predictions` keyed one-per-user. If user count ever exceeds ~1000, re-audit every unbounded `profiles` read.
+
+### Constraint: Edge function deploy target (data integrity)
+The `compute-scores` edge function MUST deploy to project `wzaykobnbrmksppsecvb` with the server-side bundler:
+```
+supabase functions deploy compute-scores --project-ref wzaykobnbrmksppsecvb --use-api --no-verify-jwt
+```
+- **Never guess the ref** from `supabase projects list` — confirm against `.env.local` / `supabase/.temp/project-ref` and the user before deploying. Deploying to the wrong ref reports "Deployed" but changes nothing the app sees.
+- **`--use-api` is mandatory when Docker is off.** Without it, a bare deploy reports success but uploads a stale/empty bundle — the live function silently never changes. (This left prod running scoring code months behind the repo.)
+- **Verify the deploy actually landed** before trusting any recompute: add a temporary `build:'marker'` field to the function's JSON response, or confirm a known score changed. A green "Deployed" line is NOT proof.
+
+### Constraint: Diagnose before fixing (no "fix fix fix")
+Trace root cause and verify scope BEFORE changing code, and verify outcomes AFTER. Specifically: when scores/totals move, account for EVERY delta against the data (not just the one you intended) before declaring done; an unexplained shift means stop and investigate, not ship. Query the live DB to confirm the actual inputs/outputs rather than reasoning from assumptions.
